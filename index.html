@@ -64,8 +64,10 @@
             color: var(--color-text-secondary);
         }
         #icon-sun { display: none; }
-        .dark-mode #icon-sun { display: block; }
-        .dark-mode #icon-moon { display: none; }
+        body.dark-mode #icon-sun { display: block; }
+        body:not(.dark-mode) #icon-moon { display: block; }
+        body.dark-mode #icon-moon { display: none; }
+
 
         .login-container {
             width: 100%;
@@ -155,13 +157,11 @@
 </head>
 <body>
 
-    <!-- Botão de Tema Sol/Lua -->
     <button class="theme-toggle" id="theme-toggle" title="Alterar tema">
         <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278Z"/></svg>
         <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707z"/></svg>
     </button>
     
-    <!-- Estrutura HTML da Tela de Login -->
     <div id="auth-container" class="login-container">
         <img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo">
         <p class="login-subtitle">Comunicação interna Molas Fama</p>
@@ -187,18 +187,19 @@
         <a href="#" class="forgot-password-link">Esqueci minha senha</a>
     </div>
 
-    <!-- Container do App (visível após login) -->
     <div id="app-container" style="display: none;">
         <h2>Bem-vindo ao Fama Flow!</h2>
         <p>Login realizado com sucesso.</p>
         <button id="logout-button">Sair</button>
     </div>
 
-    <!-- Lógica JavaScript com suas chaves e lógica de tema -->
     <script>
         const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // CORREÇÃO: Inicializa o cliente Supabase sem conflito de nome de variável.
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const loginForm = document.getElementById('login-form');
         const authContainer = document.getElementById('auth-container');
@@ -210,7 +211,7 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
             if (error) {
                 alert('Erro no login: ' + error.message);
@@ -220,7 +221,7 @@
         });
         
         logoutButton.addEventListener('click', async () => {
-            await supabase.auth.signOut();
+            await supabaseClient.auth.signOut();
             showLogin();
         });
 
@@ -234,7 +235,7 @@
             authContainer.style.display = 'block';
         }
 
-        supabase.auth.onAuthStateChange((event, session) => {
+        supabaseClient.auth.onAuthStateChange((event, session) => {
             if (session) {
                 showApp();
             } else {
@@ -246,25 +247,30 @@
         const themeToggle = document.getElementById('theme-toggle');
         const body = document.body;
 
-        // Verifica se há um tema salvo no localStorage
+        // Função para aplicar o tema com base na preferência salva ou no sistema
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Verifica o tema salvo no localStorage
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) {
-            if (savedTheme === 'dark-mode') {
-                body.classList.add('dark-mode');
-            }
+            applyTheme(savedTheme);
         } else {
-            // Se não houver tema salvo, usa o Dark Mode como padrão inicial
-            body.classList.add('dark-mode');
+            // Se não houver tema salvo, pode-se usar a preferência do sistema
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            applyTheme(prefersDark ? 'dark' : 'light');
         }
 
         themeToggle.addEventListener('click', () => {
-            if (body.classList.contains('dark-mode')) {
-                body.classList.remove('dark-mode');
-                localStorage.setItem('theme', 'light-mode'); // Salva como light
-            } else {
-                body.classList.add('dark-mode');
-                localStorage.setItem('theme', 'dark-mode'); // Salva como dark
-            }
+            const isDarkMode = body.classList.contains('dark-mode');
+            applyTheme(isDarkMode ? 'light' : 'dark');
         });
     </script>
 </body>
