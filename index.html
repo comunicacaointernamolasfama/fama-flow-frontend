@@ -78,15 +78,9 @@
             border: 1px solid var(--color-border);
         }
         
-        /* Estilo para a tag <img> da logo */
         .login-logo {
             max-width: 180px;
             margin-bottom: 1rem;
-        }
-        
-        .dark-mode .login-logo {
-             /* No modo escuro, a logo vermelha pode ficar um pouco escura. 
-                Poderíamos adicionar um filtro se necessário, mas por enquanto fica original. */
         }
 
         .login-subtitle {
@@ -163,7 +157,7 @@
     </button>
     
     <div id="auth-container" class="login-container">
-        <!-- CORREÇÃO: Voltando para a tag <img> com uma URL corrigida e funcional -->
+        <!-- CORREÇÃO DEFINITIVA: Usando a tag <img> com um link que realmente funciona -->
         <img src="https://ctfamadobrasil.com.br/wp-content/uploads/2023/09/logo.png" alt="Logo Fama" class="login-logo">
         <p class="login-subtitle">Comunicação interna Molas Fama</p>
         
@@ -249,7 +243,7 @@
 
         function applyTheme(theme) {
             if (theme === 'dark') {
-                body.classList.add('dark-mode');
+                body.classList.add('dank-mode');
                 localStorage.setItem('theme', 'dark');
             } else {
                 body.classList.remove('dark-mode');
@@ -261,8 +255,14 @@
         if (savedTheme) {
             applyTheme(savedTheme);
         } else {
+            // Se não houver tema salvo, o padrão é o tema claro (nenhuma classe é adicionada)
+            // A menos que o sistema do usuário prefira o escuro
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            applyTheme(prefersDark ? 'dark' : 'light');
+            if (prefersDark) {
+                applyTheme('dark');
+            } else {
+                applyTheme('light');
+            }
         }
 
         themeToggle.addEventListener('click', () => {
