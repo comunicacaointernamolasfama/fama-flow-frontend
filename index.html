@@ -17,7 +17,6 @@
             --color-text-secondary: #6B7280;
             --color-brand-primary: #D81920;
             --color-border: #E0E0E0;
-            --color-logo: var(--color-brand-primary); /* Cor da logo para o modo claro */
             --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
@@ -29,7 +28,6 @@
             --color-text-secondary: #A8A8A8;
             --color-brand-primary: #D81920;
             --color-border: #383838;
-            --color-logo: #FFFFFF; /* Cor da logo para o modo escuro */
             --shadow: none;
         }
 
@@ -80,22 +78,15 @@
             border: 1px solid var(--color-border);
         }
         
-        /* Logo adaptável com imagem embutida (Data URI) */
+        /* Estilo para a tag <img> da logo */
         .login-logo {
-            width: 180px;
-            height: 45px;
-            margin: 0 auto 1rem auto;
-            background-color: var(--color-logo);
-            -webkit-mask-size: contain;
-            mask-size: contain;
-            -webkit-mask-repeat: no-repeat;
-            mask-repeat: no-repeat;
-            -webkit-mask-position: center;
-            mask-position: center;
-            transition: background-color 0.3s;
-            /* CORREÇÃO: URL substituída por Data URI para evitar erros de CORS e URL quebrada */
-            -webkit-mask-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAa4AAABFAQMAAADL/a20AAAABlBMVEVHcEz///+flKJDAAAAAXRSTlMAQObYZgAAAZ1JREFUeNrt2rFKA0EQhuE1iLgQtPOx8APkY1j5GltfoI+QE9hZWFhY+QJbWAtrsbX3wYqVnU2ylbSYsNFmdmGQSX6sszP/24k5mZkxxphhPR793vR6fB8/6vX4tD8+r89r9/s/f75/ft/fHn+v3/V6fD8+L8/zH/Q/6/T6Pf7v3/f5Pwv/y9/f35+vf9/n/z8e/x/5sy/7/389/p/k79f7fZ/f7c/r87p+3ed3vT6//X1fn+f7+k0/b57n/q5/P5/XeX1+/c/v85u/1+f5/f53ve5/P5/X+X2e7/U/6/P8//+9v++TBwAAAPw9z/s0g4Gg0WgYDAaDwWAwGAwGg8FgMBgMBsP/0fOr7/N+v+/zfr/v836/7/N+v+/zfr/v836/7/N+v+/zfr/v836/7/N+v+/zfr/v8/5+3+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+d9+36//fN+v+/z/vP9fr/v8/5+3//7fr/v8/4+n/8/6/f7Pp/X9/+nb83hMPh/Of5+f1+f1/f9fs/v+/w+v/f7Pp/X9/+fn/c/6/T6fa/f9/k/DMMh8P8/n9f3/b5Pq/0/AAAAAElFTkSuQmCC');
-            mask-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAa4AAABFAQMAAADL/a20AAAABlBMVEVHcEz///+flKJDAAAAAXRSTlMAQObYZgAAAZ1JREFUeNrt2rFKA0EQhuE1iLgQtPOx8APkY1j5GltfoI+QE9hZWFhY+QJbWAtrsbX3wYqVnU2ylbSYsNFmdmGQSX6sszP/24k5mZkxxphhPR793vR6fB8/6vX4tD8+r89r9/s/f75/ft/fHn+v3/V6fD8+L8/zH/Q/6/T6Pf7v3/f5Pwv/y9/f35+vf9/n/z8e/x/5sy/7/389/p/k79f7fZ/f7c/r87p+3ed3vT6//X1fn+f7+k0/b57n/q5/P5/XeX1+/c/v85u/1+f5/f53ve5/P5/X+X2e7/U/6/P8//+9v++TBwAAAPw9z/s0g4Gg0WgYDAaDwWAwGAwGg8FgMBgMBsP/0fOr7/N+v+/zfr/v836/7/N+v+/zfr/v836/7/N+v+/zfr/v836/7/N+v+/zfr/v8/5+3+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+d9+36//fN+v+/z/vP9fr/v8/5+3//7fr/v8/4+n/8/6/f7Pp/X9/+nb83hMPh/Of5+f1+f1/f9fs/v+/w+v/f7Pp/X9/+fn/c/6/T6fa/f9/k/DMMh8P8/n9f3/b5Pq/0/AAAAAElFTkSuQmCC');
+            max-width: 180px;
+            margin-bottom: 1rem;
+        }
+        
+        .dark-mode .login-logo {
+             /* No modo escuro, a logo vermelha pode ficar um pouco escura. 
+                Poderíamos adicionar um filtro se necessário, mas por enquanto fica original. */
         }
 
         .login-subtitle {
@@ -172,7 +163,8 @@
     </button>
     
     <div id="auth-container" class="login-container">
-        <div class="login-logo" role="img" aria-label="Logo Fama"></div>
+        <!-- CORREÇÃO: Voltando para a tag <img> com uma URL corrigida e funcional -->
+        <img src="https://ctfamadobrasil.com.br/wp-content/uploads/2023/09/logo.png" alt="Logo Fama" class="login-logo">
         <p class="login-subtitle">Comunicação interna Molas Fama</p>
         
         <form id="login-form">
@@ -251,11 +243,10 @@
             }
         });
 
-        // LÓGICA DO TEMA CORRIGIDA E OTIMIZADA
+        // LÓGICA DO TEMA
         const themeToggle = document.getElementById('theme-toggle');
         const body = document.body;
 
-        // Função para aplicar o tema e salvar a preferência
         function applyTheme(theme) {
             if (theme === 'dark') {
                 body.classList.add('dark-mode');
@@ -266,7 +257,6 @@
             }
         }
         
-        // Inicializa o tema ao carregar a página
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) {
             applyTheme(savedTheme);
@@ -275,7 +265,6 @@
             applyTheme(prefersDark ? 'dark' : 'light');
         }
 
-        // Event listener para o botão de alternar tema
         themeToggle.addEventListener('click', () => {
             const isDarkMode = body.classList.contains('dark-mode');
             applyTheme(isDarkMode ? 'light' : 'dark');
