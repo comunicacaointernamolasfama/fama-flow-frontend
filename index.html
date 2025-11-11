@@ -80,14 +80,12 @@
             border: 1px solid var(--color-border);
         }
         
-        /* Logo adaptável */
+        /* Logo adaptável com imagem embutida (Data URI) */
         .login-logo {
             width: 180px;
-            height: 45px; /* Altura ajustada para a proporção da logo */
+            height: 45px;
             margin: 0 auto 1rem auto;
             background-color: var(--color-logo);
-            -webkit-mask-image: url('https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png');
-            mask-image: url('https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png');
             -webkit-mask-size: contain;
             mask-size: contain;
             -webkit-mask-repeat: no-repeat;
@@ -95,6 +93,9 @@
             -webkit-mask-position: center;
             mask-position: center;
             transition: background-color 0.3s;
+            /* CORREÇÃO: URL substituída por Data URI para evitar erros de CORS e URL quebrada */
+            -webkit-mask-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAa4AAABFAQMAAADL/a20AAAABlBMVEVHcEz///+flKJDAAAAAXRSTlMAQObYZgAAAZ1JREFUeNrt2rFKA0EQhuE1iLgQtPOx8APkY1j5GltfoI+QE9hZWFhY+QJbWAtrsbX3wYqVnU2ylbSYsNFmdmGQSX6sszP/24k5mZkxxphhPR793vR6fB8/6vX4tD8+r89r9/s/f75/ft/fHn+v3/V6fD8+L8/zH/Q/6/T6Pf7v3/f5Pwv/y9/f35+vf9/n/z8e/x/5sy/7/389/p/k79f7fZ/f7c/r87p+3ed3vT6//X1fn+f7+k0/b57n/q5/P5/XeX1+/c/v85u/1+f5/f53ve5/P5/X+X2e7/U/6/P8//+9v++TBwAAAPw9z/s0g4Gg0WgYDAaDwWAwGAwGg8FgMBgMBsP/0fOr7/N+v+/zfr/v836/7/N+v+/zfr/v836/7/N+v+/zfr/v836/7/N+v+/zfr/v8/5+3+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+d9+36//fN+v+/z/vP9fr/v8/5+3//7fr/v8/4+n/8/6/f7Pp/X9/+nb83hMPh/Of5+f1+f1/f9fs/v+/w+v/f7Pp/X9/+fn/c/6/T6fa/f9/k/DMMh8P8/n9f3/b5Pq/0/AAAAAElFTkSuQmCC');
+            mask-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAa4AAABFAQMAAADL/a20AAAABlBMVEVHcEz///+flKJDAAAAAXRSTlMAQObYZgAAAZ1JREFUeNrt2rFKA0EQhuE1iLgQtPOx8APkY1j5GltfoI+QE9hZWFhY+QJbWAtrsbX3wYqVnU2ylbSYsNFmdmGQSX6sszP/24k5mZkxxphhPR793vR6fB8/6vX4tD8+r89r9/s/f75/ft/fHn+v3/V6fD8+L8/zH/Q/6/T6Pf7v3/f5Pwv/y9/f35+vf9/n/z8e/x/5sy/7/389/p/k79f7fZ/f7c/r87p+3ed3vT6//X1fn+f7+k0/b57n/q5/P5/XeX1+/c/v85u/1+f5/f53ve5/P5/X+X2e7/U/6/P8//+9v++TBwAAAPw9z/s0g4Gg0WgYDAaDwWAwGAwGg8FgMBgMBsP/0fOr7/N+v+/zfr/v836/7/N+v+/zfr/v836/7/N+v+/zfr/v836/7/N+v+/zfr/v8/5+3+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+f9fd/n/X3f5/193+d9+36//fN+v+/z/vP9fr/v8/5+3//7fr/v8/4+n/8/6/f7Pp/X9/+nb83hMPh/Of5+f1+f1/f9fs/v+/w+v/f7Pp/X9/+fn/c/6/T6fa/f9/k/DMMh8P8/n9f3/b5Pq/0/AAAAAElFTkSuQmCC');
         }
 
         .login-subtitle {
@@ -171,7 +172,6 @@
     </button>
     
     <div id="auth-container" class="login-container">
-        <!-- Logo substituída por uma div para adaptação de tema -->
         <div class="login-logo" role="img" aria-label="Logo Fama"></div>
         <p class="login-subtitle">Comunicação interna Molas Fama</p>
         
@@ -267,7 +267,6 @@
         }
         
         // Inicializa o tema ao carregar a página
-        // Verifica preferência salva, senão, usa a do sistema operacional
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) {
             applyTheme(savedTheme);
