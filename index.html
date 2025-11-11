@@ -74,15 +74,37 @@
 
 <!-- Lógica JavaScript com suas chaves -->
 <script>
+  // =======================================================
+  // PASSO 1: INICIALIZAÇÃO (SEMPRE PRIMEIRO)
+  // =======================================================
   const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
   const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // =======================================================
+  // PASSO 2: MAPEAMENTO DOS ELEMENTOS HTML
+  // =======================================================
   const loginForm = document.getElementById('login-form');
   const authContainer = document.getElementById('auth-container');
   const appContainer = document.getElementById('app-container');
   const logoutButton = document.getElementById('logout-button');
 
+  // =======================================================
+  // PASSO 3: DEFINIÇÃO DAS FUNÇÕES
+  // =======================================================
+  function showApp() {
+    authContainer.style.display = 'none';
+    appContainer.style.display = 'block';
+  }
+  
+  function showLogin() {
+    appContainer.style.display = 'none';
+    authContainer.style.display = 'block';
+  }
+
+  // =======================================================
+  // PASSO 4: ADICIONAR OS "OUVINTES" DE EVENTOS
+  // =======================================================
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value;
@@ -102,16 +124,9 @@
     showLogin();
   });
 
-  function showApp() {
-    authContainer.style.display = 'none';
-    appContainer.style.display = 'block';
-  }
-  
-  function showLogin() {
-    appContainer.style.display = 'none';
-    authContainer.style.display = 'block';
-  }
-
+  // =======================================================
+  // PASSO 5: VERIFICAÇÃO INICIAL DO ESTADO DE LOGIN
+  // =======================================================
   // Verifica se o usuário já está logado ao carregar a página
   supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
