@@ -6,6 +6,9 @@
     <title>Fama Flow</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Quill.js - Biblioteca do Editor de Texto -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -19,9 +22,7 @@
         .login-wrapper { display: flex; align-items: center; justify-content: center; height: 100vh; }
         .theme-toggle { position: absolute; top: 1.5rem; right: 1.5rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow); z-index: 1000; }
         .theme-toggle .material-icons { color: var(--color-text-secondary); }
-        #icon-sun { display: none; }
-        body.dark-mode #icon-sun { display: block; }
-        body.dark-mode #icon-moon { display: none; }
+        #icon-sun { display: none; } body.dark-mode #icon-sun { display: block; } body.dark-mode #icon-moon { display: none; }
         .login-container { width: 100%; max-width: 400px; padding: 2.5rem; text-align: center; background-color: var(--color-surface); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--color-border); }
         .login-logo { max-width: 180px; margin-bottom: 1rem; }
         .login-subtitle { color: var(--color-text-secondary); margin-bottom: 2.5rem; font-size: 1rem; }
@@ -72,8 +73,6 @@
         .form-group { margin-bottom: 1.5rem; }
         .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
         .modal-footer { text-align: right; margin-top: 1.5rem; }
-        
-        /* --- Estilos da Página "Nova Mensagem" Aprimorados --- */
         .message-type-selector, .urgency-selector { display: flex; gap: 1rem; }
         .message-type-selector label { flex: 1; display: block; text-align: center; padding: 0.75rem; border: 1px solid var(--color-border); border-radius: 8px; cursor: pointer; transition: all 0.2s; }
         .message-type-selector input[type="radio"] { display: none; }
@@ -86,11 +85,16 @@
         .custom-checkbox input[type="checkbox"]:checked + .checkbox-box { background-color: var(--color-info); border-color: var(--color-info); }
         .custom-checkbox input[type="checkbox"]:checked + .checkbox-box .material-icons { transform: scale(1); }
         #prazo_container { display: flex; align-items: center; gap: 1rem; max-width: 250px; }
-        .rich-text-editor { border: 1px solid var(--color-border); border-radius: 8px; }
-        .rte-toolbar { padding: 0.5rem; background-color: var(--color-background); border-bottom: 1px solid var(--color-border); }
-        .rte-toolbar button { background: none; border: none; padding: 0.5rem; cursor: pointer; color: var(--color-text-secondary); }
-        .rte-textarea { width: 100%; border: none; min-height: 150px; padding: 1rem; background-color: transparent; resize: vertical; box-sizing: border-box; color: var(--color-text-primary); }
         .form-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
+
+        /* Estilos para o Editor Quill.js */
+        .ql-toolbar { border-top-left-radius: 8px; border-top-right-radius: 8px; background-color: var(--color-background); border-color: var(--color-border) !important; }
+        .ql-container { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; border-color: var(--color-border) !important; min-height: 150px; font-size: 1rem; }
+        .ql-editor { color: var(--color-text-primary); }
+        body.dark-mode .ql-snow .ql-stroke { color: var(--color-text-secondary); }
+        body.dark-mode .ql-snow .ql-picker-label { color: var(--color-text-secondary); }
+        body.dark-mode .ql-snow .ql-picker-item { color: var(--color-text-secondary); }
+        body.dark-mode .ql-snow .ql-picker-options { background-color: var(--color-surface); border-color: var(--color-border) !important; }
     </style>
 </head>
 <body>
@@ -107,17 +111,16 @@
             <div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div>
             <div id="users-page" class="page-content"><div class="page-header"><h1>Gerenciamento de Usuários</h1><button id="btn-new-user" class="btn btn-primary"><span class="material-icons">add</span> Novo Usuário</button></div><div class="card"><table class="data-table"><thead><tr><th>Usuário</th><th>Email</th><th>Departamento</th><th>Cargo</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div>
             <div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div class="card" id="user-profile-content">Carregando perfil...</div></div>
-            
             <div id="new-message-page" class="page-content">
                 <div class="page-header"><h1><span class="material-icons back-arrow" onclick="showPage('messages-page')">arrow_back</span> Nova Mensagem</h1></div>
                 <div class="card">
                     <form id="new-message-form">
                         <div class="form-group"><label>Tipo de Mensagem</label><div class="message-type-selector"><div><input type="radio" id="tipo-simples" name="message-type" value="message" checked onchange="toggleChamadoFields()"><label for="tipo-simples">Mensagem Simples</label></div><div><input type="radio" id="tipo-chamado" name="message-type" value="ticket" onchange="toggleChamadoFields()"><label for="tipo-chamado">Chamado Formal</label></div></div></div>
                         <div id="chamado-fields" style="display:none;"><div class="grid grid-cols-2"><div class="form-group"><label for="due_date">Prazo para Resposta</label><div id="prazo_container"><input type="date" id="due_date" class="input-field"></div></div><div class="form-group"><label>&nbsp;</label><label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label></div></div></div>
-                        <div class="form-group"><label for="destinatario">Destinatário(s)</label><input type="text" id="destinatario" class="input-field" placeholder="Digite o nome, email ou departamento..."></div>
+                        <div class="form-group"><label for="destinatario">Destinatário(s)</label><input type="text" id="destinatario" class="input-field" placeholder="Cole o ID do usuário de destino"></div>
                         <div class="form-group"><label for="assunto">Assunto</label><input type="text" id="assunto" class="input-field" placeholder="Digite o assunto da mensagem"></div>
                         <div class="form-group"><label>Nível de Urgência</label><div class="urgency-selector"><button type="button" class="btn btn-success active" data-priority="normal">Normal</button><button type="button" class="btn btn-secondary" data-priority="important">Importante</button><button type="button" class="btn btn-secondary" data-priority="urgent">Urgente</button></div></div>
-                        <div class="form-group"><label>Mensagem</label><div class="rich-text-editor"><div class="rte-toolbar"><button type="button" title="Negrito"><span class="material-icons">format_bold</span></button><button type="button" title="Itálico"><span class="material-icons">format_italic</span></button><button type="button" title="Sublinhado"><span class="material-icons">format_underlined</span></button><button type="button" title="Lista"><span class="material-icons">format_list_bulleted</span></button><button type="button" title="Anexar Arquivo"><span class="material-icons">attach_file</span></button><button type="button" title="Inserir Imagem"><span class="material-icons">image</span></button><button type="button" title="Emoji"><span class="material-icons">sentiment_satisfied_alt</span></button><button type="button" title="Menção"><span class="material-icons">alternate_email</span></button><button type="button" title="Link"><span class="material-icons">link</span></button></div><textarea class="rte-textarea" placeholder="Escreva sua mensagem..."></textarea></div></div>
+                        <div class="form-group"><label>Mensagem</label><div id="editor-container"></div><input type="file" id="file-upload-input" style="display: none;" onchange="handleFileUpload(event)"></div>
                         <div class="form-actions"><button type="button" class="btn btn-secondary" onclick="showPage('messages-page')">Cancelar</button><button type="submit" class="btn btn-danger">Enviar Mensagem</button></div>
                     </form>
                 </div>
@@ -125,7 +128,6 @@
             <button class="fab" id="fab-new-message" title="Nova Mensagem" onclick="showPage('new-message-page')"><span class="material-icons">add</span></button>
         </main>
     </div>
-
     <div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-primary" onclick="saveUser()">Salvar</button></div></div></div>
 
     <script>
@@ -134,25 +136,37 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentUserProfile = null;
-        
+        let quillEditor = null;
+
         document.addEventListener('DOMContentLoaded', () => {
+            initializeQuillEditor();
             checkUserSession();
             setupEventListeners();
         });
 
-        async function checkUserSession() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                await fetchUserProfile(session.user.id);
-                showApp();
-            } else {
-                showLogin();
-            }
+        function initializeQuillEditor() {
+            const toolbarOptions = [
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link', 'image'],
+                [{ 'header': [1, 2, 3, false] }],
+                ['clean']
+            ];
+            quillEditor = new Quill('#editor-container', {
+                modules: { toolbar: toolbarOptions },
+                placeholder: 'Escreva sua mensagem...',
+                theme: 'snow'
+            });
+            // Adiciona o handler para o anexo de arquivos
+            quillEditor.getModule('toolbar').addHandler('image', () => {
+                 document.getElementById('file-upload-input').click();
+            });
         }
 
         function setupEventListeners() {
             document.getElementById('login-form').addEventListener('submit', handleLogin);
             document.getElementById('logout-button').addEventListener('click', handleLogout);
+            document.getElementById('new-message-form').addEventListener('submit', sendMessage);
             document.querySelectorAll('.nav-link[data-page]').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -170,124 +184,93 @@
                     const clickedButton = e.currentTarget;
                     clickedButton.classList.remove('btn-secondary');
                     clickedButton.classList.add('active');
-                    if (selectedPriority === 'normal') {
-                        clickedButton.classList.add('btn-success');
-                    } else if (selectedPriority === 'important') {
-                        clickedButton.classList.add('btn-warning');
-                    } else if (selectedPriority === 'urgent') {
-                        clickedButton.classList.add('btn-danger');
-                    }
+                    if (selectedPriority === 'normal') clickedButton.classList.add('btn-success');
+                    else if (selectedPriority === 'important') clickedButton.classList.add('btn-warning');
+                    else if (selectedPriority === 'urgent') clickedButton.classList.add('btn-danger');
                 });
             });
         }
         
+        async function sendMessage(e) {
+            e.preventDefault();
+            if (!currentUserProfile) { alert("Você precisa estar logado."); return; }
+            
+            const subject = document.getElementById('assunto').value;
+            const content = quillEditor.root.innerHTML;
+            const priority = document.querySelector('.urgency-selector .btn.active').dataset.priority;
+            const type = document.querySelector('input[name="message-type"]:checked').value;
+            const recipientId = document.getElementById('destinatario').value;
+
+            if (!recipientId) { alert("Por favor, informe um destinatário."); return; }
+
+            try {
+                const { data: conversationData, error: convError } = await supabaseClient
+                    .from('conversations')
+                    .insert({
+                        subject: subject, type: type, priority: priority, status: 'open',
+                        due_date: type === 'ticket' ? document.getElementById('due_date').value : null,
+                        requires_response: type === 'ticket' ? document.getElementById('requires_response').checked : false,
+                        assignee_id: recipientId // Assumindo que o primeiro destinatário é o responsável
+                    })
+                    .select().single();
+                if (convError) throw convError;
+
+                const { error: msgError } = await supabaseClient
+                    .from('messages').insert({ conversation_id: conversationData.id, sender_id: currentUserProfile.id, content: content });
+                if (msgError) throw msgError;
+
+                const participants = [
+                    { conversation_id: conversationData.id, user_id: currentUserProfile.id },
+                    { conversation_id: conversationData.id, user_id: recipientId }
+                ];
+                const { error: partError } = await supabaseClient.from('conversation_participants').insert(participants);
+                if (partError) throw partError;
+
+                alert("Mensagem enviada com sucesso!");
+                quillEditor.setContents([]);
+                document.getElementById('new-message-form').reset();
+                showPage('messages-page');
+            } catch (error) {
+                console.error("Erro ao enviar mensagem:", error);
+                alert("Falha ao enviar mensagem: " + error.message);
+            }
+        }
+        
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const webhookUrl = 'SEU_WEBHOOK_URL_AQUI/famaflow-upload'; 
+            const messageId = Date.now();
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                alert(`Simulando upload do arquivo: ${file.name}`);
+                // const response = await fetch(`${webhookUrl}?message_id=${messageId}`, { method: 'POST', body: formData });
+                // if (response.ok) { alert('Arquivo enviado!'); } else { alert('Falha no upload.'); }
+            } catch (error) {
+                console.error('Erro no upload:', error);
+                alert('Erro ao enviar o arquivo.');
+            }
+        }
+        
+        async function checkUserSession() { const { data: { session } } = await supabaseClient.auth.getSession(); if (session) { await fetchUserProfile(session.user.id); showApp(); } else { showLogin(); } }
         async function handleLogin(e) { e.preventDefault(); const email = document.getElementById('email').value; const password = document.getElementById('password').value; const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password }); if (error) { alert('Erro no login: ' + error.message); } else if (data.user) { await fetchUserProfile(data.user.id); showApp(); } }
         async function handleLogout() { await supabaseClient.auth.signOut(); currentUserProfile = null; showLogin(); }
         async function fetchUserProfile(userId) { const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', userId).single(); if (data) currentUserProfile = data; else console.error("Perfil não encontrado:", error); }
-        
-        function showApp() {
-            document.getElementById('auth-wrapper').style.display = 'none';
-            document.getElementById('app-container').style.display = 'flex';
-            document.getElementById('admin-section').style.display = (currentUserProfile && currentUserProfile.role === 'Admin') ? 'block' : 'none';
-            showPage('dashboard-page');
-            loadAllDynamicData();
-        }
-
-        function showLogin() {
-            document.getElementById('app-container').style.display = 'none';
-            document.getElementById('auth-wrapper').style.display = 'block';
-        }
-
-        function showPage(pageId) {
-            document.querySelectorAll('.page-content').forEach(page => page.style.display = 'none');
-            const targetPage = document.getElementById(pageId);
-            if (targetPage) {
-                targetPage.style.display = 'block';
-            }
-            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-            const activeLink = document.querySelector(`.nav-link[data-page="${pageId}"]`);
-            if (activeLink) {
-                activeLink.classList.add('active');
-            }
-            const fab = document.getElementById('fab-new-message');
-            if (fab) {
-                fab.style.display = (pageId === 'new-message-page') ? 'none' : 'flex';
-            }
-        }
-
-        async function loadAllDynamicData() {
-            loadDashboardStats();
-            loadUsers();
-        }
-
-        async function loadDashboardStats() {
-            const { count: pendingCount, error: pError } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('status', 'open');
-            if (pError) console.error("Erro dashboard (pendentes):", pError);
-            const { count: urgentCount, error: uError } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('priority', 'urgent').eq('status', 'open');
-            if (uError) console.error("Erro dashboard (urgentes):", uError);
-            document.getElementById('pending-messages-count').textContent = pendingCount || 0;
-            document.getElementById('urgent-tickets-count').textContent = urgentCount || 0;
-        }
-
-        async function loadUsers() {
-            const { data: profiles, error } = await supabaseClient.from('profiles').select('*');
-            if (error) {
-                console.error("Erro ao buscar usuários:", error);
-                document.getElementById('user-table-body').innerHTML = `<tr><td colspan="5">Erro ao carregar usuários. Verifique as permissões (RLS) no Supabase.</td></tr>`;
-                return;
-            }
-            const tableBody = document.getElementById('user-table-body');
-            tableBody.innerHTML = profiles.map(profile => `
-                <tr>
-                    <td>${profile.full_name || 'N/A'}</td>
-                    <td>${profile.email || 'N/A'}</td>
-                    <td>${profile.department || 'N/A'}</td>
-                    <td>${profile.role || 'N/A'}</td>
-                    <td class="action-buttons">
-                        <button onclick='openUserModal(${JSON.stringify(profile)})'><span class="material-icons">edit</span></button>
-                        <button onclick="deleteUser('${profile.id}', '${profile.full_name}')"><span class="material-icons">delete</span></button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-        
-        function toggleChamadoFields() {
-            const isChamado = document.getElementById('tipo-chamado').checked;
-            document.getElementById('chamado-fields').style.display = isChamado ? 'block' : 'none';
-        }
-        
-        function openUserModal(user) {
-            const modal = document.getElementById('user-modal');
-            const form = document.getElementById('user-form');
-            form.reset();
-            const userEmailField = document.getElementById('user_email');
-            const passwordGroup = document.getElementById('password-group');
-            userEmailField.disabled = !!user;
-            passwordGroup.style.display = user ? 'none' : 'block';
-            document.getElementById('user_password').required = !user;
-            if (user) {
-                document.getElementById('user-modal-title').textContent = 'Editar Usuário';
-                document.getElementById('user-id').value = user.id;
-                document.getElementById('full_name').value = user.full_name;
-                userEmailField.value = user.email || '';
-                document.getElementById('department').value = user.department;
-                document.getElementById('role').value = user.role;
-            } else {
-                document.getElementById('user-modal-title').textContent = 'Novo Usuário';
-            }
-            modal.classList.add('visible');
-        }
-
+        function showApp() { document.getElementById('auth-wrapper').style.display = 'none'; document.getElementById('app-container').style.display = 'flex'; document.getElementById('admin-section').style.display = (currentUserProfile && currentUserProfile.role === 'Admin') ? 'block' : 'none'; showPage('dashboard-page'); loadAllDynamicData(); }
+        function showLogin() { document.getElementById('app-container').style.display = 'none'; document.getElementById('auth-wrapper').style.display = 'block'; }
+        function showPage(pageId) { document.querySelectorAll('.page-content').forEach(page => page.style.display = 'none'); const targetPage = document.getElementById(pageId); if (targetPage) { targetPage.style.display = 'block'; } document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); const activeLink = document.querySelector(`.nav-link[data-page="${pageId}"]`); if (activeLink) { activeLink.classList.add('active'); } const fab = document.getElementById('fab-new-message'); if (fab) { fab.style.display = (pageId === 'new-message-page') ? 'none' : 'flex'; } }
+        async function loadAllDynamicData() { loadDashboardStats(); loadUsers(); }
+        async function loadDashboardStats() { const { count: pendingCount, error: pError } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('status', 'open'); if (pError) console.error("Erro dashboard (pendentes):", pError); const { count: urgentCount, error: uError } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('priority', 'urgent').eq('status', 'open'); if (uError) console.error("Erro dashboard (urgentes):", uError); document.getElementById('pending-messages-count').textContent = pendingCount || 0; document.getElementById('urgent-tickets-count').textContent = urgentCount || 0; }
+        async function loadUsers() { const { data: profiles, error } = await supabaseClient.from('profiles').select('*'); if (error) { console.error("Erro ao buscar usuários:", error); document.getElementById('user-table-body').innerHTML = `<tr><td colspan="5">Erro ao carregar usuários. Verifique as permissões (RLS) no Supabase.</td></tr>`; return; } const tableBody = document.getElementById('user-table-body'); tableBody.innerHTML = profiles.map(profile => `<tr><td>${profile.full_name || 'N/A'}</td><td>${profile.email || 'N/A'}</td><td>${profile.department || 'N/A'}</td><td>${profile.role || 'N/A'}</td><td class="action-buttons"><button onclick='openUserModal(${JSON.stringify(profile)})'><span class="material-icons">edit</span></button><button onclick="deleteUser('${profile.id}', '${profile.full_name}')"><span class="material-icons">delete</span></button></td></tr>`).join(''); }
+        function toggleChamadoFields() { const isChamado = document.getElementById('tipo-chamado').checked; document.getElementById('chamado-fields').style.display = isChamado ? 'block' : 'none'; }
+        function openUserModal(user) { const modal = document.getElementById('user-modal'); const form = document.getElementById('user-form'); form.reset(); const userEmailField = document.getElementById('user_email'); const passwordGroup = document.getElementById('password-group'); userEmailField.disabled = !!user; passwordGroup.style.display = user ? 'none' : 'block'; document.getElementById('user_password').required = !user; if (user) { document.getElementById('user-modal-title').textContent = 'Editar Usuário'; document.getElementById('user-id').value = user.id; document.getElementById('full_name').value = user.full_name; userEmailField.value = user.email || ''; document.getElementById('department').value = user.department; document.getElementById('role').value = user.role; } else { document.getElementById('user-modal-title').textContent = 'Novo Usuário'; } modal.classList.add('visible'); }
         function closeUserModal() { document.getElementById('user-modal').classList.remove('visible'); }
         async function saveUser() { alert("AVISO: A criação/edição de usuários diretamente do frontend é insegura e requer uma Edge Function em produção."); alert("Simulação: Usuário seria salvo aqui."); closeUserModal(); }
         async function deleteUser(userId, userName) { if (confirm(`Tem certeza de que deseja excluir o usuário ${userName}?`)) { alert("AVISO: A exclusão de usuários requer uma Edge Function em produção para segurança."); alert("Simulação: Usuário seria excluído aqui."); } }
-
-        const themeToggle = document.getElementById('theme-toggle');
-        const body = document.body;
-        function applyTheme(theme) { body.classList.toggle('dark-mode', theme === 'dark'); localStorage.setItem('theme', theme); }
-        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        applyTheme(savedTheme);
-        themeToggle.addEventListener('click', () => applyTheme(body.classList.contains('dark-mode') ? 'light' : 'dark'));
+        const themeToggle = document.getElementById('theme-toggle'); const body = document.body; function applyTheme(theme) { body.classList.toggle('dark-mode', theme === 'dark'); localStorage.setItem('theme', theme); }
+        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); applyTheme(savedTheme); themeToggle.addEventListener('click', () => applyTheme(body.classList.contains('dark-mode') ? 'light' : 'dark'));
     </script>
 </body>
 </html>
