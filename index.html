@@ -17,6 +17,7 @@
             --color-text-secondary: #6B7280;
             --color-brand-primary: #D81920;
             --color-border: #E0E0E0;
+            --color-logo: var(--color-brand-primary); /* Cor da logo para o modo claro */
             --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
@@ -28,6 +29,7 @@
             --color-text-secondary: #A8A8A8;
             --color-brand-primary: #D81920;
             --color-border: #383838;
+            --color-logo: #FFFFFF; /* Cor da logo para o modo escuro */
             --shadow: none;
         }
 
@@ -65,9 +67,7 @@
         }
         #icon-sun { display: none; }
         body.dark-mode #icon-sun { display: block; }
-        body:not(.dark-mode) #icon-moon { display: block; }
         body.dark-mode #icon-moon { display: none; }
-
 
         .login-container {
             width: 100%;
@@ -80,13 +80,21 @@
             border: 1px solid var(--color-border);
         }
         
-        .dark-mode .login-logo {
-            /* Garante que a logo seja visível no modo escuro, se necessário */
-        }
-
+        /* Logo adaptável */
         .login-logo {
-            max-width: 180px;
-            margin-bottom: 1rem;
+            width: 180px;
+            height: 45px; /* Altura ajustada para a proporção da logo */
+            margin: 0 auto 1rem auto;
+            background-color: var(--color-logo);
+            -webkit-mask-image: url('https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png');
+            mask-image: url('https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png');
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            transition: background-color 0.3s;
         }
 
         .login-subtitle {
@@ -163,7 +171,8 @@
     </button>
     
     <div id="auth-container" class="login-container">
-        <img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo">
+        <!-- Logo substituída por uma div para adaptação de tema -->
+        <div class="login-logo" role="img" aria-label="Logo Fama"></div>
         <p class="login-subtitle">Comunicação interna Molas Fama</p>
         
         <form id="login-form">
@@ -197,7 +206,6 @@
         const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
         
-        // CORREÇÃO: Inicializa o cliente Supabase sem conflito de nome de variável.
         const { createClient } = supabase;
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -243,11 +251,11 @@
             }
         });
 
-        // LÓGICA DO TEMA
+        // LÓGICA DO TEMA CORRIGIDA E OTIMIZADA
         const themeToggle = document.getElementById('theme-toggle');
         const body = document.body;
 
-        // Função para aplicar o tema com base na preferência salva ou no sistema
+        // Função para aplicar o tema e salvar a preferência
         function applyTheme(theme) {
             if (theme === 'dark') {
                 body.classList.add('dark-mode');
@@ -257,17 +265,18 @@
                 localStorage.setItem('theme', 'light');
             }
         }
-
-        // Verifica o tema salvo no localStorage
+        
+        // Inicializa o tema ao carregar a página
+        // Verifica preferência salva, senão, usa a do sistema operacional
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) {
             applyTheme(savedTheme);
         } else {
-            // Se não houver tema salvo, pode-se usar a preferência do sistema
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
             applyTheme(prefersDark ? 'dark' : 'light');
         }
 
+        // Event listener para o botão de alternar tema
         themeToggle.addEventListener('click', () => {
             const isDarkMode = body.classList.contains('dark-mode');
             applyTheme(isDarkMode ? 'light' : 'dark');
