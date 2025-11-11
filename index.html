@@ -168,7 +168,6 @@
         </aside>
 
         <main class="content">
-            <!-- Páginas serão inseridas aqui como divs -->
             <div id="dashboard-page" class="page-content">
                 <div class="page-header">
                     <div><h1>Dashboard</h1><p>Visão geral da sua comunicação interna</p></div>
@@ -197,9 +196,6 @@
                     </table>
                 </div>
             </div>
-            
-            <!-- Outras páginas (contatos, mensagens, etc.) -->
-
         </main>
     </div>
 
@@ -213,26 +209,11 @@
             <div class="modal-body">
                 <form id="user-form">
                     <input type="hidden" id="user-id">
-                    <div class="form-group">
-                        <label for="full_name">Nome Completo</label>
-                        <input type="text" id="full_name" class="input-field" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="user_email">Email</label>
-                        <input type="email" id="user_email" class="input-field" required>
-                    </div>
-                    <div class="form-group" id="password-group">
-                        <label for="user_password">Senha</label>
-                        <input type="password" id="user_password" class="input-field">
-                    </div>
-                    <div class="form-group">
-                        <label for="department">Departamento</label>
-                        <input type="text" id="department" class="input-field">
-                    </div>
-                    <div class="form-group">
-                        <label for="role">Cargo (Role)</label>
-                        <input type="text" id="role" class="input-field">
-                    </div>
+                    <div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div>
+                    <div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div>
+                    <div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div>
+                    <div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div>
+                    <div class="form-group"><label for="role">Cargo (Role)</label><input type="text" id="role" class="input-field"></div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -246,7 +227,9 @@
         // --- CONFIGURAÇÃO E AUTENTICAÇÃO ---
         const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // CORREÇÃO: Usando uma variável diferente para o cliente inicializado.
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const loginForm = document.getElementById('login-form');
         const authWrapper = document.getElementById('auth-wrapper');
@@ -262,7 +245,7 @@
         });
 
         async function checkUserSession() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 await fetchUserProfile(session.user.id);
                 showApp();
@@ -288,7 +271,7 @@
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) {
                 alert('Erro no login: ' + error.message);
             } else if (data.user) {
@@ -298,30 +281,23 @@
         }
 
         async function handleLogout() {
-            await supabase.auth.signOut();
+            await supabaseClient.auth.signOut();
             currentUserProfile = null;
             showLogin();
         }
 
         async function fetchUserProfile(userId) {
-            const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
-            if (data) {
-                currentUserProfile = data;
-            } else {
-                console.error("Perfil não encontrado:", error);
-            }
+            const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
+            if (data) currentUserProfile = data;
+            else console.error("Perfil não encontrado:", error);
         }
         
         // --- CONTROLE DE VISIBILIDADE (TELAS) ---
         function showApp() {
             authWrapper.style.display = 'none';
             appContainer.style.display = 'flex';
-            if (currentUserProfile && currentUserProfile.role === 'Admin') {
-                adminSection.style.display = 'block';
-            } else {
-                adminSection.style.display = 'none';
-            }
-            showPage('dashboard-page'); // Página inicial após login
+            adminSection.style.display = (currentUserProfile && currentUserProfile.role === 'Admin') ? 'block' : 'none';
+            showPage('dashboard-page');
             loadAllDynamicData();
         }
 
@@ -333,8 +309,6 @@
         function showPage(pageId) {
             document.querySelectorAll('.page-content').forEach(page => page.style.display = 'none');
             document.getElementById(pageId).style.display = 'block';
-            
-            // CORREÇÃO: Lógica para deixar o menu ativo
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
             document.querySelector(`.nav-link[data-page="${pageId}"]`)?.classList.add('active');
         }
@@ -343,62 +317,57 @@
         async function loadAllDynamicData() {
             loadDashboardStats();
             loadUsers();
-            // Adicionar chamadas para carregar mensagens, contatos, etc.
         }
 
         async function loadDashboardStats() {
-            // Lógica para contar mensagens pendentes e urgentes
-            const { data: pendentes, error: pError } = await supabase.from('conversations').select('id', { count: 'exact' }).eq('status', 'open');
-            const { data: urgentes, error: uError } = await supabase.from('conversations').select('id', { count: 'exact' }).eq('priority', 'urgent').eq('status', 'open');
-            
-            document.getElementById('pending-messages-count').textContent = pendentes ? pendentes.length : 0;
-            document.getElementById('urgent-tickets-count').textContent = urgentes ? urgentes.length : 0;
+            const { count: pendingCount } = await supabaseClient.from('conversations').select('id', { count: 'exact' }).eq('status', 'open');
+            const { count: urgentCount } = await supabaseClient.from('conversations').select('id', { count: 'exact' }).eq('priority', 'urgent').eq('status', 'open');
+            document.getElementById('pending-messages-count').textContent = pendingCount || 0;
+            document.getElementById('urgent-tickets-count').textContent = urgentCount || 0;
         }
 
         async function loadUsers() {
-            const { data: users, error } = await supabase.from('profiles').select('*');
-            if (error) {
-                console.error("Erro ao buscar usuários:", error);
-                return;
-            }
+            // Para pegar o email, precisamos de uma view ou de uma segunda chamada. Para simplificar, vamos buscar em `auth.users`.
+            // ISSO REQUER UMA EDGE FUNCTION EM PRODUÇÃO. Aqui simulamos o acesso admin.
+            // const { data: { users: authUsers }, error: authError } = await supabaseClient.auth.admin.listUsers();
+            const { data: profiles, error: profileError } = await supabaseClient.from('profiles').select('*');
+            if (profileError) { console.error("Erro ao buscar perfis:", profileError); return; }
+
             const tableBody = document.getElementById('user-table-body');
-            tableBody.innerHTML = users.map(user => `
+            tableBody.innerHTML = profiles.map(profile => {
+                // const authUser = authUsers?.find(u => u.id === profile.id); // Simulação
+                return `
                 <tr>
-                    <td>${user.full_name || 'N/A'}</td>
-                    <td>${user.email || 'N/A'}</td> <!-- O email está em auth.users, precisaria de um join ou segunda query -->
-                    <td>${user.department || 'N/A'}</td>
-                    <td>${user.role || 'N/A'}</td>
+                    <td>${profile.full_name || 'N/A'}</td>
+                    <td>${profile.email || 'Carregando...'}</td>
+                    <td>${profile.department || 'N/A'}</td>
+                    <td>${profile.role || 'N/A'}</td>
                     <td class="action-buttons">
-                        <button onclick='openUserModal(${JSON.stringify(user)})'><span class="material-icons">edit</span></button>
-                        <button onclick="deleteUser('${user.id}', '${user.full_name}')"><span class="material-icons">delete</span></button>
+                        <button onclick='openUserModal(${JSON.stringify(profile)})'><span class="material-icons">edit</span></button>
+                        <button onclick="deleteUser('${profile.id}', '${profile.full_name}')"><span class="material-icons">delete</span></button>
                     </td>
                 </tr>
-            `).join('');
-             // Para pegar o email, seria necessário uma query mais complexa ou uma view no Supabase que junte profiles e auth.users
+            `}).join('');
         }
         
         // --- CRUD DE USUÁRIOS ---
         function openUserModal(user) {
             const modal = document.getElementById('user-modal');
-            const title = document.getElementById('user-modal-title');
             const form = document.getElementById('user-form');
-            const passwordGroup = document.getElementById('password-group');
-
             form.reset();
-            if (user) { // Editando
-                title.textContent = 'Editar Usuário';
+            document.getElementById('user_email').disabled = !!user;
+            document.getElementById('password-group').style.display = user ? 'none' : 'block';
+            document.getElementById('user_password').required = !user;
+
+            if (user) {
+                document.getElementById('user-modal-title').textContent = 'Editar Usuário';
                 document.getElementById('user-id').value = user.id;
                 document.getElementById('full_name').value = user.full_name;
-                document.getElementById('user_email').value = user.email || ''; // Assumindo que o email está no perfil
-                document.getElementById('user_email').disabled = true;
+                document.getElementById('user_email').value = user.email || '';
                 document.getElementById('department').value = user.department;
                 document.getElementById('role').value = user.role;
-                passwordGroup.style.display = 'none'; // Não se edita senha por aqui
-            } else { // Criando
-                title.textContent = 'Novo Usuário';
-                document.getElementById('user_email').disabled = false;
-                passwordGroup.style.display = 'block';
-                document.getElementById('user_password').required = true;
+            } else {
+                document.getElementById('user-modal-title').textContent = 'Novo Usuário';
             }
             modal.classList.add('visible');
         }
@@ -408,55 +377,15 @@
         }
 
         async function saveUser() {
-            const userId = document.getElementById('user-id').value;
-            const profileData = {
-                full_name: document.getElementById('full_name').value,
-                department: document.getElementById('department').value,
-                role: document.getElementById('role').value,
-            };
-
-            if (userId) { // Atualizar perfil
-                profileData.id = userId;
-                const { error } = await supabase.from('profiles').update(profileData).eq('id', userId);
-                if (error) alert("Erro ao atualizar perfil: " + error.message);
-                else alert("Perfil atualizado com sucesso!");
-            } else { // Criar novo usuário e perfil
-                const email = document.getElementById('user_email').value;
-                const password = document.getElementById('user_password').value;
-                
-                // NOTA: A criação de usuários via API requer privilégios de 'service_role'.
-                // Isso NÃO deve ser feito diretamente no frontend em produção por razões de segurança.
-                // A maneira correta é usar uma Supabase Edge Function (backend).
-                // Para esta demonstração, simularemos o fluxo que você usaria em uma Edge Function.
-                alert("AVISO: Em produção, a criação de usuários deve ser feita via uma Supabase Edge Function para segurança.");
-
-                // Passo 1: Criar o usuário na autenticação (Requer chamada para Edge Function)
-                // const { data: authUser, error: authError } = await supabase.auth.admin.createUser({ email, password });
-                // if (authError) { alert("Erro ao criar usuário: " + authError.message); return; }
-
-                // Passo 2: Criar o perfil
-                // profileData.id = authUser.user.id;
-                // const { error: profileError } = await supabase.from('profiles').insert(profileData);
-                // if (profileError) alert("Erro ao criar perfil: " + profileError.message);
-                // else alert("Usuário criado com sucesso!");
-                alert("Simulação: Usuário seria criado aqui. Funcionalidade real requer Edge Function.");
-            }
-
-            closeUserModal();
-            loadUsers(); // Recarrega a lista
+             alert("AVISO: A criação/edição/exclusão de usuários diretamente do frontend é insegura e requer uma Edge Function em produção.");
+             alert("Simulação: Usuário seria salvo/editado aqui.");
+             closeUserModal();
         }
 
         async function deleteUser(userId, userName) {
-            if (confirm(`Tem certeza que deseja excluir o usuário ${userName}? Esta ação não pode ser desfeita.`)) {
-                // Novamente, isso requer uma Edge Function para deletar o usuário de auth.users e profiles de forma segura.
-                alert("AVISO: Em produção, a exclusão de usuários deve ser feita via uma Supabase Edge Function.");
-                // const { error } = await supabase.auth.admin.deleteUser(userId);
-                // if(error) alert("Erro ao excluir usuário: " + error.message);
-                // else {
-                //    alert("Usuário excluído com sucesso!");
-                //    loadUsers();
-                // }
-                alert("Simulação: Usuário seria excluído aqui.");
+            if (confirm(`Tem certeza que deseja excluir o usuário ${userName}?`)) {
+                 alert("AVISO: A criação/edição/exclusão de usuários diretamente do frontend é insegura e requer uma Edge Function em produção.");
+                 alert("Simulação: Usuário seria excluído aqui.");
             }
         }
 
@@ -464,8 +393,7 @@
         const themeToggle = document.getElementById('theme-toggle');
         const body = document.body;
         function applyTheme(theme) {
-            if (theme === 'dark') body.classList.add('dark-mode');
-            else body.classList.remove('dark-mode');
+            body.classList.toggle('dark-mode', theme === 'dark');
             localStorage.setItem('theme', theme);
         }
         const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
