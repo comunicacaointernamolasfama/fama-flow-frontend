@@ -58,6 +58,7 @@
             justify-content: center;
             cursor: pointer;
             box-shadow: var(--shadow);
+            z-index: 10;
         }
         .theme-toggle svg {
             color: var(--color-text-secondary);
@@ -65,7 +66,6 @@
         #icon-sun { display: none; }
         .dark-mode #icon-sun { display: block; }
         .dark-mode #icon-moon { display: none; }
-
 
         .login-container {
             width: 100%;
@@ -76,6 +76,10 @@
             border-radius: 12px;
             box-shadow: var(--shadow);
             border: 1px solid var(--color-border);
+        }
+        
+        .dark-mode .login-logo {
+            /* Garante que a logo seja visível no modo escuro, se necessário */
         }
 
         .login-logo {
@@ -97,7 +101,7 @@
         .input-field {
             width: 100%;
             padding: 1rem 1rem 1rem 3rem;
-            background-color: var(--color-background); /* Fundo do input igual ao da página */
+            background-color: var(--color-background);
             border: 1px solid var(--color-border);
             border-radius: 8px;
             color: var(--color-text-primary);
@@ -159,17 +163,84 @@
     
     <!-- Estrutura HTML da Tela de Login -->
     <div id="auth-container" class="login-container">
-        <!-- Conteúdo do Login -->
+        <img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo">
+        <p class="login-subtitle">Comunicação interna Molas Fama</p>
+        
+        <form id="login-form">
+            <div class="input-group">
+                <span class="input-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M.05 3.555A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.555L8 8.414.05 3.555ZM0 4.697v7.104l5.803-3.558L0 4.697ZM6.761 8.83l-6.57 4.027A2 2 0 0 0 2 14h12a2 2 0 0 0 1.808-1.144l-6.57-4.027L8 9.586l-1.239-.757Zm3.436-.586L16 11.801V4.697l-5.803 3.558Z"/></svg>
+                </span>
+                <input type="email" id="email" class="input-field" placeholder="Email" required>
+            </div>
+            
+            <div class="input-group">
+                <span class="input-icon">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+                </span>
+                <input type="password" id="password" class="input-field" placeholder="Senha" required>
+            </div>
+            
+            <button type="submit" class="btn-primary">Entrar</button>
+        </form>
+
+        <a href="#" class="forgot-password-link">Esqueci minha senha</a>
     </div>
 
     <!-- Container do App (visível após login) -->
     <div id="app-container" style="display: none;">
-        <!-- Conteúdo do App -->
+        <h2>Bem-vindo ao Fama Flow!</h2>
+        <p>Login realizado com sucesso.</p>
+        <button id="logout-button">Sair</button>
     </div>
 
     <!-- Lógica JavaScript com suas chaves e lógica de tema -->
     <script>
-        // ... (todo o seu código de login do Supabase permanece aqui) ...
+        const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const loginForm = document.getElementById('login-form');
+        const authContainer = document.getElementById('auth-container');
+        const appContainer = document.getElementById('app-container');
+        const logoutButton = document.getElementById('logout-button');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                alert('Erro no login: ' + error.message);
+            } else {
+                showApp();
+            }
+        });
+        
+        logoutButton.addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            showLogin();
+        });
+
+        function showApp() {
+            authContainer.style.display = 'none';
+            appContainer.style.display = 'block';
+        }
+        
+        function showLogin() {
+            appContainer.style.display = 'none';
+            authContainer.style.display = 'block';
+        }
+
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                showApp();
+            } else {
+                showLogin();
+            }
+        });
 
         // LÓGICA DO TEMA
         const themeToggle = document.getElementById('theme-toggle');
@@ -178,7 +249,9 @@
         // Verifica se há um tema salvo no localStorage
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) {
-            body.classList.add(savedTheme);
+            if (savedTheme === 'dark-mode') {
+                body.classList.add('dark-mode');
+            }
         } else {
             // Se não houver tema salvo, usa o Dark Mode como padrão inicial
             body.classList.add('dark-mode');
