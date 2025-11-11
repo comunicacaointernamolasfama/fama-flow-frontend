@@ -1,138 +1,200 @@
-<!-- Incluir a biblioteca do Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- Estilização Básica para Deixar Mais Apresentável -->
-<style>
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    margin: 0;
-    background-color: #f4f4f9;
-  }
-  #auth-container, #app-container {
-    width: 100%;
-    max-width: 400px;
-    padding: 2rem;
-    background-color: white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    text-align: center;
-  }
-  h2 {
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-    color: #333;
-  }
-  input {
-    display: block;
-    width: 100%;
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box; /* Garante que o padding não aumente a largura */
-  }
-  button {
-    width: 100%;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 4px;
-    background-color: #007bff;
-    color: white;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-  button:hover {
-    background-color: #0056b3;
-  }
-  #logout-button {
-    background-color: #dc3545;
-  }
-  #logout-button:hover {
-    background-color: #c82333;
-  }
-</style>
-
-<!-- Estrutura HTML -->
-<div id="auth-container">
-  <h2>Login Fama Flow</h2>
-  <form id="login-form">
-    <input type="email" id="email" placeholder="Seu email" required value="everton.mereles.teste@email.com" />
-    <input type="password" id="password" placeholder="Sua senha" required value="senha-forte-de-teste" />
-    <button type="submit">Entrar</button>
-  </form>
-</div>
-<div id="app-container" style="display: none;">
-  <h2>Bem-vindo ao Fama Flow!</h2>
-  <p>Login realizado com sucesso.</p>
-  <button id="logout-button">Sair</button>
-</div>
-
-<!-- Lógica JavaScript com suas chaves -->
-<script>
-  // =======================================================
-  // PASSO 1: INICIALIZAÇÃO (SEMPRE PRIMEIRO)
-  // =======================================================
-  const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  // =======================================================
-  // PASSO 2: MAPEAMENTO DOS ELEMENTOS HTML
-  // =======================================================
-  const loginForm = document.getElementById('login-form');
-  const authContainer = document.getElementById('auth-container');
-  const appContainer = document.getElementById('app-container');
-  const logoutButton = document.getElementById('logout-button');
-
-  // =======================================================
-  // PASSO 3: DEFINIÇÃO DAS FUNÇÕES
-  // =======================================================
-  function showApp() {
-    authContainer.style.display = 'none';
-    appContainer.style.display = 'block';
-  }
-  
-  function showLogin() {
-    appContainer.style.display = 'none';
-    authContainer.style.display = 'block';
-  }
-
-  // =======================================================
-  // PASSO 4: ADICIONAR OS "OUVINTES" DE EVENTOS
-  // =======================================================
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fama Flow</title>
+    <!-- Incluir a biblioteca do Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    <!-- Estilização (Recriando o design do Bolt) -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    if (error) {
-      alert('Erro no login: ' + error.message);
-    } else {
-      showApp();
-    }
-  });
-  
-  logoutButton.addEventListener('click', async () => {
-    await supabase.auth.signOut();
-    showLogin();
-  });
+        :root {
+            /* Paleta Dark Mode (Padrão) */
+            --color-background: #121212;
+            --color-surface: #1E1E1E;
+            --color-text-primary: #FFFFFF;
+            --color-text-secondary: #A8A8A8;
+            --color-brand-primary: #D81920;
+            --color-border: #383838;
+        }
 
-  // =======================================================
-  // PASSO 5: VERIFICAÇÃO INICIAL DO ESTADO DE LOGIN
-  // =======================================================
-  // Verifica se o usuário já está logado ao carregar a página
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (session) {
-      showApp();
-    } else {
-      showLogin();
-    }
-  });
-</script>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: var(--color-background);
+            color: var(--color-text-primary);
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem;
+            text-align: center;
+        }
+
+        .login-logo {
+            max-width: 180px;
+            margin-bottom: 1rem;
+        }
+
+        .login-subtitle {
+            color: var(--color-text-secondary);
+            margin-bottom: 2.5rem;
+            font-size: 1rem;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            background-color: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            color: var(--color-text-primary);
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-secondary);
+            pointer-events: none; /* Impede que o ícone bloqueie o clique no input */
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--color-brand-primary);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .forgot-password-link {
+            display: block;
+            margin-top: 1.5rem;
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .forgot-password-link:hover {
+            text-decoration: underline;
+        }
+
+        #app-container {
+            padding: 2rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Estrutura HTML da Tela de Login -->
+    <div id="auth-container" class="login-container">
+        <img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo">
+        <p class="login-subtitle">Comunicação interna Molas Fama</p>
+        
+        <form id="login-form">
+            <div class="input-group">
+                <span class="input-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M.05 3.555A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.555L8 8.414.05 3.555ZM0 4.697v7.104l5.803-3.558L0 4.697ZM6.761 8.83l-6.57 4.027A2 2 0 0 0 2 14h12a2 2 0 0 0 1.808-1.144l-6.57-4.027L8 9.586l-1.239-.757Zm3.436-.586L16 11.801V4.697l-5.803 3.558Z"/></svg>
+                </span>
+                <input type="email" id="email" class="input-field" placeholder="Email" required>
+            </div>
+            
+            <div class="input-group">
+                <span class="input-icon">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/></svg>
+                </span>
+                <input type="password" id="password" class="input-field" placeholder="Senha" required>
+            </div>
+            
+            <button type="submit" class="btn-primary">Entrar</button>
+        </form>
+
+        <a href="#" class="forgot-password-link">Esqueci minha senha</a>
+    </div>
+
+    <!-- Container do App (visível após login) -->
+    <div id="app-container" style="display: none;">
+        <h2>Bem-vindo ao Fama Flow!</h2>
+        <p>Login realizado com sucesso.</p>
+        <button id="logout-button">Sair</button>
+    </div>
+
+    <!-- Lógica JavaScript com suas chaves -->
+    <script>
+        const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // O resto da sua lógica de login permanece igual...
+        const loginForm = document.getElementById('login-form');
+        const authContainer = document.getElementById('auth-container');
+        const appContainer = document.getElementById('app-container');
+        const logoutButton = document.getElementById('logout-button');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                alert('Erro no login: ' + error.message);
+            } else {
+                // Ao logar com sucesso, redireciona para a página do dashboard (ou renderiza o app)
+                // Por enquanto, apenas mostraremos o container do app
+                showApp();
+            }
+        });
+        
+        logoutButton.addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            showLogin();
+        });
+
+        function showApp() {
+            authContainer.style.display = 'none';
+            appContainer.style.display = 'block';
+        }
+        
+        function showLogin() {
+            appContainer.style.display = 'none';
+            authContainer.style.display = 'block';
+        }
+
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                showApp();
+            } else {
+                showLogin();
+            }
+        });
+    </script>
+</body>
+</html>
