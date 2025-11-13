@@ -101,7 +101,6 @@
         <span class="material-icons" id="icon-moon">dark_mode</span>
         <span class="material-icons" id="icon-sun">light_mode</span>
     </button>
-
     <script>
         const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
@@ -149,11 +148,9 @@
             const logoutButton = document.getElementById('logout-button');
             const newMessageForm = document.getElementById('new-message-form');
             const newUserButton = document.getElementById('btn-new-user');
-
             if (logoutButton) logoutButton.addEventListener('click', handleLogout);
             if (newMessageForm) newMessageForm.addEventListener('submit', sendMessage);
             if (newUserButton) newUserButton.addEventListener('click', () => openUserModal(null));
-
             document.querySelectorAll('.nav-link[data-page]').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -241,7 +238,6 @@
                 if (!password) { alert("A senha é obrigatória para criar um novo usuário."); return; }
                 
                 let newUserId;
-
                 const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({ email: email, password: password, email_confirm: true });
 
                 if (authError) {
@@ -261,16 +257,15 @@
                     newUserId = authData.user.id;
                 }
 
-                const { error: profileError } = await supabaseClient.from('profiles').insert({ id: newUserId, full_name: fullName, department: department, role: role });
+                // Espera um pouco para garantir que o trigger do Supabase (se existir) seja executado
+                await new Promise(resolve => setTimeout(resolve, 500)); 
 
+                const { error: profileError } = await supabaseClient.from('profiles').upsert({ id: newUserId, full_name: fullName, department: department, role: role });
+                
                 if (profileError) {
-                    if (profileError.message.includes('duplicate key')) {
-                        alert('Erro: Este usuário já possui um perfil. Apenas a autenticação foi criada/verificada.');
-                    } else {
-                        alert("Erro ao criar perfil do usuário: " + profileError.message);
-                    }
+                    alert("Erro ao criar/atualizar perfil do usuário: " + profileError.message);
                 } else {
-                    alert("Usuário e perfil criados com sucesso!");
+                    alert("Usuário criado com sucesso!");
                 }
             }
             closeUserModal();
