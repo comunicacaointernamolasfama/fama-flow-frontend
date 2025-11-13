@@ -44,7 +44,7 @@
         .page-content { display: none; } .page-content.active { display: block; }
         .card { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
         .grid { display: grid; gap: 1.5rem; } .grid-cols-2 { grid-template-columns: repeat(2, 1fr); } .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-        .btn { padding: 0.6rem 1.2rem; /* Botão "+ Novo Usuário" um pouco menor */ border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; border: none; transition: background-color 0.2s, opacity 0.2s;}
+        .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; border: none; transition: background-color 0.2s, opacity 0.2s;}
         .btn:hover { opacity: 0.9; }
         .btn .material-icons { margin-right: 0.5rem; font-size: 20px;}
         .btn-secondary { background-color: var(--color-surface); color: var(--color-text-primary); border: 1px solid var(--color-border); }
@@ -56,9 +56,7 @@
         .stat-card-header .material-icons { margin-right: 0.75rem; }
         .stat-card-value { font-size: 2.5rem; font-weight: 700; }
         .stat-card.card-warning { background-color: var(--color-warning-bg); color: var(--color-warning); border-color: var(--color-warning); }
-        .stat-card.card-warning .stat-card-header { color: var(--color-warning); }
         .stat-card.card-danger { background-color: var(--color-danger-bg); color: var(--color-danger); border-color: var(--color-danger); }
-        .stat-card.card-danger .stat-card-header { color: var(--color-danger); }
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table th, .data-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--color-border); }
         .data-table th { font-weight: 600; color: var(--color-text-secondary); }
@@ -72,21 +70,7 @@
         .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
         .modal-footer { text-align: right; margin-top: 1.5rem; }
         
-        /* --- Estilo Pop-up de Nova Mensagem --- */
-        #new-message-popup {
-            position: fixed;
-            bottom: 0;
-            right: 10rem;
-            width: 500px;
-            background-color: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-top-left-radius: 12px;
-            border-top-right-radius: 12px;
-            box-shadow: 0 -5px 25px rgba(0,0,0,0.1);
-            z-index: 1001;
-            display: none; /* Começa oculto */
-            flex-direction: column;
-        }
+        #new-message-popup { position: fixed; bottom: 0; right: 10rem; width: 500px; background-color: var(--color-surface); border: 1px solid var(--color-border); border-top-left-radius: 12px; border-top-right-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); z-index: 1001; display: none; flex-direction: column; }
         #new-message-popup.visible { display: flex; }
         .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background-color: var(--color-background); border-bottom: 1px solid var(--color-border); }
         .popup-header h3 { margin: 0; font-size: 1rem; }
@@ -95,8 +79,22 @@
         .popup-body .input-field { padding: 0.75rem; }
         .popup-body .form-group { margin-bottom: 1rem; }
         .popup-footer { padding: 1rem; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
+        .popup-footer-options button { background: none; border: none; color: var(--color-text-secondary); cursor: pointer; }
+        #popup-advanced-options { display: none; padding: 1rem; border-top: 1px solid var(--color-border); background-color: var(--color-background); }
+        .message-type-selector, .urgency-selector { display: flex; gap: 1rem; }
+        .message-type-selector label { flex: 1; display: block; text-align: center; padding: 0.5rem; border: 1px solid var(--color-border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background-color: var(--color-surface); }
+        .message-type-selector input[type="radio"] { display: none; }
+        .message-type-selector input[type="radio"]:checked + label { background-color: var(--color-info-bg); border-color: var(--color-info); color: var(--color-info); font-weight: 600; }
+        .urgency-selector .btn { flex: 1; justify-content: center; }
+        .custom-checkbox { display: flex; align-items: center; gap: 0.75rem; }
+        .custom-checkbox input[type="checkbox"] { display: none; }
+        .custom-checkbox .checkbox-box { width: 20px; height: 20px; border: 2px solid var(--color-border); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .custom-checkbox .checkbox-box .material-icons { font-size: 16px; color: white; transform: scale(0); transition: transform 0.2s; }
+        .custom-checkbox input[type="checkbox"]:checked + .checkbox-box { background-color: var(--color-info); border-color: var(--color-info); }
+        .custom-checkbox input[type="checkbox"]:checked + .checkbox-box .material-icons { transform: scale(1); }
+        #prazo_container { display: flex; align-items: center; gap: 1rem; max-width: 250px; }
+        .form-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
 
-        /* Estilos do Editor Quill.js */
         #editor-container { background-color: var(--color-surface); }
         .ql-toolbar { border-top-left-radius: 8px; border-top-right-radius: 8px; background-color: var(--color-background); border: 1px solid var(--color-border) !important; border-bottom: none !important; }
         .ql-container { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; border: 1px solid var(--color-border) !important; min-height: 150px; font-size: 1rem; }
@@ -115,31 +113,35 @@
         <span class="material-icons" id="icon-sun">light_mode</span>
     </button>
     
-    <!-- Pop-up de Nova Mensagem (fora do #root para ficar por cima de tudo) -->
     <div id="new-message-popup">
         <div class="popup-header">
             <h3>Nova Mensagem</h3>
             <button onclick="closeNewMessagePopup()"><span class="material-icons">close</span></button>
         </div>
-        <div class="popup-body">
-            <form id="new-message-form">
-                 <div class="form-group"><input type="text" id="destinatario" class="input-field" placeholder="Para: Pesquisar por nome ou departamento..."></div>
-                 <div class="form-group"><input type="text" id="assunto" class="input-field" placeholder="Assunto"></div>
-                 <div class="form-group">
-                    <div id="editor-toolbar">
-                        <span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button></span>
-                        <span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span>
-                        <span class="ql-formats"><button class="ql-link"></button><button id="custom-attach-button"><span class="material-icons">attach_file</span></button></span>
-                    </div>
+        <form id="new-message-form">
+            <div class="popup-body">
+                <div class="form-group"><input type="text" id="destinatario" class="input-field" placeholder="Para: Pesquisar por nome ou departamento..."></div>
+                <div class="form-group"><input type="text" id="assunto" class="input-field" placeholder="Assunto"></div>
+                <div class="form-group">
+                    <div id="editor-toolbar"><span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button></span><span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span><span class="ql-formats"><button class="ql-link"></button><button id="custom-attach-button"><span class="material-icons">attach_file</span></button></span></div>
                     <div id="editor-container"></div>
                     <input type="file" id="file-upload-input" style="display: none;" onchange="handleFileUpload(event)">
-                 </div>
-            </form>
-        </div>
-        <div class="popup-footer">
-            <button type="submit" form="new-message-form" class="btn btn-danger">Enviar</button>
-            <!-- Futuramente, adicionar opções de chamado aqui -->
-        </div>
+                </div>
+            </div>
+            <!-- SEÇÃO DE OPÇÕES AVANÇADAS (OCULTA) -->
+            <div id="popup-advanced-options">
+                <div class="form-group"><label>Tipo de Mensagem</label><div class="message-type-selector"><div><input type="radio" id="tipo-simples" name="message-type" value="message" checked onchange="toggleChamadoFields()"><label for="tipo-simples">Mensagem Simples</label></div><div><input type="radio" id="tipo-chamado" name="message-type" value="ticket" onchange="toggleChamadoFields()"><label for="tipo-chamado">Chamado Formal</label></div></div></div>
+                <div id="chamado-fields" style="display:none;"><div class="form-group"><label for="due_date">Prazo para Resposta</label><div id="prazo_container"><input type="date" id="due_date" class="input-field"></div></div></div>
+                <div class="form-group"><label>Nível de Urgência</label><div class="urgency-selector"><button type="button" class="btn btn-success active" data-priority="normal">Normal</button><button type="button" class="btn btn-secondary" data-priority="important">Importante</button><button type="button" class="btn btn-secondary" data-priority="urgent">Urgente</button></div></div>
+                <div class="form-group"><label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label></div>
+            </div>
+            <div class="popup-footer">
+                <button type="submit" class="btn btn-danger">Enviar</button>
+                <div class="popup-footer-options">
+                    <button id="toggle-advanced-options" title="Mais opções"><span class="material-icons">more_vert</span></button>
+                </div>
+            </div>
+        </form>
     </div>
 
     <script>
@@ -190,11 +192,13 @@
             const newMessageForm = document.getElementById('new-message-form');
             const newUserButton = document.getElementById('btn-new-user');
             const fab = document.getElementById('fab-new-message');
+            const toggleAdvancedBtn = document.getElementById('toggle-advanced-options');
 
             if (logoutButton) logoutButton.addEventListener('click', handleLogout);
             if (newMessageForm) newMessageForm.addEventListener('submit', sendMessage);
             if (newUserButton) newUserButton.addEventListener('click', () => openUserModal(null));
             if (fab) fab.addEventListener('click', openNewMessagePopup);
+            if (toggleAdvancedBtn) toggleAdvancedBtn.addEventListener('click', toggleAdvancedOptions);
 
             document.querySelectorAll('.nav-link[data-page]').forEach(link => {
                 link.addEventListener('click', (e) => {
@@ -202,11 +206,27 @@
                     showPage(e.currentTarget.dataset.page);
                 });
             });
+            document.querySelectorAll('.urgency-selector .btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const selectedPriority = e.currentTarget.dataset.priority;
+                    document.querySelectorAll('.urgency-selector .btn').forEach(btn => {
+                        btn.classList.remove('btn-success', 'btn-warning', 'btn-danger', 'active');
+                        btn.classList.add('btn-secondary');
+                    });
+                    const clickedButton = e.currentTarget;
+                    clickedButton.classList.remove('btn-secondary');
+                    clickedButton.classList.add('active');
+                    if (selectedPriority === 'normal') clickedButton.classList.add('btn-success');
+                    else if (selectedPriority === 'important') clickedButton.classList.add('btn-warning');
+                    else if (selectedPriority === 'urgent') clickedButton.classList.add('btn-danger');
+                });
+            });
         }
         
         function initializeQuillEditor() {
             const editorContainer = document.getElementById('editor-container');
-            if (editorContainer && !quillEditor) { // Previne reinicialização
+            if (editorContainer && !quillEditor) {
                 quillEditor = new Quill('#editor-container', {
                     modules: { toolbar: '#editor-toolbar' },
                     placeholder: 'Escreva sua mensagem...',
@@ -214,23 +234,17 @@
                 });
                 const attachButton = document.getElementById('custom-attach-button');
                 if(attachButton) {
-                    attachButton.addEventListener('click', () => {
+                    attachButton.addEventListener('click', (e) => {
+                        e.preventDefault();
                         document.getElementById('file-upload-input').click();
                     });
                 }
             }
         }
-
-        function openNewMessagePopup() {
-            document.getElementById('new-message-popup').classList.add('visible');
-        }
-
-        function closeNewMessagePopup() {
-            document.getElementById('new-message-popup').classList.remove('visible');
-            // Opcional: Limpar campos ao fechar
-            document.getElementById('new-message-form').reset();
-            if (quillEditor) quillEditor.setContents([]);
-        }
+        
+        function openNewMessagePopup() { document.getElementById('new-message-popup').classList.add('visible'); }
+        function closeNewMessagePopup() { document.getElementById('new-message-popup').classList.remove('visible'); document.getElementById('new-message-form').reset(); if (quillEditor) quillEditor.setContents([]); document.getElementById('popup-advanced-options').style.display = 'none'; }
+        function toggleAdvancedOptions(e) { e.preventDefault(); const optionsDiv = document.getElementById('popup-advanced-options'); optionsDiv.style.display = optionsDiv.style.display === 'block' ? 'none' : 'block'; }
 
         async function handleLogin(e) { e.preventDefault(); const email = document.getElementById('email').value; const password = document.getElementById('password').value; const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password }); if (error) { alert('Erro no login: ' + error.message); } else if (data.user) { await fetchUserProfile(data.user.id); renderAppLayout(); } }
         async function handleLogout() { await supabaseClient.auth.signOut(); currentUserProfile = null; renderAuthLayout(); }
@@ -258,6 +272,7 @@
             if(tableBody) tableBody.innerHTML = users.map(user => `<tr><td>${user.full_name || 'N/A'}</td><td>${user.email || 'N/A'}</td><td>${user.department || 'N/A'}</td><td>${user.role || 'N/A'}</td><td class="action-buttons"><button onclick='openUserModal(${JSON.stringify(user)})'><span class="material-icons">edit</span></button><button onclick="deleteUser('${user.id}', '${user.full_name}')"><span class="material-icons">delete</span></button></td></tr>`).join('');
         }
         
+        function toggleChamadoFields() { const isChamado = document.getElementById('tipo-chamado').checked; document.getElementById('chamado-fields').style.display = isChamado ? 'block' : 'none'; }
         function openUserModal(user) { const modal = document.querySelector('#app-container #user-modal'); const form = document.getElementById('user-form'); form.reset(); const userEmailField = document.getElementById('user_email'); const passwordGroup = document.getElementById('password-group'); userEmailField.disabled = !!user; passwordGroup.style.display = user ? 'none' : 'block'; document.getElementById('user_password').required = !user; if (user) { document.getElementById('user-modal-title').textContent = 'Editar Usuário'; document.getElementById('user-id').value = user.id; document.getElementById('full_name').value = user.full_name; userEmailField.value = user.email || ''; document.getElementById('department').value = user.department; document.getElementById('role').value = user.role; } else { document.getElementById('user-modal-title').textContent = 'Novo Usuário'; } modal.classList.add('visible'); }
         function closeUserModal() { const modal = document.querySelector('#app-container #user-modal'); if (modal) modal.classList.remove('visible'); }
         
@@ -268,7 +283,6 @@
             const role = document.getElementById('role').value;
             const email = document.getElementById('user_email').value;
             const password = document.getElementById('user_password').value;
-
             if (userId) {
                 const { error } = await supabaseClient.from('profiles').update({ full_name: fullName, department: department, role: role }).eq('id', userId);
                 if (error) { alert("Erro ao atualizar perfil: " + error.message); } else { alert("Perfil atualizado com sucesso!"); }
@@ -284,10 +298,7 @@
                         newUserId = user.id;
                     } else { alert("Erro ao criar usuário: " + authError.message); return; }
                 } else { newUserId = authData.user.id; }
-                
-                // Aguarda para garantir que o trigger (se houver) execute
                 await new Promise(resolve => setTimeout(resolve, 500)); 
-
                 const { error: profileError } = await supabaseClient.from('profiles').upsert({ id: newUserId, full_name: fullName, department: department, role: role });
                 if (profileError) { alert("Erro ao criar/atualizar perfil: " + profileError.message); } 
                 else { alert("Usuário criado com sucesso!"); }
@@ -297,7 +308,7 @@
         }
 
         async function deleteUser(userId, userName) { if (confirm(`Tem certeza de que deseja excluir o usuário ${userName}?`)) { alert("AVISO: A exclusão de usuários (ação de admin) deve ser movida para uma Edge Function em produção."); } }
-        async function sendMessage(e) { e.preventDefault(); if (!currentUserProfile) { alert("Você precisa estar logado."); return; } const subject = document.getElementById('assunto').value; const content = quillEditor.root.innerHTML; const recipientId = document.getElementById('destinatario').value; if (!recipientId) { alert("Por favor, informe um destinatário."); return; } try { const { data: conversationData, error: convError } = await supabaseClient.from('conversations').insert({ subject: subject, type: 'message', status: 'open', priority: 'normal' }).select().single(); if (convError) throw convError; const { error: msgError } = await supabaseClient.from('messages').insert({ conversation_id: conversationData.id, sender_id: currentUserProfile.id, content: content }); if (msgError) throw msgError; const participants = [ { conversation_id: conversationData.id, user_id: currentUserProfile.id }, { conversation_id: conversationData.id, user_id: recipientId } ]; const { error: partError } = await supabaseClient.from('conversation_participants').insert(participants); if (partError) throw partError; alert("Mensagem enviada com sucesso!"); closeNewMessagePopup(); } catch (error) { console.error("Erro ao enviar mensagem:", error); alert("Falha ao enviar mensagem: " + error.message); } }
+        async function sendMessage(e) { e.preventDefault(); if (!currentUserProfile) { alert("Você precisa estar logado."); return; } const subject = document.getElementById('assunto').value; const content = quillEditor.root.innerHTML; const recipientId = document.getElementById('destinatario').value; if (!recipientId) { alert("Por favor, informe um destinatário."); return; } const type = document.getElementById('tipo-chamado').checked ? 'ticket' : 'message'; const priority = document.querySelector('.urgency-selector .btn.active').dataset.priority; const requiresResponse = document.getElementById('requires_response').checked; const dueDate = document.getElementById('due_date').value; try { const { data: conversationData, error: convError } = await supabaseClient.from('conversations').insert({ subject, type, priority, status: 'open', requires_response: requiresResponse, due_date: type === 'ticket' ? dueDate : null }).select().single(); if (convError) throw convError; const { error: msgError } = await supabaseClient.from('messages').insert({ conversation_id: conversationData.id, sender_id: currentUserProfile.id, content: content }); if (msgError) throw msgError; const participants = [ { conversation_id: conversationData.id, user_id: currentUserProfile.id }, { conversation_id: conversationData.id, user_id: recipientId } ]; const { error: partError } = await supabaseClient.from('conversation_participants').insert(participants); if (partError) throw partError; alert("Mensagem enviada com sucesso!"); closeNewMessagePopup(); } catch (error) { console.error("Erro ao enviar mensagem:", error); alert("Falha ao enviar mensagem: " + error.message); } }
         async function handleFileUpload(event) { const file = event.target.files[0]; if (!file) return; const webhookUrl = 'SEU_WEBHOOK_URL_AQUI/famaflow-upload'; const messageId = Date.now(); const formData = new FormData(); formData.append('file', file); try { alert(`Simulando upload do arquivo: ${file.name}`); } catch (error) { console.error('Erro no upload:', error); alert('Erro ao enviar o arquivo.'); } }
         
         const body = document.body;
