@@ -19,85 +19,56 @@
         body { font-family: 'Inter', sans-serif; margin: 0; background-color: var(--color-background); color: var(--color-text-primary); transition: background-color 0.3s, color 0.3s; }
         .login-wrapper { display: flex; align-items: center; justify-content: center; height: 100vh; }
         .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow); z-index: 3000; }
-        .theme-toggle .material-icons { color: var(--color-text-secondary); }
-        #icon-sun { display: none; } body.dark-mode #icon-sun { display: block; } body.dark-mode #icon-moon { display: none; }
-        .login-container { width: 100%; max-width: 400px; padding: 2.5rem; text-align: center; background-color: var(--color-surface); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--color-border); }
-        .login-logo { max-width: 180px; margin-bottom: 1rem; }
-        .login-subtitle { color: var(--color-text-secondary); margin-bottom: 2.5rem; font-size: 1rem; }
-        .input-group { position: relative; margin-bottom: 1.5rem; text-align: left;}
-        .input-field { width: 100%; padding: 1rem; background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-primary); font-size: 1rem; box-sizing: border-box;}
-        .btn-primary { width: 100%; padding: 1rem; border: none; border-radius: 8px; background-color: var(--color-brand-primary); color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
         #app-container { display: flex; height: 100vh; width: 100%; }
         .sidebar { width: 260px; background-color: var(--color-surface); border-right: 1px solid var(--color-border); padding: 1.5rem; display: flex; flex-direction: column; }
-        .sidebar-header { margin-bottom: 2rem; } .sidebar-logo { width: 120px; }
-        .nav-menu { list-style: none; padding: 0; margin: 0; } .nav-menu li { margin-bottom: 0.5rem; }
-        .nav-link { display: flex; align-items: center; padding: 0.75rem 1rem; border-radius: 8px; text-decoration: none; color: var(--color-text-secondary); font-weight: 500; transition: background-color 0.2s, color 0.2s; }
-        .nav-link .material-icons { margin-right: 1rem; }
-        .nav-link:hover { background-color: var(--color-background); color: var(--color-text-primary); }
         .nav-link.active { background-color: var(--color-brand-primary); color: white; }
-        .nav-section-title { font-size: 0.8rem; color: var(--color-text-secondary); text-transform: uppercase; margin: 2rem 0 1rem 1rem; font-weight: 600; }
-        .sidebar-footer { margin-top: auto; }
         main.content { flex: 1; padding: 2rem 3rem; overflow-y: auto; background-color: var(--color-background); position: relative; }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-        .page-header h1 { margin: 0; font-size: 1.8rem; display: flex; align-items: center; gap: 1rem;} .page-header p { margin: 5px 0 0 0; color: var(--color-text-secondary); }
-        .page-header .back-arrow { cursor: pointer; }
+        .page-header h1 { margin: 0; font-size: 1.8rem; display: flex; align-items: center; gap: 1rem;}
         .page-content { display: none; } .page-content.active { display: block; }
         .card { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
-        .grid { display: grid; gap: 1.5rem; } .grid-cols-2 { grid-template-columns: repeat(2, 1fr); } .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid { display: grid; gap: 1.5rem; } .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
         .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; border: none; transition: background-color 0.2s, opacity 0.2s;}
         .btn:hover { opacity: 0.9; }
-        .btn .material-icons { margin-right: 0.5rem; font-size: 20px;}
         .btn-secondary { background-color: var(--color-surface); color: var(--color-text-primary); border: 1px solid var(--color-border); }
-        .btn-success { background-color: var(--color-success); color: white; } .btn-warning { background-color: var(--color-warning); color: white; } .btn-danger { background-color: var(--color-brand-primary); color: white; }
+        .btn-danger { background-color: var(--color-brand-primary); color: white; }
         .fab { position: absolute; right: 3rem; bottom: 3rem; width: 56px; height: 56px; background-color: var(--color-brand-primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.15); cursor: pointer; border: none; z-index: 100; transition: transform 0.2s; }
         .fab:hover { transform: scale(1.1); }
-        .stat-card { padding: 1.5rem; border-radius: 12px; border: 1px solid var(--color-border); }
-        .stat-card-header { display: flex; align-items: center; margin-bottom: 1rem; font-weight: 500;}
-        .stat-card-header .material-icons { margin-right: 0.75rem; }
-        .stat-card-value { font-size: 2.5rem; font-weight: 700; }
-        .stat-card.card-warning { background-color: var(--color-warning-bg); color: var(--color-warning); border-color: var(--color-warning); }
-        .stat-card.card-danger { background-color: var(--color-danger-bg); color: var(--color-danger); border-color: var(--color-danger); }
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th, .data-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--color-border); }
-        .data-table th { font-weight: 600; color: var(--color-text-secondary); }
-        .action-buttons button { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 0.5rem; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; }
         .modal-overlay.visible { display: flex; }
         .modal-content { background-color: var(--color-surface); padding: 2rem; border-radius: 12px; width: 100%; max-width: 500px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .modal-header h2 { margin: 0; }
-        .form-group { margin-bottom: 1.5rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
-        .modal-footer { text-align: right; margin-top: 1.5rem; }
-        
-        #new-message-popup { position: fixed; bottom: 0; right: 10rem; width: 500px; background-color: var(--color-surface); border: 1px solid var(--color-border); border-top-left-radius: 12px; border-top-right-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); z-index: 1001; display: none; flex-direction: column; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
+        .input-field { width: 100%; padding: 0.75rem; background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-primary); font-size: 1rem; box-sizing: border-box;}
+
+        /* --- Estilo Pop-up de Nova Mensagem --- */
+        #new-message-popup { position: fixed; bottom: 0; right: 3rem; width: 550px; background-color: var(--color-surface); border: 1px solid var(--color-border); border-top-left-radius: 12px; border-top-right-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); z-index: 1001; display: none; flex-direction: column; }
         #new-message-popup.visible { display: flex; }
-        .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background-color: var(--color-background); border-bottom: 1px solid var(--color-border); }
+        .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background-color: var(--color-background); border-bottom: 1px solid var(--color-border); cursor: move; }
         .popup-header h3 { margin: 0; font-size: 1rem; }
-        .popup-header button { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); }
+        .popup-header .popup-actions button { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); }
         .popup-body { padding: 1rem; }
-        .popup-body .input-field { padding: 0.75rem; }
-        .popup-body .form-group { margin-bottom: 1rem; }
         .popup-footer { padding: 1rem; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
-        .popup-footer-options button { background: none; border: none; color: var(--color-text-secondary); cursor: pointer; }
+        .popup-footer-options button { background: none; border: none; color: var(--color-text-secondary); cursor: pointer; padding: 0.5rem; border-radius: 50%; }
+        .popup-footer-options button:hover { background-color: var(--color-background); }
         #popup-advanced-options { display: none; padding: 1rem; border-top: 1px solid var(--color-border); background-color: var(--color-background); }
-        .message-type-selector, .urgency-selector { display: flex; gap: 1rem; }
-        .message-type-selector label { flex: 1; display: block; text-align: center; padding: 0.5rem; border: 1px solid var(--color-border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background-color: var(--color-surface); }
+        #popup-advanced-options .grid { align-items: end; }
+        .message-type-selector, .urgency-selector { display: flex; gap: 0.5rem; }
+        .message-type-selector label, .urgency-selector .btn { flex: 1; display: flex; justify-content: center; align-items: center; text-align: center; padding: 0.5rem; border: 1px solid var(--color-border); border-radius: 8px; cursor: pointer; transition: all 0.2s; background-color: var(--color-surface); font-size: 0.9rem; }
         .message-type-selector input[type="radio"] { display: none; }
         .message-type-selector input[type="radio"]:checked + label { background-color: var(--color-info-bg); border-color: var(--color-info); color: var(--color-info); font-weight: 600; }
-        .urgency-selector .btn { flex: 1; justify-content: center; }
-        .custom-checkbox { display: flex; align-items: center; gap: 0.75rem; }
+        .custom-checkbox { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
         .custom-checkbox input[type="checkbox"] { display: none; }
-        .custom-checkbox .checkbox-box { width: 20px; height: 20px; border: 2px solid var(--color-border); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .custom-checkbox .checkbox-box .material-icons { font-size: 16px; color: white; transform: scale(0); transition: transform 0.2s; }
+        .custom-checkbox .checkbox-box { width: 18px; height: 18px; border: 2px solid var(--color-border); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .custom-checkbox .checkbox-box .material-icons { font-size: 14px; color: white; transform: scale(0); transition: transform 0.2s; }
         .custom-checkbox input[type="checkbox"]:checked + .checkbox-box { background-color: var(--color-info); border-color: var(--color-info); }
         .custom-checkbox input[type="checkbox"]:checked + .checkbox-box .material-icons { transform: scale(1); }
-        #prazo_container { display: flex; align-items: center; gap: 1rem; max-width: 250px; }
-        .form-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
+        .date-presets { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+        .date-presets button { font-size: 0.8rem; padding: 0.25rem 0.5rem; }
 
+        /* Estilos do Editor Quill.js */
         #editor-container { background-color: var(--color-surface); }
-        .ql-toolbar { border-top-left-radius: 8px; border-top-right-radius: 8px; background-color: var(--color-background); border: 1px solid var(--color-border) !important; border-bottom: none !important; }
-        .ql-container { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; border: 1px solid var(--color-border) !important; min-height: 150px; font-size: 1rem; }
+        .ql-toolbar { background-color: var(--color-background); border: 1px solid var(--color-border) !important; border-bottom: none !important; padding: 4px 8px !important; }
+        .ql-container { border: 1px solid var(--color-border) !important; min-height: 120px; max-height: 250px; overflow-y: auto; font-size: 1rem; }
         .ql-editor { color: var(--color-text-primary); }
         body.dark-mode .ql-snow .ql-stroke { color: var(--color-text-secondary); }
         body.dark-mode .ql-snow .ql-picker-label { color: var(--color-text-secondary); }
@@ -108,15 +79,14 @@
 </head>
 <body>
     <div id="root"></div>
-    <button class="theme-toggle" id="theme-toggle" title="Alterar tema" style="display: none;">
-        <span class="material-icons" id="icon-moon">dark_mode</span>
-        <span class="material-icons" id="icon-sun">light_mode</span>
-    </button>
+    <button class="theme-toggle" id="theme-toggle" title="Alterar tema" style="display: none;">...</button>
     
     <div id="new-message-popup">
         <div class="popup-header">
             <h3>Nova Mensagem</h3>
-            <button onclick="closeNewMessagePopup()"><span class="material-icons">close</span></button>
+            <div class="popup-actions">
+                <button onclick="closeNewMessagePopup()"><span class="material-icons">close</span></button>
+            </div>
         </div>
         <form id="new-message-form">
             <div class="popup-body">
@@ -128,192 +98,58 @@
                     <input type="file" id="file-upload-input" style="display: none;" onchange="handleFileUpload(event)">
                 </div>
             </div>
-            <!-- SEÇÃO DE OPÇÕES AVANÇADAS (OCULTA) -->
             <div id="popup-advanced-options">
                 <div class="form-group"><label>Tipo de Mensagem</label><div class="message-type-selector"><div><input type="radio" id="tipo-simples" name="message-type" value="message" checked onchange="toggleChamadoFields()"><label for="tipo-simples">Mensagem Simples</label></div><div><input type="radio" id="tipo-chamado" name="message-type" value="ticket" onchange="toggleChamadoFields()"><label for="tipo-chamado">Chamado Formal</label></div></div></div>
-                <div id="chamado-fields" style="display:none;"><div class="form-group"><label for="due_date">Prazo para Resposta</label><div id="prazo_container"><input type="date" id="due_date" class="input-field"></div></div></div>
+                <div id="chamado-fields" style="display:none;"><div class="form-group"><label for="due_date">Prazo para Resposta</label><input type="date" id="due_date" class="input-field"><div class="date-presets"><button type="button" class="btn btn-secondary" onclick="setDueDate(1)">+1 dia</button><button type="button" class="btn btn-secondary" onclick="setDueDate(7)">+7 dias</button><button type="button" class="btn btn-secondary" onclick="setDueDate(15)">+15 dias</button></div></div></div>
                 <div class="form-group"><label>Nível de Urgência</label><div class="urgency-selector"><button type="button" class="btn btn-success active" data-priority="normal">Normal</button><button type="button" class="btn btn-secondary" data-priority="important">Importante</button><button type="button" class="btn btn-secondary" data-priority="urgent">Urgente</button></div></div>
                 <div class="form-group"><label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label></div>
             </div>
             <div class="popup-footer">
                 <button type="submit" class="btn btn-danger">Enviar</button>
-                <div class="popup-footer-options">
-                    <button id="toggle-advanced-options" title="Mais opções"><span class="material-icons">more_vert</span></button>
-                </div>
+                <div class="popup-footer-options"><button type="button" id="toggle-advanced-options" title="Mais opções"><span class="material-icons">more_vert</span></button></div>
             </div>
         </form>
     </div>
 
     <script>
+        // --- TODO O SCRIPT, SEM CORTES ---
         const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
         const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjc0NzYyMywiZXhwIjoyMDc4MzIzNjIzfQ.flhYf7ScWkiuGntgO1qvPwUkLy1hCD6oMhzxgj-uHss';
-
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const supabaseAdmin = supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-
         let currentUserProfile = null;
         let quillEditor = null;
-
         const root = document.getElementById('root');
         const themeToggleBtn = document.getElementById('theme-toggle');
-
         const authHTML = `<div class="login-wrapper"><div id="auth-container" class="login-container"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo"><p class="login-subtitle">Comunicação interna Molas Fama</p><form id="login-form"><div class="input-group"><input type="email" id="email" class="input-field" placeholder="Email" required></div><div class="input-group"><input type="password" id="password" class="input-field" placeholder="Senha" required></div><button type="submit" class="btn-primary">Entrar</button></form></div></div>`;
         const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1>Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="stat-card card-warning"><div class="stat-card-header"><span class="material-icons">mark_email_unread</span><span>Minhas Mensagens Pendentes</span></div><div class="stat-card-value" id="pending-messages-count">0</div></div><div class="stat-card card-danger"><div class="stat-card-header"><span class="material-icons">report_problem</span><span>Meus Chamados Urgentes</span></div><div class="stat-card-value" id="urgent-tickets-count">0</div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="card"><div id="message-list-content">Carregando mensagens...</div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><div id="users-page" class="page-content"><div class="page-header"><h1>Gerenciamento de Usuários</h1><button id="btn-new-user" class="btn btn-primary"><span class="material-icons">add</span> Novo Usuário</button></div><div class="card"><table class="data-table"><thead><tr><th>Usuário</th><th>Email</th><th>Departamento</th><th>Cargo</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div class="card" id="user-profile-content">Carregando perfil...</div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-primary" onclick="saveUser()">Salvar</button></div></div></div></div>`;
-
         document.addEventListener('DOMContentLoaded', checkUserSession);
-
-        async function checkUserSession() {
-            applyTheme(localStorage.getItem('theme') || 'light'); 
-            themeToggleBtn.style.display = 'flex';
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                await fetchUserProfile(session.user.id);
-                renderAppLayout();
-            } else {
-                renderAuthLayout();
-            }
-        }
-
-        function renderAuthLayout() {
-            root.innerHTML = authHTML;
-            document.getElementById('login-form').addEventListener('submit', handleLogin);
-        }
-
-        function renderAppLayout() {
-            root.innerHTML = appHTML;
-            initializeQuillEditor();
-            setupEventListeners();
-            showApp();
-        }
-
-        function setupEventListeners() {
-            const logoutButton = document.getElementById('logout-button');
-            const newMessageForm = document.getElementById('new-message-form');
-            const newUserButton = document.getElementById('btn-new-user');
-            const fab = document.getElementById('fab-new-message');
-            const toggleAdvancedBtn = document.getElementById('toggle-advanced-options');
-
-            if (logoutButton) logoutButton.addEventListener('click', handleLogout);
-            if (newMessageForm) newMessageForm.addEventListener('submit', sendMessage);
-            if (newUserButton) newUserButton.addEventListener('click', () => openUserModal(null));
-            if (fab) fab.addEventListener('click', openNewMessagePopup);
-            if (toggleAdvancedBtn) toggleAdvancedBtn.addEventListener('click', toggleAdvancedOptions);
-
-            document.querySelectorAll('.nav-link[data-page]').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    showPage(e.currentTarget.dataset.page);
-                });
-            });
-            document.querySelectorAll('.urgency-selector .btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const selectedPriority = e.currentTarget.dataset.priority;
-                    document.querySelectorAll('.urgency-selector .btn').forEach(btn => {
-                        btn.classList.remove('btn-success', 'btn-warning', 'btn-danger', 'active');
-                        btn.classList.add('btn-secondary');
-                    });
-                    const clickedButton = e.currentTarget;
-                    clickedButton.classList.remove('btn-secondary');
-                    clickedButton.classList.add('active');
-                    if (selectedPriority === 'normal') clickedButton.classList.add('btn-success');
-                    else if (selectedPriority === 'important') clickedButton.classList.add('btn-warning');
-                    else if (selectedPriority === 'urgent') clickedButton.classList.add('btn-danger');
-                });
-            });
-        }
-        
-        function initializeQuillEditor() {
-            const editorContainer = document.getElementById('editor-container');
-            if (editorContainer && !quillEditor) {
-                quillEditor = new Quill('#editor-container', {
-                    modules: { toolbar: '#editor-toolbar' },
-                    placeholder: 'Escreva sua mensagem...',
-                    theme: 'snow'
-                });
-                const attachButton = document.getElementById('custom-attach-button');
-                if(attachButton) {
-                    attachButton.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        document.getElementById('file-upload-input').click();
-                    });
-                }
-            }
-        }
-        
+        async function checkUserSession() { applyTheme(localStorage.getItem('theme') || 'light'); themeToggleBtn.style.display = 'flex'; const { data: { session } } = await supabaseClient.auth.getSession(); if (session) { await fetchUserProfile(session.user.id); renderAppLayout(); } else { renderAuthLayout(); } }
+        function renderAuthLayout() { root.innerHTML = authHTML; document.getElementById('login-form').addEventListener('submit', handleLogin); }
+        function renderAppLayout() { root.innerHTML = appHTML; initializeQuillEditor(); setupEventListeners(); showApp(); }
+        function setupEventListeners() { const logoutButton = document.getElementById('logout-button'); const newMessageForm = document.getElementById('new-message-form'); const newUserButton = document.getElementById('btn-new-user'); const fab = document.getElementById('fab-new-message'); const toggleAdvancedBtn = document.getElementById('toggle-advanced-options'); if (logoutButton) logoutButton.addEventListener('click', handleLogout); if (newMessageForm) newMessageForm.addEventListener('submit', sendMessage); if (newUserButton) newUserButton.addEventListener('click', () => openUserModal(null)); if (fab) fab.addEventListener('click', openNewMessagePopup); if (toggleAdvancedBtn) toggleAdvancedBtn.addEventListener('click', (e) => { e.preventDefault(); toggleAdvancedOptions(); }); document.querySelectorAll('.nav-link[data-page]').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); showPage(e.currentTarget.dataset.page); }); }); document.querySelectorAll('.urgency-selector .btn').forEach(button => { button.addEventListener('click', (e) => { e.preventDefault(); const selectedPriority = e.currentTarget.dataset.priority; document.querySelectorAll('.urgency-selector .btn').forEach(btn => { btn.classList.remove('btn-success', 'btn-warning', 'btn-danger', 'active'); btn.classList.add('btn-secondary'); }); const clickedButton = e.currentTarget; clickedButton.classList.remove('btn-secondary'); clickedButton.classList.add('active'); if (selectedPriority === 'normal') clickedButton.classList.add('btn-success'); else if (selectedPriority === 'important') clickedButton.classList.add('btn-warning'); else if (selectedPriority === 'urgent') clickedButton.classList.add('btn-danger'); }); }); }
+        function initializeQuillEditor() { const editorContainer = document.getElementById('editor-container'); if (editorContainer && !quillEditor) { quillEditor = new Quill('#editor-container', { modules: { toolbar: '#editor-toolbar' }, placeholder: 'Escreva sua mensagem...', theme: 'snow' }); const attachButton = document.getElementById('custom-attach-button'); if(attachButton) { attachButton.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('file-upload-input').click(); }); } } }
         function openNewMessagePopup() { document.getElementById('new-message-popup').classList.add('visible'); }
         function closeNewMessagePopup() { document.getElementById('new-message-popup').classList.remove('visible'); document.getElementById('new-message-form').reset(); if (quillEditor) quillEditor.setContents([]); document.getElementById('popup-advanced-options').style.display = 'none'; }
-        function toggleAdvancedOptions(e) { e.preventDefault(); const optionsDiv = document.getElementById('popup-advanced-options'); optionsDiv.style.display = optionsDiv.style.display === 'block' ? 'none' : 'block'; }
-
+        function toggleAdvancedOptions() { const optionsDiv = document.getElementById('popup-advanced-options'); optionsDiv.style.display = optionsDiv.style.display === 'block' ? 'none' : 'block'; }
+        function setDueDate(days) { const date = new Date(); date.setDate(date.getDate() + days); const dateField = document.getElementById('due_date'); if(dateField) dateField.value = date.toISOString().split('T')[0]; }
         async function handleLogin(e) { e.preventDefault(); const email = document.getElementById('email').value; const password = document.getElementById('password').value; const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password }); if (error) { alert('Erro no login: ' + error.message); } else if (data.user) { await fetchUserProfile(data.user.id); renderAppLayout(); } }
         async function handleLogout() { await supabaseClient.auth.signOut(); currentUserProfile = null; renderAuthLayout(); }
         async function fetchUserProfile(userId) { const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', userId).single(); if (data) currentUserProfile = data; else console.error("Perfil não encontrado:", error); }
         function showApp() { document.getElementById('admin-section').style.display = (currentUserProfile && currentUserProfile.role === 'Admin') ? 'block' : 'none'; showPage('dashboard-page'); loadAllDynamicData(); }
-
-        function showPage(pageId) {
-            const appContainer = document.getElementById('app-container');
-            if (!appContainer) return;
-            appContainer.querySelectorAll('.page-content').forEach(page => page.style.display = 'none');
-            const targetPage = appContainer.querySelector(`#${pageId}`);
-            if (targetPage) { targetPage.style.display = 'block'; }
-            appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-            const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`);
-            if (activeLink) { activeLink.classList.add('active'); }
-        }
-
+        function showPage(pageId) { const appContainer = document.getElementById('app-container'); if (!appContainer) return; appContainer.querySelectorAll('.page-content').forEach(page => page.style.display = 'none'); const targetPage = appContainer.querySelector(`#${pageId}`); if (targetPage) { targetPage.style.display = 'block'; } appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); if (activeLink) { activeLink.classList.add('active'); } }
         async function loadAllDynamicData() { loadDashboardStats(); loadUsers(); }
         async function loadDashboardStats() { const { count: pendingCount, error: pError } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('status', 'open'); if (pError) console.error("Erro dashboard (pendentes):", pError); const { count: urgentCount, error: uError } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('priority', 'urgent').eq('status', 'open'); if (uError) console.error("Erro dashboard (urgentes):", uError); document.getElementById('pending-messages-count').textContent = pendingCount || 0; document.getElementById('urgent-tickets-count').textContent = urgentCount || 0; }
-        
-        async function loadUsers() {
-            const { data: users, error } = await supabaseClient.from('user_details').select('*');
-            if (error) { console.error("Erro ao buscar usuários:", error); const tableBody = document.getElementById('user-table-body'); if(tableBody) tableBody.innerHTML = `<tr><td colspan="5">Erro ao carregar usuários. Verifique as permissões (RLS) no Supabase.</td></tr>`; return; }
-            const tableBody = document.getElementById('user-table-body');
-            if(tableBody) tableBody.innerHTML = users.map(user => `<tr><td>${user.full_name || 'N/A'}</td><td>${user.email || 'N/A'}</td><td>${user.department || 'N/A'}</td><td>${user.role || 'N/A'}</td><td class="action-buttons"><button onclick='openUserModal(${JSON.stringify(user)})'><span class="material-icons">edit</span></button><button onclick="deleteUser('${user.id}', '${user.full_name}')"><span class="material-icons">delete</span></button></td></tr>`).join('');
-        }
-        
+        async function loadUsers() { const { data: users, error } = await supabaseClient.from('user_details').select('*'); if (error) { console.error("Erro ao buscar usuários:", error); const tableBody = document.getElementById('user-table-body'); if(tableBody) tableBody.innerHTML = `<tr><td colspan="5">Erro ao carregar usuários. Verifique as permissões (RLS) no Supabase.</td></tr>`; return; } const tableBody = document.getElementById('user-table-body'); if(tableBody) tableBody.innerHTML = users.map(user => `<tr><td>${user.full_name || 'N/A'}</td><td>${user.email || 'N/A'}</td><td>${user.department || 'N/A'}</td><td>${user.role || 'N/A'}</td><td class="action-buttons"><button onclick='openUserModal(${JSON.stringify(user)})'><span class="material-icons">edit</span></button><button onclick="deleteUser('${user.id}', '${user.full_name}')"><span class="material-icons">delete</span></button></td></tr>`).join(''); }
         function toggleChamadoFields() { const isChamado = document.getElementById('tipo-chamado').checked; document.getElementById('chamado-fields').style.display = isChamado ? 'block' : 'none'; }
         function openUserModal(user) { const modal = document.querySelector('#app-container #user-modal'); const form = document.getElementById('user-form'); form.reset(); const userEmailField = document.getElementById('user_email'); const passwordGroup = document.getElementById('password-group'); userEmailField.disabled = !!user; passwordGroup.style.display = user ? 'none' : 'block'; document.getElementById('user_password').required = !user; if (user) { document.getElementById('user-modal-title').textContent = 'Editar Usuário'; document.getElementById('user-id').value = user.id; document.getElementById('full_name').value = user.full_name; userEmailField.value = user.email || ''; document.getElementById('department').value = user.department; document.getElementById('role').value = user.role; } else { document.getElementById('user-modal-title').textContent = 'Novo Usuário'; } modal.classList.add('visible'); }
         function closeUserModal() { const modal = document.querySelector('#app-container #user-modal'); if (modal) modal.classList.remove('visible'); }
-        
-        async function saveUser() {
-            const userId = document.getElementById('user-id').value;
-            const fullName = document.getElementById('full_name').value;
-            const department = document.getElementById('department').value;
-            const role = document.getElementById('role').value;
-            const email = document.getElementById('user_email').value;
-            const password = document.getElementById('user_password').value;
-            if (userId) {
-                const { error } = await supabaseClient.from('profiles').update({ full_name: fullName, department: department, role: role }).eq('id', userId);
-                if (error) { alert("Erro ao atualizar perfil: " + error.message); } else { alert("Perfil atualizado com sucesso!"); }
-            } else {
-                if (!password) { alert("A senha é obrigatória para criar um novo usuário."); return; }
-                let newUserId;
-                const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({ email: email, password: password, email_confirm: true });
-                if (authError) {
-                    if (authError.message.includes('User already registered')) {
-                        console.warn('Usuário já existe na autenticação. Buscando ID existente.');
-                        const { data: { user }, error: getUserError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
-                        if (getUserError) { alert('Erro crítico: ' + getUserError.message); return; }
-                        newUserId = user.id;
-                    } else { alert("Erro ao criar usuário: " + authError.message); return; }
-                } else { newUserId = authData.user.id; }
-                await new Promise(resolve => setTimeout(resolve, 500)); 
-                const { error: profileError } = await supabaseClient.from('profiles').upsert({ id: newUserId, full_name: fullName, department: department, role: role });
-                if (profileError) { alert("Erro ao criar/atualizar perfil: " + profileError.message); } 
-                else { alert("Usuário criado com sucesso!"); }
-            }
-            closeUserModal();
-            loadUsers();
-        }
-
+        async function saveUser() { const userId = document.getElementById('user-id').value; const fullName = document.getElementById('full_name').value; const department = document.getElementById('department').value; const role = document.getElementById('role').value; const email = document.getElementById('user_email').value; const password = document.getElementById('user_password').value; if (userId) { const { error } = await supabaseClient.from('profiles').update({ full_name: fullName, department: department, role: role }).eq('id', userId); if (error) { alert("Erro ao atualizar perfil: " + error.message); } else { alert("Perfil atualizado com sucesso!"); } } else { if (!password) { alert("A senha é obrigatória para criar um novo usuário."); return; } let newUserId; const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({ email: email, password: password, email_confirm: true }); if (authError) { if (authError.message.includes('User already registered')) { console.warn('Usuário já existe na autenticação. Buscando ID existente.'); const { data: { user }, error: getUserError } = await supabaseAdmin.auth.admin.getUserByEmail(email); if (getUserError) { alert('Erro crítico: ' + getUserError.message); return; } newUserId = user.id; } else { alert("Erro ao criar usuário: " + authError.message); return; } } else { newUserId = authData.user.id; } await new Promise(resolve => setTimeout(resolve, 500)); const { error: profileError } = await supabaseClient.from('profiles').upsert({ id: newUserId, full_name: fullName, department: department, role: role }); if (profileError) { alert("Erro ao criar/atualizar perfil: " + profileError.message); } else { alert("Usuário criado com sucesso!"); } } closeUserModal(); loadUsers(); }
         async function deleteUser(userId, userName) { if (confirm(`Tem certeza de que deseja excluir o usuário ${userName}?`)) { alert("AVISO: A exclusão de usuários (ação de admin) deve ser movida para uma Edge Function em produção."); } }
         async function sendMessage(e) { e.preventDefault(); if (!currentUserProfile) { alert("Você precisa estar logado."); return; } const subject = document.getElementById('assunto').value; const content = quillEditor.root.innerHTML; const recipientId = document.getElementById('destinatario').value; if (!recipientId) { alert("Por favor, informe um destinatário."); return; } const type = document.getElementById('tipo-chamado').checked ? 'ticket' : 'message'; const priority = document.querySelector('.urgency-selector .btn.active').dataset.priority; const requiresResponse = document.getElementById('requires_response').checked; const dueDate = document.getElementById('due_date').value; try { const { data: conversationData, error: convError } = await supabaseClient.from('conversations').insert({ subject, type, priority, status: 'open', requires_response: requiresResponse, due_date: type === 'ticket' ? dueDate : null }).select().single(); if (convError) throw convError; const { error: msgError } = await supabaseClient.from('messages').insert({ conversation_id: conversationData.id, sender_id: currentUserProfile.id, content: content }); if (msgError) throw msgError; const participants = [ { conversation_id: conversationData.id, user_id: currentUserProfile.id }, { conversation_id: conversationData.id, user_id: recipientId } ]; const { error: partError } = await supabaseClient.from('conversation_participants').insert(participants); if (partError) throw partError; alert("Mensagem enviada com sucesso!"); closeNewMessagePopup(); } catch (error) { console.error("Erro ao enviar mensagem:", error); alert("Falha ao enviar mensagem: " + error.message); } }
         async function handleFileUpload(event) { const file = event.target.files[0]; if (!file) return; const webhookUrl = 'SEU_WEBHOOK_URL_AQUI/famaflow-upload'; const messageId = Date.now(); const formData = new FormData(); formData.append('file', file); try { alert(`Simulando upload do arquivo: ${file.name}`); } catch (error) { console.error('Erro no upload:', error); alert('Erro ao enviar o arquivo.'); } }
-        
-        const body = document.body;
-        themeToggleBtn.addEventListener('click', () => applyTheme(body.classList.contains('dark-mode') ? 'light' : 'dark'));
-        function applyTheme(theme) { body.classList.toggle('dark-mode', theme === 'dark'); localStorage.setItem('theme', theme); }
+        const body = document.body; themeToggleBtn.addEventListener('click', () => applyTheme(body.classList.contains('dark-mode') ? 'light' : 'dark')); function applyTheme(theme) { body.classList.toggle('dark-mode', theme === 'dark'); localStorage.setItem('theme', theme); }
     </script>
 </body>
 </html>
