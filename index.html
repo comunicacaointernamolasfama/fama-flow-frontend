@@ -104,7 +104,10 @@
     <script>
         const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
+        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjc0NzYyMywiZXhwIjoyMDc4MzIzNjIzfQ.flhYf7ScWkiuGntgO1qvPwUkLy1hCD6oMhzxgj-uHss';
+
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabaseAdmin = supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
         let currentUserProfile = null;
         let quillEditor = null;
@@ -194,7 +197,7 @@
         async function handleLogout() { await supabaseClient.auth.signOut(); currentUserProfile = null; renderAuthLayout(); }
         async function fetchUserProfile(userId) { const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', userId).single(); if (data) currentUserProfile = data; else console.error("Perfil não encontrado:", error); }
         function showApp() { document.getElementById('admin-section').style.display = (currentUserProfile && currentUserProfile.role === 'Admin') ? 'block' : 'none'; showPage('dashboard-page'); loadAllDynamicData(); }
-        
+
         function showPage(pageId) {
             const appContainer = document.getElementById('app-container');
             if (!appContainer) return;
@@ -235,14 +238,17 @@
                 if (error) { alert("Erro ao atualizar perfil: " + error.message); } else { alert("Perfil atualizado com sucesso!"); }
             } else {
                 if (!password) { alert("A senha é obrigatória para criar um novo usuário."); return; }
-                const { error } = await supabaseClient.rpc('create_new_user', { new_email: email, new_password: password, full_name: fullName, department: department, role: role });
-                if (error) { alert("Erro ao criar usuário: " + error.message); } else { alert("Usuário criado com sucesso!"); }
+                const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({ email: email, password: password, email_confirm: true });
+                if (authError) { alert("Erro ao criar usuário na autenticação: " + authError.message); return; }
+                const newUserId = authData.user.id;
+                const { error: profileError } = await supabaseClient.from('profiles').insert({ id: newUserId, full_name: fullName, department: department, role: role });
+                if (profileError) { alert("Erro ao criar perfil do usuário: " + profileError.message); } else { alert("Usuário criado com sucesso!"); }
             }
             closeUserModal();
             loadUsers();
         }
-        
-        async function deleteUser(userId, userName) { if (confirm(`Tem certeza de que deseja excluir o usuário ${userName}?`)) { alert("AVISO: A exclusão de usuários requer uma Edge Function segura. Isto é uma simulação."); } }
+
+        async function deleteUser(userId, userName) { if (confirm(`Tem certeza de que deseja excluir o usuário ${userName}?`)) { alert("AVISO: A exclusão de usuários (ação de admin) deve ser movida para uma Edge Function em produção."); } }
         async function sendMessage(e) { e.preventDefault(); if (!currentUserProfile) { alert("Você precisa estar logado."); return; } const subject = document.getElementById('assunto').value; const content = quillEditor.root.innerHTML; const priority = document.querySelector('.urgency-selector .btn.active').dataset.priority; const type = document.querySelector('input[name="message-type"]:checked').value; const recipientId = document.getElementById('destinatario').value; if (!recipientId) { alert("Por favor, informe um destinatário."); return; } try { const { data: conversationData, error: convError } = await supabaseClient.from('conversations').insert({ subject: subject, type: type, priority: priority, status: 'open', requires_response: document.getElementById('requires_response_geral').checked, due_date: type === 'ticket' ? document.getElementById('due_date').value : null, assignee_id: recipientId }).select().single(); if (convError) throw convError; const { error: msgError } = await supabaseClient.from('messages').insert({ conversation_id: conversationData.id, sender_id: currentUserProfile.id, content: content }); if (msgError) throw msgError; const participants = [ { conversation_id: conversationData.id, user_id: currentUserProfile.id }, { conversation_id: conversationData.id, user_id: recipientId } ]; const { error: partError } = await supabaseClient.from('conversation_participants').insert(participants); if (partError) throw partError; alert("Mensagem enviada com sucesso!"); quillEditor.setContents([]); document.getElementById('new-message-form').reset(); showPage('messages-page'); } catch (error) { console.error("Erro ao enviar mensagem:", error); alert("Falha ao enviar mensagem: " + error.message); } }
         async function handleFileUpload(event) { const file = event.target.files[0]; if (!file) return; const webhookUrl = 'SEU_WEBHOOK_URL_AQUI/famaflow-upload'; const messageId = Date.now(); const formData = new FormData(); formData.append('file', file); try { alert(`Simulando upload do arquivo: ${file.name}`); } catch (error) { console.error('Erro no upload:', error); alert('Erro ao enviar o arquivo.'); } }
         
