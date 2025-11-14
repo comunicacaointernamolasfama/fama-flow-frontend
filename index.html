@@ -332,9 +332,16 @@
             const messagesContainer = document.getElementById('conversation-messages');
             messagesContainer.innerHTML = '<div style="text-align: center;">Carregando conversa...</div>';
             
-            const { data, error } = await supabaseClient.from('messages').select(`*, profiles(full_name)`).eq('conversation_id', conversationId).order('created_at', { ascending: true });
-            if (error) { showToast('Erro ao carregar mensagens da conversa.', 'danger'); return; }
+            // CORREÇÃO: Usar a nova view segura para buscar mensagens
+            const { data, error } = await supabaseClient
+                .from('conversation_messages_view')
+                .select('*')
+                .eq('conversation_id', conversationId)
+                .order('created_at', { ascending: true });
 
+            if (error) { showToast('Erro ao carregar mensagens da conversa.', 'danger'); console.error(error); return; }
+
+            // Busca os detalhes da conversa separadamente (isso é seguro)
             const { data: convData } = await supabaseClient.from('conversations').select('subject, conversation_participants(*, profiles(full_name))').eq('id', conversationId).single();
             if(convData) {
                 document.getElementById('conversation-subject').textContent = convData.subject;
@@ -345,7 +352,8 @@
             messagesContainer.innerHTML = data.map(msg => {
                 const isSent = msg.sender_id === currentUserProfile.id;
                 const timestamp = new Date(msg.created_at).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-                return `<div class="message-bubble-wrapper ${isSent ? 'sent' : 'received'}"><div class="message-bubble ${isSent ? 'sent' : 'received'}">${msg.content}</div><div class="message-metadata">${isSent ? 'Você' : msg.profiles.full_name} • ${timestamp}</div></div>`;
+                // USA O sender_name que já vem da VIEW
+                return `<div class="message-bubble-wrapper ${isSent ? 'sent' : 'received'}"><div class="message-bubble ${isSent ? 'sent' : 'received'}">${msg.content}</div><div class="message-metadata">${isSent ? 'Você' : msg.sender_name} • ${timestamp}</div></div>`;
             }).join('');
             
             const lastMessage = messagesContainer.lastElementChild;
