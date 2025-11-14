@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fama Flow</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -71,25 +71,25 @@
         .tab-link.active { color: var(--color-brand-primary); border-bottom-color: var(--color-brand-primary); }
         .tab-content { display: none; } .tab-content.active { display: block; }
         .empty-state { padding: 3rem 1rem; text-align: center; color: var(--color-text-secondary); }
-        /* REFINEMENT: New styles for the refined message list */
-        .data-table-fino { width: 100%; border-collapse: collapse; }
+        /* FINAL REFINEMENT: Styles for a compact, Gmail-like list */
+        .data-table-fino { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .data-table-fino tr { cursor: pointer; }
         .data-table-fino tr:hover { background-color: var(--color-background); }
-        .data-table-fino td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
-        .data-table-fino .col-who { width: 20%; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .data-table-fino .col-subject { width: 50%; }
-        .data-table-fino .col-subject .subject-line { display: flex; align-items: center; gap: 0.5rem; font-weight: 500; margin-bottom: 0.1rem; }
-        .data-table-fino .col-subject .preview-text { color: var(--color-text-secondary); font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-        .data-table-fino .col-meta { width: 20%; text-align: right; }
+        .data-table-fino td { padding: 0.6rem 1rem; border-bottom: 1px solid var(--color-border); vertical-align: middle; white-space: nowrap; }
+        .data-table-fino .col-who { width: 18%; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+        .data-table-fino .col-subject { width: 55%; overflow: hidden; text-overflow: ellipsis; }
+        .data-table-fino .subject-title { font-weight: 600; }
+        .data-table-fino .subject-preview { color: var(--color-text-secondary); margin-left: 0.5rem; }
+        .data-table-fino .col-meta { width: 17%; text-align: right; }
         .data-table-fino .col-meta .meta-tags { display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; }
-        .data-table-fino .col-date { width: 10%; text-align: right; color: var(--color-text-secondary); font-size: 0.9rem; white-space: nowrap; }
-        .tag-fino { font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 12px; display: inline-block; line-height: 1.2; }
+        .data-table-fino .col-date { width: 10%; text-align: right; color: var(--color-text-secondary); font-size: 0.9rem; }
+        .tag-fino { font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 12px; margin-left: 0.5rem; display: inline-block; line-height: 1.2; vertical-align: middle; }
         .tag-fino.tag-urgent { background-color: var(--color-danger-bg); color: var(--color-danger); }
         .tag-fino.tag-important { background-color: var(--color-warning-bg); color: var(--color-warning); }
         .tag-icon { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; color: var(--color-text-secondary); }
         .tag-icon .material-icons { font-size: 18px; }
         .due-date-tag { font-weight: 500; color: var(--color-text-primary); }
-        /* End of refined styles */
+        /* End of final styles */
         #new-message-popup { position: fixed; bottom: 0; right: 3rem; width: 600px; max-width: 90vw; background-color: var(--color-surface); border: 1px solid var(--color-border); border-top-left-radius: 12px; border-top-right-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); z-index: 1001; display: none; flex-direction: column; transition: transform 0.3s ease-out; transform: translateY(100%); }
         #new-message-popup.visible { display: flex; transform: translateY(0); }
         .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background-color: var(--color-background); border-bottom: 1px solid var(--color-border); cursor: move; }
@@ -300,7 +300,7 @@
             }
         }
 
-        // REFINEMENT: Updated function to render the new table layout
+        // FINAL REFINEMENT: Updated function for the final compact layout
         function renderMessageTable(conversations, containerId, type) {
             const container = document.getElementById(containerId);
             if (!conversations || conversations.length === 0) {
@@ -309,7 +309,7 @@
             }
 
             const tableRows = conversations.map(conv => {
-                const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ').substring(0, 80) : '';
+                const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ') : '';
                 const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
                 const participants = conv.other_participants_names || 'Você mesmo';
 
@@ -326,8 +326,9 @@
                     <tr onclick="openConversation('${conv.id}')">
                         <td class="col-who">${type === 'inbox' ? participants : `Para: ${participants}`}</td>
                         <td class="col-subject">
-                            <div class="subject-line">${conv.subject} ${priorityTag}</div>
-                            <div class="preview-text">${preview}...</div>
+                            <span class="subject-title">${conv.subject}</span>
+                            ${priorityTag}
+                            <span class="subject-preview"> - ${preview}</span>
                         </td>
                         <td class="col-meta"><div class="meta-tags">${metaTagsHTML}</div></td>
                         <td class="col-date">${timestamp}</td>
