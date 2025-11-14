@@ -368,7 +368,8 @@
             const tableBody = document.getElementById('user-table-body');
             tableBody.innerHTML = `<tr><td colspan="5">Carregando usuários...</td></tr>`;
             try {
-                const { data: users, error } = await supabaseClient.functions.invoke('get-all-users');
+                // CORREÇÃO: Utiliza a nova VIEW segura
+                const { data: users, error } = await supabaseClient.from('users_with_email').select('*');
                 if (error) throw error;
                 
                 if (tableBody) {
@@ -385,15 +386,14 @@
                 }
             } catch(error) {
                 console.error("Erro ao carregar usuários:", error);
-                if(tableBody) tableBody.innerHTML = `<tr><td colspan="5">Erro ao carregar usuários. Verifique se a Edge Function 'get-all-users' está implantada.</td></tr>`;
+                if(tableBody) tableBody.innerHTML = `<tr><td colspan="5">Erro ao carregar usuários. Verifique as permissões da view 'users_with_email'.</td></tr>`;
             }
         }
         function openUserModal(user) { const modal = document.querySelector('#app-container #user-modal'); document.getElementById('user-form').reset(); const userEmailField = document.getElementById('user_email'); const passwordGroup = document.getElementById('password-group'); userEmailField.disabled = !!user; passwordGroup.style.display = user ? 'none' : 'block'; document.getElementById('user_password').required = !user; if (user) { document.getElementById('user-modal-title').textContent = 'Editar Usuário'; document.getElementById('user-id').value = user.id; document.getElementById('full_name').value = user.full_name; userEmailField.value = user.email || ''; document.getElementById('department').value = user.department; document.getElementById('role').value = user.role; } else { document.getElementById('user-modal-title').textContent = 'Novo Usuário'; document.getElementById('user-id').value = ''; } modal.classList.add('visible'); }
         function closeUserModal() { const modal = document.querySelector('#app-container #user-modal'); if (modal) modal.classList.remove('visible'); }
         
         async function saveUser() {
-            // Esta operação deve ser movida para uma Edge Function segura.
-            // A chave de serviço está aqui apenas para fins de demonstração e NÃO deve ser usada em produção.
+            // Esta operação deve ser movida para uma Edge Function segura para produção.
             const SUPABASE_SERVICE_KEY_TEMP = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjc0NzYyMywiZXhwIjoyMDc4MzIzNjIzfQ.flhYf7ScWkiuGntgOqvPwUkLy1hCD6oMhzxgj-uHss';
             const supabaseAdminClient = supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY_TEMP);
 
