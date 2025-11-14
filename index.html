@@ -134,8 +134,6 @@
         .message-subject { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .message-preview { color: var(--color-text-secondary); font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .message-timestamp { color: var(--color-text-secondary); font-size: 0.8rem; margin-left: 1rem; flex-shrink: 0; }
-        
-        /* --- Conversation View Styles --- */
         #conversation-view-page .card { display: flex; flex-direction: column; height: calc(100vh - 8rem); padding: 0; }
         #conversation-messages { flex-grow: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column-reverse; }
         .message-bubble-wrapper { display: flex; margin-bottom: 1rem; }
@@ -172,7 +170,7 @@
         const themeToggleBtn = document.getElementById('theme-toggle');
 
         const authHTML = `<div class="login-wrapper visible" id="auth-wrapper"><div id="auth-container" class="login-container"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo"><p class="login-subtitle">Comunicação interna Molas Fama</p><form id="login-form"><div class="input-group"><input type="email" id="email" class="input-field" placeholder="Email" required></div><div class="input-group"><input type="password" id="password" class="input-field" placeholder="Senha" required></div><button type="submit" class="btn-primary" style="width: 100%;">Entrar</button></form></div></div>`;
-        const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1>Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Urgentes</h3><p id="urgent-tickets-count">0</p></div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="card" style="padding: 0;"><div id="message-list-content">Carregando mensagens...</div></div></div><div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"><button class="btn btn-secondary" onclick="showPage('messages-page')"><span class="material-icons">arrow_back</span> Voltar</button><div><h1 id="conversation-subject"></h1><p id="conversation-participants"></p></div></div><div class="card"><div id="conversation-messages"></div><div id="reply-form-wrapper"><form id="reply-form"><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar Resposta</button></form></div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><div id="users-page" class="page-content"><div class="page-header"><h1>Gerenciamento de Usuários</h1><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div><div class="card"><table class="data-table"><thead><tr><th>Usuário</th><th>Email</th><th>Departamento</th><th>Cargo</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div class="card" id="user-profile-content">Carregando perfil...</div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div></div>`;
+        const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1>Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Urgentes</h3><p id="urgent-tickets-count">0</p></div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="card" style="padding: 0;"><div id="message-list-content">Carregando mensagens...</div></div></div><div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"><button class="btn btn-secondary" onclick="showPage('messages-page')"><span class="material-icons">arrow_back</span> Voltar</button><div><h1 id="conversation-subject"></h1><p id="conversation-participants"></p></div></div><div class="card"><div id="conversation-messages"></div><div id="reply-form-wrapper"><form id="reply-form"><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><div id="users-page" class="page-content"><div class="page-header"><h1>Gerenciamento de Usuários</h1><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div><div class="card"><table class="data-table"><thead><tr><th>Usuário</th><th>Email</th><th>Departamento</th><th>Cargo</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div class="card" id="user-profile-content">Carregando perfil...</div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div></div>`;
         
         document.addEventListener('DOMContentLoaded', checkUserSession);
         
@@ -230,14 +228,27 @@
             e.preventDefault();
             if (!currentUserProfile) { showToast("Você precisa estar logado.", 'warning'); return; }
             if (selectedRecipients.length === 0) { showToast("Adicione pelo menos um destinatário.", 'warning'); return; }
-            const recipientIds = selectedRecipients.map(u => u.id); const subject = document.getElementById('assunto').value || "Sem assunto"; const content = quillEditor.root.innerHTML; const type = document.querySelector('input[name="message-type"]:checked').value; const priority = document.querySelector('.urgency-selector .btn.active').dataset.priority; const requiresResponse = document.getElementById('requires_response').checked; const dueDate = document.getElementById('due_date').value;
+            
+            const args = {
+                recipient_ids: selectedRecipients.map(u => u.id),
+                subject: document.getElementById('assunto').value || "Sem assunto",
+                content: quillEditor.root.innerHTML,
+                type: document.querySelector('input[name="message-type"]:checked').value,
+                priority: document.querySelector('.urgency-selector .btn.active').dataset.priority,
+                requires_response: document.getElementById('requires_response').checked,
+                due_date: document.getElementById('due_date').value || null
+            };
+
             try {
-                const { data: convData, error: convError } = await supabaseClient.from('conversations').insert({ subject, type, priority, status: 'open', requires_response: requiresResponse, due_date: type === 'ticket' ? dueDate : null }).select().single(); if (convError) throw convError;
-                const { error: msgError } = await supabaseClient.from('messages').insert({ conversation_id: convData.id, sender_id: currentUserProfile.id, content: content }); if (msgError) throw msgError;
-                let participants = recipientIds.map(id => ({ conversation_id: convData.id, user_id: id })); participants.push({ conversation_id: convData.id, user_id: currentUserProfile.id });
-                const { error: partError } = await supabaseClient.from('conversation_participants').insert(participants); if (partError) throw partError;
-                showToast("Mensagem enviada com sucesso!", 'success'); closeNewMessagePopup(); loadMessages();
-            } catch (error) { console.error("Erro ao enviar mensagem:", error); showToast("Falha ao enviar mensagem: " + error.message, 'danger'); }
+                const { data, error } = await supabaseClient.rpc('create_new_conversation', args);
+                if (error) throw error;
+                showToast("Mensagem enviada com sucesso!", 'success');
+                closeNewMessagePopup();
+                loadMessages();
+            } catch (error) {
+                console.error("Erro ao enviar mensagem:", error);
+                showToast("Falha ao enviar mensagem: " + error.message, 'danger');
+            }
         }
 
         async function loadMessages() {
@@ -245,17 +256,18 @@
             const container = document.getElementById('message-list-content');
             container.innerHTML = '<div style="padding: 1rem; text-align: center;">Carregando...</div>';
             const { data, error } = await supabaseClient.rpc('get_user_conversations_with_details');
-            if (error) { console.error('Erro ao buscar mensagens:', error); container.innerHTML = '<div style="padding: 1rem; text-align: center;">Erro ao carregar.</div>'; return; }
-            if (data.length === 0) { container.innerHTML = '<div style="padding: 1rem; text-align: center;">Nenhuma mensagem.</div>'; return; }
+            if (error) { console.error('Erro ao buscar mensagens:', error); container.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--color-danger);">Erro ao carregar mensagens.</div>'; return; }
+            if (!data || data.length === 0) { container.innerHTML = '<div style="padding: 1rem; text-align: center;">Nenhuma mensagem encontrada.</div>'; return; }
             container.innerHTML = data.map(conv => {
                 const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ').substring(0, 100) : '...';
                 const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR') : '';
-                const avatarInitial = conv.other_participants_names.charAt(0).toUpperCase();
-                return `<div class="message-item" onclick="openConversation(${conv.id})"><div class="message-avatar">${avatarInitial}</div><div class="message-details"><div class="message-sender">${conv.other_participants_names}</div><div class="message-subject">${conv.subject}</div><p class="message-preview">${preview}</p></div><div class="message-timestamp">${timestamp}</div></div>`;
+                const participants = conv.other_participants_names || 'Você mesmo';
+                const avatarInitial = participants.charAt(0).toUpperCase();
+                return `<div class="message-item" onclick="openConversation(${conv.id})"><div class="message-avatar">${avatarInitial}</div><div class="message-details"><div class="message-sender">${participants}</div><div class="message-subject">${conv.subject}</div><p class="message-preview">${preview}</p></div><div class="message-timestamp">${timestamp}</div></div>`;
             }).join('');
         }
 
-        async function openConversation(conversationId) {
+        window.openConversation = async (conversationId) => {
             showPage('conversation-view-page');
             const messagesContainer = document.getElementById('conversation-messages');
             messagesContainer.innerHTML = '<div style="text-align: center;">Carregando conversa...</div>';
@@ -269,11 +281,11 @@
 
             messagesContainer.innerHTML = data.messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)).map(msg => {
                 const isSent = msg.sender_id === currentUserProfile.id;
-                const wrapperClass = isSent ? 'sent' : 'received';
-                const bubbleClass = isSent ? 'sent' : 'received';
-                return `<div class="message-bubble-wrapper ${wrapperClass}"><div class="message-bubble ${bubbleClass}"><div class="sender-name">${msg.profiles.full_name}</div>${msg.content}</div></div>`;
+                return `<div class="message-bubble-wrapper ${isSent ? 'sent' : 'received'}"><div class="message-bubble ${isSent ? 'sent' : 'received'}"><div class="sender-name">${isSent ? 'Você' : msg.profiles.full_name}</div>${msg.content}</div></div>`;
             }).join('');
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            const lastMessage = messagesContainer.lastElementChild;
+            if(lastMessage) lastMessage.scrollIntoView();
 
             const replyForm = document.getElementById('reply-form');
             replyForm.onsubmit = async (e) => {
@@ -283,12 +295,8 @@
                 if (!content) return;
                 
                 const { error } = await supabaseClient.from('messages').insert({ conversation_id: conversationId, sender_id: currentUserProfile.id, content: content });
-                if (error) {
-                    showToast('Erro ao enviar resposta.', 'danger');
-                } else {
-                    replyInput.value = '';
-                    openConversation(conversationId); // Refresh
-                }
+                if (error) { showToast('Erro ao enviar resposta.', 'danger'); } 
+                else { replyInput.value = ''; openConversation(conversationId); }
             };
         }
 
