@@ -58,8 +58,6 @@
         .modal-body { padding: 1.5rem; } .modal-footer { padding: 1rem 1.5rem; display: flex; justify-content: flex-end; gap: 0.5rem; background-color: var(--color-background); }
         .form-group { margin-bottom: 1rem; }
         .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
-        
-        /* Fixed Dashboard & Table Styles */
         .stat-card { display: flex; align-items: center; gap: 1rem; }
         .stat-card .stat-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .stat-card.card-warning .stat-icon { background-color: var(--color-warning-bg); color: var(--color-warning); }
@@ -74,7 +72,7 @@
         .data-table .action-buttons button:hover { background-color: var(--color-background); color: var(--color-text-primary); }
         .page-header .btn { padding: 0.5rem 1rem; }
         
-        /* Redesigned New Message Popup */
+        /* --- Redesigned New Message Popup --- */
         #new-message-popup { position: fixed; bottom: 0; right: 3rem; width: 600px; max-width: 90vw; background-color: var(--color-surface); border: 1px solid var(--color-border); border-top-left-radius: 12px; border-top-right-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); z-index: 1001; display: none; flex-direction: column; transition: transform 0.3s ease-out; transform: translateY(100%); }
         #new-message-popup.visible { display: flex; transform: translateY(0); }
         .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background-color: var(--color-background); border-bottom: 1px solid var(--color-border); cursor: move; }
@@ -85,18 +83,24 @@
         .popup-body .form-group { margin: 0; }
         .popup-body .input-field { background: transparent; border: none; border-bottom: 1px solid var(--color-border); border-radius: 0; padding: 0.75rem 0; font-size: 0.9rem; }
         .popup-body .input-field:focus { outline: none; border-bottom-color: var(--color-info); }
-        .popup-body .ql-container.ql-snow { border: none !important; flex-grow: 1; overflow-y: auto; }
-        .popup-body .ql-editor { padding: 1rem 0; }
+        .ql-editor.ql-blank::before { color: var(--color-text-secondary); font-style: normal; pointer-events: none; } /* Fix for placeholder z-index issue */
+        #editor-wrapper { flex-grow: 1; display: flex; flex-direction: column; min-height: 0; }
+        #editor-wrapper .ql-toolbar { flex-shrink: 0; }
+        #editor-wrapper .ql-container.ql-snow { border: none !important; flex-grow: 1; overflow-y: auto; }
+        #editor-wrapper .ql-editor { padding: 1rem 0; }
+        .ql-snow .ql-attach-file::before { font-family: 'Material Icons'; content: 'attach_file'; vertical-align: middle; font-size: 18px; } /* Custom Icon */
         #recipient-group { position: relative; }
         #recipient-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; z-index: 1002; max-height: 200px; overflow-y: auto; display: none; box-shadow: var(--shadow); }
         .suggestion-item { padding: 0.5rem 1rem; cursor: pointer; }
         .suggestion-item:hover { background-color: var(--color-background); }
-        .popup-footer { padding: 0.75rem 1rem; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
+        .popup-footer { padding: 0.75rem 1rem; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; align-items: stretch; gap: 0.75rem; }
+        .popup-footer-main { display: flex; justify-content: space-between; align-items: center; }
         .popup-options { display: flex; align-items: center; gap: 1rem; }
         .message-type-selector { display: flex; gap: 0.5rem; border: 1px solid var(--color-border); border-radius: 8px; padding: 0.25rem; background-color: var(--color-background);}
         .message-type-selector label { flex: 1; display: block; text-align: center; padding: 0.25rem 0.5rem; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 0.8rem; }
         .message-type-selector input[type="radio"] { display: none; }
         .message-type-selector input[type="radio"]:checked + label { background-color: var(--color-surface); box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-weight: 600; }
+        .urgency-selector { display: flex; gap: 0.5rem; }
         .urgency-selector .btn { font-size: 0.8rem; padding: 0.4rem 0.8rem; border-radius: 20px; }
         .custom-checkbox { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; }
         .custom-checkbox input[type="checkbox"] { display: none; }
@@ -104,7 +108,8 @@
         .custom-checkbox .checkbox-box .material-icons { font-size: 14px; color: white; transform: scale(0); transition: transform 0.2s; }
         .custom-checkbox input[type="checkbox"]:checked + .checkbox-box { background-color: var(--color-info); border-color: var(--color-info); }
         .custom-checkbox input[type="checkbox"]:checked + .checkbox-box .material-icons { transform: scale(1); }
-        #chamado-fields { display: flex; align-items: center; gap: 0.5rem; }
+        #chamado-fields { display: flex; align-items: center; gap: 0.75rem; background-color: var(--color-background); padding: 0.5rem 1rem; border-radius: 8px; }
+        #chamado-fields label { font-size: 0.9rem; margin-bottom: 0; color: var(--color-text-secondary); }
         #chamado-fields .input-field { font-size: 0.9rem; padding: 0.4rem 0.8rem; }
         #chamado-fields .date-presets { display: flex; gap: 0.25rem; }
         #chamado-fields .date-presets button { font-size: 0.8rem; padding: 0.25rem 0.5rem; }
@@ -127,28 +132,36 @@
                     <div id="recipient-suggestions"></div>
                 </div>
                 <div class="form-group"><input type="text" id="assunto" class="input-field" placeholder="Assunto"></div>
-                <div id="editor-container"></div>
+                <div id="editor-wrapper">
+                    <div id="editor-container"></div>
+                </div>
+                <input type="file" id="file-upload-input" style="display: none;" onchange="handleFileUpload(event)">
             </div>
             <div class="popup-footer">
-                <button type="submit" class="btn btn-danger">Enviar</button>
-                <div class="popup-options">
-                    <div class="message-type-selector">
-                        <div><input type="radio" id="tipo-simples" name="message-type" value="message" checked onchange="toggleChamadoFields()"><label for="tipo-simples">Simples</label></div>
-                        <div><input type="radio" id="tipo-chamado" name="message-type" value="ticket" onchange="toggleChamadoFields()"><label for="tipo-chamado">Chamado</label></div>
+                <div id="chamado-fields" style="display:none;">
+                    <label for="due_date">Prazo:</label>
+                    <input type="date" id="due_date" class="input-field">
+                    <div class="date-presets">
+                        <button type="button" class="btn btn-secondary" onclick="setDueDate(1)">+1d</button>
+                        <button type="button" class="btn btn-secondary" onclick="setDueDate(7)">+7d</button>
                     </div>
-                     <div id="chamado-fields" style="display:none;">
-                        <input type="date" id="due_date" class="input-field">
-                        <div class="date-presets">
-                            <button type="button" class="btn btn-secondary" onclick="setDueDate(1)">+1d</button>
-                            <button type="button" class="btn btn-secondary" onclick="setDueDate(7)">+7d</button>
+                </div>
+                <div class="popup-footer-main">
+                    <div class="popup-options">
+                        <button type="submit" class="btn btn-danger">Enviar</button>
+                        <div class="message-type-selector">
+                            <div><input type="radio" id="tipo-simples" name="message-type" value="message" checked onchange="toggleChamadoFields()"><label for="tipo-simples">Simples</label></div>
+                            <div><input type="radio" id="tipo-chamado" name="message-type" value="ticket" onchange="toggleChamadoFields()"><label for="tipo-chamado">Chamado</label></div>
                         </div>
                     </div>
-                    <div class="urgency-selector">
-                        <button type="button" class="btn btn-success active" data-priority="normal" title="Normal">N</button>
-                        <button type="button" class="btn btn-secondary" data-priority="important" title="Importante">!</button>
-                        <button type="button" class="btn btn-secondary" data-priority="urgent" title="Urgente">!!</button>
+                    <div class="popup-options">
+                        <div class="urgency-selector">
+                            <button type="button" class="btn btn-success active" data-priority="normal">Normal</button>
+                            <button type="button" class="btn btn-secondary" data-priority="important">Importante</button>
+                            <button type="button" class="btn btn-secondary" data-priority="urgent">Urgente</button>
+                        </div>
+                        <label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label>
                     </div>
-                    <label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label>
                 </div>
             </div>
         </form>
@@ -157,7 +170,7 @@
     <script>
         const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
-        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjc0NzYyMywiZXhwIjoyMDc4MzIzNjIzfQ.flhYf7ScWkiuGntgO1qvPwUkLy1hCD6oMhzxgj-uHss';
+        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjc0NzYyMywiZXhwIjoyMDc4MzIzNjIzfQ.flhYf7ScWkiuGntgOqvPwUkLy1hCD6oMhzxgj-uHss';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const supabaseAdmin = supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
         
@@ -171,7 +184,6 @@
         const authHTML = `<div class="login-wrapper visible" id="auth-wrapper"><div id="auth-container" class="login-container"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo"><p class="login-subtitle">Comunicação interna Molas Fama</p><form id="login-form"><div class="input-group"><input type="email" id="email" class="input-field" placeholder="Email" required></div><div class="input-group"><input type="password" id="password" class="input-field" placeholder="Senha" required></div><button type="submit" class="btn-primary" style="width: 100%;">Entrar</button></form></div></div>`;
         const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1>Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Urgentes</h3><p id="urgent-tickets-count">0</p></div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="card"><div id="message-list-content">Carregando mensagens...</div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><div id="users-page" class="page-content"><div class="page-header"><h1>Gerenciamento de Usuários</h1><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div><div class="card"><table class="data-table"><thead><tr><th>Usuário</th><th>Email</th><th>Departamento</th><th>Cargo</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div class="card" id="user-profile-content">Carregando perfil...</div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div></div>`;
         
-        // --- CORE APP LOGIC ---
         document.addEventListener('DOMContentLoaded', checkUserSession);
         
         async function checkUserSession() {
@@ -224,42 +236,11 @@
             document.getElementById('destinatario').addEventListener('input', handleRecipientSearch);
         }
 
-        // --- AUTH & USER PROFILE ---
-        async function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (error) { alert('Erro no login: ' + error.message); }
-            else if (data.user) {
-                await fetchUserProfile(data.user.id);
-                renderAppLayout();
-            }
-        }
+        async function handleLogin(e) { e.preventDefault(); const email = document.getElementById('email').value; const password = document.getElementById('password').value; const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password }); if (error) { alert('Erro no login: ' + error.message); } else if (data.user) { await fetchUserProfile(data.user.id); renderAppLayout(); } }
+        async function handleLogout() { await supabaseClient.auth.signOut(); currentUserProfile = null; allUsers = []; renderAuthLayout(); }
+        async function fetchUserProfile(userId) { const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', userId).single(); if (data) currentUserProfile = data; else console.error("Perfil não encontrado:", error); }
 
-        async function handleLogout() {
-            await supabaseClient.auth.signOut();
-            currentUserProfile = null;
-            allUsers = [];
-            renderAuthLayout();
-        }
-
-        async function fetchUserProfile(userId) {
-            const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
-            if (data) currentUserProfile = data;
-            else console.error("Perfil não encontrado:", error);
-        }
-
-        // --- APP INITIALIZATION & NAVIGATION ---
-        function showApp() {
-            const appContainer = document.getElementById('app-container');
-            if(appContainer) {
-                appContainer.classList.add('visible');
-                document.getElementById('admin-section').style.display = (currentUserProfile && currentUserProfile.role === 'Admin') ? 'block' : 'none';
-                showPage('dashboard-page');
-                loadAllDynamicData();
-            }
-        }
+        function showApp() { const appContainer = document.getElementById('app-container'); if(appContainer) { appContainer.classList.add('visible'); document.getElementById('admin-section').style.display = (currentUserProfile && currentUserProfile.role === 'Admin') ? 'block' : 'none'; showPage('dashboard-page'); loadAllDynamicData(); } }
         
         function showPage(pageId) {
             const appContainer = document.getElementById('app-container');
@@ -273,45 +254,50 @@
             if (activeLink) activeLink.classList.add('active');
         }
         
-        // --- DYNAMIC DATA LOADING ---
-        async function loadAllDynamicData() {
-            loadDashboardStats();
-            if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin();
-            fetchAllUsersForSearch();
-        }
-        
-        async function loadDashboardStats() {
-            const { count: pendingCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('status', 'open');
-            const { count: urgentCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('priority', 'urgent').eq('status', 'open');
-            document.getElementById('pending-messages-count').textContent = pendingCount || 0;
-            document.getElementById('urgent-tickets-count').textContent = urgentCount || 0;
+        async function loadAllDynamicData() { loadDashboardStats(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
+        async function loadDashboardStats() { const { count: pendingCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('status', 'open'); const { count: urgentCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('priority', 'urgent').eq('status', 'open'); document.getElementById('pending-messages-count').textContent = pendingCount || 0; document.getElementById('urgent-tickets-count').textContent = urgentCount || 0; }
+        async function fetchAllUsersForSearch() { const { data, error } = await supabaseClient.from('user_details').select('id, full_name, email'); if(error) console.error("Erro ao buscar usuários para pesquisa:", error); else allUsers = data.filter(u => u.id !== currentUserProfile.id); }
+
+        function customAttachFile() {
+            document.getElementById('file-upload-input').click();
         }
 
-        async function fetchAllUsersForSearch() {
-            const { data, error } = await supabaseClient.from('user_details').select('id, full_name, email');
-            if(error) console.error("Erro ao buscar usuários para pesquisa:", error);
-            else allUsers = data.filter(u => u.id !== currentUserProfile.id); // Exclude self
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            alert(`Simulando upload do arquivo: ${file.name}`);
+            // Aqui iria a lógica de upload para o Supabase Storage
         }
 
-        // --- NEW MESSAGE POPUP ---
         function initializeQuillEditor() {
             if (document.getElementById('editor-container') && !quillEditor) {
+                const toolbarOptions = [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link', 'image'],
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['clean']
+                ];
                 quillEditor = new Quill('#editor-container', {
-                    modules: { toolbar: [
-                        ['bold', 'italic', 'underline'],
-                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                        ['link']
-                    ]},
+                    modules: { toolbar: toolbarOptions },
                     placeholder: 'Escreva sua mensagem...',
                     theme: 'snow'
                 });
+                
+                // Adicionando botão customizado de anexo
+                const attachButton = document.createElement('button');
+                attachButton.innerHTML = '<span class="material-icons">attach_file</span>';
+                attachButton.title = "Anexar arquivo";
+                attachButton.style.cssText = "width: auto; padding: 0 5px;";
+                attachButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    customAttachFile();
+                });
+                quillEditor.getModule('toolbar').container.querySelector('.ql-formats').appendChild(attachButton);
             }
         }
 
-        function openNewMessagePopup() {
-            document.getElementById('new-message-popup').classList.add('visible');
-            if (!quillEditor) initializeQuillEditor();
-        }
+        function openNewMessagePopup() { document.getElementById('new-message-popup').classList.add('visible'); if (!quillEditor) initializeQuillEditor(); }
         
         function closeNewMessagePopup() {
             document.getElementById('new-message-popup').classList.remove('visible');
@@ -319,6 +305,7 @@
             document.getElementById('destinatario-id').value = '';
             document.getElementById('recipient-suggestions').style.display = 'none';
             if (quillEditor) quillEditor.setContents([]);
+            document.getElementById('tipo-simples').checked = true; // Reset radio
             toggleChamadoFields(); // Reset visibility
         }
 
@@ -327,25 +314,13 @@
             document.getElementById('chamado-fields').style.display = isChamado ? 'flex' : 'none';
         }
 
-        function setDueDate(days) {
-            const date = new Date();
-            date.setDate(date.getDate() + days);
-            document.getElementById('due_date').value = date.toISOString().split('T')[0];
-        }
+        function setDueDate(days) { const date = new Date(); date.setDate(date.getDate() + days); document.getElementById('due_date').value = date.toISOString().split('T')[0]; }
 
-        // --- RECIPIENT SEARCH ---
         function handleRecipientSearch(e) {
             const query = e.target.value.toLowerCase();
             const suggestionsContainer = document.getElementById('recipient-suggestions');
-            if (query.length < 2) {
-                suggestionsContainer.style.display = 'none';
-                return;
-            }
-            const filteredUsers = allUsers.filter(user => 
-                (user.full_name && user.full_name.toLowerCase().includes(query)) ||
-                (user.email && user.email.toLowerCase().includes(query))
-            );
-            
+            if (query.length < 2) { suggestionsContainer.style.display = 'none'; return; }
+            const filteredUsers = allUsers.filter(user => (user.full_name && user.full_name.toLowerCase().includes(query)) || (user.email && user.email.toLowerCase().includes(query)));
             suggestionsContainer.innerHTML = '';
             if (filteredUsers.length > 0) {
                 filteredUsers.forEach(user => {
@@ -361,19 +336,13 @@
             }
         }
 
-        function selectRecipient(user) {
-            document.getElementById('destinatario').value = user.full_name;
-            document.getElementById('destinatario-id').value = user.id;
-            document.getElementById('recipient-suggestions').style.display = 'none';
-        }
+        function selectRecipient(user) { document.getElementById('destinatario').value = user.full_name; document.getElementById('destinatario-id').value = user.id; document.getElementById('recipient-suggestions').style.display = 'none'; }
 
         async function sendMessage(e) {
             e.preventDefault();
             if (!currentUserProfile) { alert("Você precisa estar logado."); return; }
-
             const recipientId = document.getElementById('destinatario-id').value;
             if (!recipientId) { alert("Selecione um destinatário da lista."); return; }
-
             const subject = document.getElementById('assunto').value;
             const content = quillEditor.root.innerHTML;
             const type = document.querySelector('input[name="message-type"]:checked').value;
@@ -382,53 +351,23 @@
             const dueDate = document.getElementById('due_date').value;
 
             try {
-                const { data: convData, error: convError } = await supabaseClient
-                    .from('conversations')
-                    .insert({ subject, type, priority, status: 'open', requires_response: requiresResponse, due_date: type === 'ticket' ? dueDate : null })
-                    .select().single();
+                const { data: convData, error: convError } = await supabaseClient.from('conversations').insert({ subject, type, priority, status: 'open', requires_response: requiresResponse, due_date: type === 'ticket' ? dueDate : null }).select().single();
                 if (convError) throw convError;
-
                 const { error: msgError } = await supabaseClient.from('messages').insert({ conversation_id: convData.id, sender_id: currentUserProfile.id, content: content });
                 if (msgError) throw msgError;
-                
-                const participants = [
-                    { conversation_id: convData.id, user_id: currentUserProfile.id },
-                    { conversation_id: convData.id, user_id: recipientId }
-                ];
+                const participants = [ { conversation_id: convData.id, user_id: currentUserProfile.id }, { conversation_id: convData.id, user_id: recipientId } ];
                 const { error: partError } = await supabaseClient.from('conversation_participants').insert(participants);
                 if (partError) throw partError;
-                
                 alert("Mensagem enviada com sucesso!");
                 closeNewMessagePopup();
-            } catch (error) {
-                console.error("Erro ao enviar mensagem:", error);
-                alert("Falha ao enviar mensagem: " + error.message);
-            }
+            } catch (error) { console.error("Erro ao enviar mensagem:", error); alert("Falha ao enviar mensagem: " + error.message); }
         }
         
-        // --- ADMIN: USER MANAGEMENT ---
         async function loadUsersForAdmin() {
             const { data: users, error } = await supabaseClient.from('user_details').select('*');
             const tableBody = document.getElementById('user-table-body');
-            if (error) {
-                console.error("Erro ao buscar usuários:", error);
-                if(tableBody) tableBody.innerHTML = `<tr><td colspan="5">Erro ao carregar usuários.</td></tr>`;
-                return;
-            }
-            if(tableBody) {
-                tableBody.innerHTML = users.map(user => `
-                    <tr>
-                        <td>${user.full_name || 'N/A'}</td>
-                        <td>${user.email || 'N/A'}</td>
-                        <td>${user.department || 'N/A'}</td>
-                        <td>${user.role || 'N/A'}</td>
-                        <td class="action-buttons">
-                            <button onclick='openUserModal(${JSON.stringify(user)})' title="Editar"><span class="material-icons">edit</span></button>
-                            <button onclick="deleteUser('${user.id}', '${user.full_name}')" title="Excluir"><span class="material-icons">delete</span></button>
-                        </td>
-                    </tr>
-                `).join('');
-            }
+            if (error) { console.error("Erro ao buscar usuários:", error); if(tableBody) tableBody.innerHTML = `<tr><td colspan="5">Erro ao carregar usuários.</td></tr>`; return; }
+            if(tableBody) { tableBody.innerHTML = users.map(user => `<tr><td>${user.full_name || 'N/A'}</td><td>${user.email || 'N/A'}</td><td>${user.department || 'N/A'}</td><td>${user.role || 'N/A'}</td><td class="action-buttons"><button onclick='openUserModal(${JSON.stringify(user)})' title="Editar"><span class="material-icons">edit</span></button><button onclick="deleteUser('${user.id}', '${user.full_name}')" title="Excluir"><span class="material-icons">delete</span></button></td></tr>`).join(''); }
         }
         
         function openUserModal(user) {
@@ -439,24 +378,12 @@
             userEmailField.disabled = !!user;
             passwordGroup.style.display = user ? 'none' : 'block';
             document.getElementById('user_password').required = !user;
-            if (user) {
-                document.getElementById('user-modal-title').textContent = 'Editar Usuário';
-                document.getElementById('user-id').value = user.id;
-                document.getElementById('full_name').value = user.full_name;
-                userEmailField.value = user.email || '';
-                document.getElementById('department').value = user.department;
-                document.getElementById('role').value = user.role;
-            } else {
-                document.getElementById('user-modal-title').textContent = 'Novo Usuário';
-                document.getElementById('user-id').value = '';
-            }
+            if (user) { document.getElementById('user-modal-title').textContent = 'Editar Usuário'; document.getElementById('user-id').value = user.id; document.getElementById('full_name').value = user.full_name; userEmailField.value = user.email || ''; document.getElementById('department').value = user.department; document.getElementById('role').value = user.role; }
+            else { document.getElementById('user-modal-title').textContent = 'Novo Usuário'; document.getElementById('user-id').value = ''; }
             modal.classList.add('visible');
         }
 
-        function closeUserModal() {
-            const modal = document.querySelector('#app-container #user-modal');
-            if (modal) modal.classList.remove('visible');
-        }
+        function closeUserModal() { const modal = document.querySelector('#app-container #user-modal'); if (modal) modal.classList.remove('visible'); }
         
         async function saveUser() {
             const userId = document.getElementById('user-id').value;
@@ -465,45 +392,23 @@
             const role = document.getElementById('role').value;
             const email = document.getElementById('user_email').value;
             const password = document.getElementById('user_password').value;
-            
-            if (userId) { // Update existing user
-                const { error } = await supabaseClient.from('profiles').update({ full_name: fullName, department: department, role: role }).eq('id', userId);
-                if (error) { alert("Erro ao atualizar perfil: " + error.message); }
-                else { alert("Perfil atualizado com sucesso!"); }
-            } else { // Create new user
-                if (!password) { alert("A senha é obrigatória para novos usuários."); return; }
+            if (userId) { const { error } = await supabaseClient.from('profiles').update({ full_name: fullName, department: department, role: role }).eq('id', userId); if (error) { alert("Erro ao atualizar perfil: " + error.message); } else { alert("Perfil atualizado com sucesso!"); } }
+            else { if (!password) { alert("A senha é obrigatória para novos usuários."); return; }
                 const { data, error: authError } = await supabaseAdmin.auth.admin.createUser({ email: email, password: password, email_confirm: true });
-                if (authError) {
-                    alert("Erro ao criar usuário: " + authError.message);
-                    return;
-                }
+                if (authError) { alert("Erro ao criar usuário: " + authError.message); return; }
                 const newUserId = data.user.id;
-                await new Promise(resolve => setTimeout(resolve, 500)); // Delay to allow user creation to propagate
+                await new Promise(resolve => setTimeout(resolve, 500));
                 const { error: profileError } = await supabaseClient.from('profiles').upsert({ id: newUserId, full_name: fullName, department: department, role: role });
-                if (profileError) { alert("Erro ao criar perfil do usuário: " + profileError.message); }
-                else { alert("Usuário criado com sucesso!"); }
+                if (profileError) { alert("Erro ao criar perfil do usuário: " + profileError.message); } else { alert("Usuário criado com sucesso!"); }
             }
-            closeUserModal();
-            loadUsersForAdmin();
+            closeUserModal(); loadUsersForAdmin();
         }
 
-        async function deleteUser(userId, userName) {
-            if (confirm(`Tem certeza que deseja excluir o usuário ${userName}? Esta ação não pode ser desfeita.`)) {
-                alert("AVISO: A exclusão de usuários deve ser movida para uma Edge Function segura para evitar expor a chave de serviço no cliente. Esta é uma simulação.");
-                // Real implementation would be:
-                // const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
-                // if (error) alert("Erro ao excluir: " + error.message);
-                // else { alert("Usuário excluído."); loadUsersForAdmin(); }
-            }
-        }
+        async function deleteUser(userId, userName) { if (confirm(`Tem certeza que deseja excluir o usuário ${userName}? Esta ação não pode ser desfeita.`)) { alert("AVISO: A exclusão de usuários deve ser movida para uma Edge Function segura para evitar expor a chave de serviço no cliente. Esta é uma simulação."); } }
 
-        // --- THEME TOGGLE ---
         const body = document.body;
         themeToggleBtn.addEventListener('click', () => applyTheme(body.classList.contains('dark-mode') ? 'light' : 'dark'));
-        function applyTheme(theme) {
-            body.classList.toggle('dark-mode', theme === 'dark');
-            localStorage.setItem('theme', theme);
-        }
+        function applyTheme(theme) { body.classList.toggle('dark-mode', theme === 'dark'); localStorage.setItem('theme', theme); }
     </script>
 </body>
 </html>
