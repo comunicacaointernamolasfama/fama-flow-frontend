@@ -65,13 +65,28 @@
         .stat-card.card-danger .stat-icon { background-color: var(--color-danger-bg); color: var(--color-danger); }
         .stat-card .stat-info h3 { margin: 0; font-size: 1rem; color: var(--color-text-secondary); }
         .stat-card .stat-info p { margin: 0; font-size: 2rem; font-weight: 700; }
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--color-border); }
-        .data-table thead th { background-color: var(--color-background); font-weight: 600; color: var(--color-text-secondary); font-size: 0.9rem; }
-        .data-table .action-buttons { display: flex; gap: 0.5rem; }
-        .data-table .action-buttons button { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
-        .data-table .action-buttons button:hover { background-color: var(--color-background); color: var(--color-text-primary); }
         .page-header .btn { padding: 0.5rem 1rem; }
+        .data-table-fino { width: 100%; border-collapse: collapse; }
+        .data-table-fino tr { cursor: pointer; }
+        .data-table-fino tr:hover { background-color: var(--color-background); }
+        .data-table-fino td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+        .data-table-fino .col-who { width: 20%; font-weight: 600; }
+        .data-table-fino .col-subject { width: 45%; }
+        .data-table-fino .col-subject strong { font-weight: 500; }
+        .data-table-fino .col-subject span { color: var(--color-text-secondary); margin-left: 0.5rem; }
+        .data-table-fino .col-tags { width: 20%; }
+        .data-table-fino .col-date { width: 15%; text-align: right; color: var(--color-text-secondary); font-size: 0.9rem; }
+        .data-table-fino .tags-container { display: flex; align-items: center; gap: 0.75rem; }
+        .data-table-fino .tag-icon { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; color: var(--color-text-secondary); }
+        .data-table-fino .tag-icon .material-icons { font-size: 18px; }
+        .data-table-fino .tag-icon.urgent { color: var(--color-danger); }
+        .data-table-fino .tag-icon.important { color: var(--color-warning); }
+        .data-table-fino .tag-icon.ticket { color: var(--color-info); }
+        .tabs-container { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--color-border); margin-bottom: -1px; }
+        .tab-link { background: none; border: none; padding: 0.75rem 1.25rem; cursor: pointer; color: var(--color-text-secondary); font-weight: 500; border-bottom: 2px solid transparent; }
+        .tab-link.active { color: var(--color-brand-primary); border-bottom-color: var(--color-brand-primary); }
+        .tab-content { display: none; } .tab-content.active { display: block; }
+        .empty-state { padding: 3rem 1rem; text-align: center; color: var(--color-text-secondary); }
         #new-message-popup { position: fixed; bottom: 0; right: 3rem; width: 600px; max-width: 90vw; background-color: var(--color-surface); border: 1px solid var(--color-border); border-top-left-radius: 12px; border-top-right-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); z-index: 1001; display: none; flex-direction: column; transition: transform 0.3s ease-out; transform: translateY(100%); }
         #new-message-popup.visible { display: flex; transform: translateY(0); }
         .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background-color: var(--color-background); border-bottom: 1px solid var(--color-border); cursor: move; }
@@ -125,24 +140,6 @@
         .toast.toast-danger { border-color: var(--color-danger); background-color: var(--color-danger-bg); } .toast.toast-danger .toast-icon { color: var(--color-danger); }
         .toast.toast-warning { border-color: var(--color-warning); background-color: var(--color-warning-bg); } .toast.toast-warning .toast-icon { color: var(--color-warning); }
         .toast.toast-info { border-color: var(--color-info); background-color: var(--color-info-bg); } .toast.toast-info .toast-icon { color: var(--color-info); }
-        #message-list-content { display: flex; flex-direction: column; }
-        .message-item { display: flex; padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); cursor: pointer; transition: background-color 0.2s; gap: 1rem; align-items: flex-start; }
-        .message-item:last-child { border-bottom: none; }
-        .message-item:hover { background-color: var(--color-background); }
-        .message-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--color-info-bg); color: var(--color-info); display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; margin-top: 4px; }
-        .message-details { flex-grow: 1; overflow: hidden; }
-        .message-header { display: flex; justify-content: space-between; align-items: baseline; }
-        .message-sender { font-weight: 600; }
-        .message-subject { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .message-preview { color: var(--color-text-secondary); font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0.25rem 0; }
-        .message-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
-        .tag { font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.25rem; }
-        .tag .material-icons { font-size: 14px; }
-        .tag.tag-urgent { background-color: var(--color-danger-bg); color: var(--color-danger); }
-        .tag.tag-important { background-color: var(--color-warning-bg); color: var(--color-warning); }
-        .tag.tag-ticket { background-color: var(--color-info-bg); color: var(--color-info); }
-        .tag.tag-response { border: 1px solid var(--color-border); color: var(--color-text-secondary); }
-        .message-timestamp { color: var(--color-text-secondary); font-size: 0.8rem; flex-shrink: 0; }
         #conversation-view-page .card { display: flex; flex-direction: column; height: calc(100vh - 8rem); padding: 0; }
         #conversation-messages { flex-grow: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
         .message-bubble-wrapper { display: flex; flex-direction: column; max-width: 70%; }
@@ -184,7 +181,7 @@
         const themeToggleBtn = document.getElementById('theme-toggle');
 
         const authHTML = `<div class="login-wrapper visible" id="auth-wrapper"><div id="auth-container" class="login-container"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo"><p class="login-subtitle">Comunicação interna Molas Fama</p><form id="login-form"><div class="input-group"><input type="email" id="email" class="input-field" placeholder="Email" required></div><div class="input-group"><input type="password" id="password" class="input-field" placeholder="Senha" required></div><button type="submit" class="btn-primary" style="width: 100%;">Entrar</button></form></div></div>`;
-        const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Urgentes</h3><p id="urgent-tickets-count">0</p></div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="card" style="padding: 0;"><div id="message-list-content">Carregando mensagens...</div></div></div><div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"><button class="btn btn-secondary" onclick="showPage('messages-page')"><span class="material-icons">arrow_back</span> Voltar</button><div><h1 id="conversation-subject"></h1><p id="conversation-participants"></p></div><div class="conversation-header-actions"><button class="btn btn-secondary" onclick="document.getElementById('reply-input').focus()"><span class="material-icons">reply</span> Responder</button></div></div><div class="card"><div id="conversation-messages"></div><div id="reply-form-wrapper"><form id="reply-form"><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><div id="users-page" class="page-content"><div class="page-header"><h1>Gerenciamento de Usuários</h1><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div><div class="card"><table class="data-table"><thead><tr><th>Usuário</th><th>Email</th><th>Departamento</th><th>Cargo</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div class="card" id="user-profile-content">Carregando perfil...</div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div></div>`;
+        const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Urgentes</h3><p id="urgent-tickets-count">0</p></div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button></div><div class="card" style="padding: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div></div></div><div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"><button class="btn btn-secondary" onclick="showPage('messages-page')"><span class="material-icons">arrow_back</span> Voltar</button><div><h1 id="conversation-subject"></h1><p id="conversation-participants"></p></div><div class="conversation-header-actions"><button class="btn btn-secondary" onclick="document.getElementById('reply-input').focus()"><span class="material-icons">reply</span> Responder</button></div></div><div class="card"><div id="conversation-messages"></div><div id="reply-form-wrapper"><form id="reply-form"><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><div id="users-page" class="page-content"><div class="page-header"><h1>Gerenciamento de Usuários</h1><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div><div class="card"><table class="data-table"><thead><tr><th>Usuário</th><th>Email</th><th>Departamento</th><th>Cargo</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div class="card" id="user-profile-content">Carregando perfil...</div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div></div>`;
         
         document.addEventListener('DOMContentLoaded', checkUserSession);
         
@@ -208,12 +205,13 @@
         function setupEventListeners() {
             document.getElementById('logout-button').addEventListener('click', handleLogout);
             document.getElementById('new-message-form').addEventListener('submit', sendMessage);
-            document.getElementById('btn-new-user').addEventListener('click', () => openUserModal(null));
+            document.getElementById('btn-new-user')?.addEventListener('click', () => openUserModal(null));
             document.getElementById('fab-new-message').addEventListener('click', openNewMessagePopup);
             document.querySelectorAll('.nav-link[data-page]').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); showPage(e.currentTarget.dataset.page); }); });
             document.querySelectorAll('.urgency-selector .btn').forEach(button => { button.addEventListener('click', (e) => { e.preventDefault(); document.querySelectorAll('.urgency-selector .btn').forEach(btn => { btn.classList.remove('btn-success', 'btn-warning', 'btn-danger', 'active'); btn.classList.add('btn-secondary'); }); const clickedButton = e.currentTarget; clickedButton.classList.remove('btn-secondary'); clickedButton.classList.add('active'); const priority = clickedButton.dataset.priority; if (priority === 'normal') clickedButton.classList.add('btn-success'); else if (priority === 'important') clickedButton.classList.add('btn-warning'); else if (priority === 'urgent') clickedButton.classList.add('btn-danger'); }); });
             const recipientInput = document.getElementById('destinatario-input');
             if (recipientInput) { recipientInput.addEventListener('input', handleRecipientSearch); recipientInput.addEventListener('keydown', handleRecipientBackspace); }
+            document.querySelectorAll('#messages-page .tab-link').forEach(tab => { tab.addEventListener('click', (e) => { const targetId = e.currentTarget.dataset.tab; document.querySelectorAll('#messages-page .tab-link').forEach(t => t.classList.remove('active')); document.querySelectorAll('#messages-page .tab-content').forEach(c => c.classList.remove('active')); e.currentTarget.classList.add('active'); document.getElementById(targetId).classList.add('active'); }); });
         }
 
         async function handleLogin(e) { e.preventDefault(); const email = document.getElementById('email').value; const password = document.getElementById('password').value; const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password }); if (error) { showToast('Erro no login: ' + error.message, 'danger'); } else if (data.user) { await fetchUserProfile(data.user); renderAppLayout(); } }
@@ -239,7 +237,7 @@
                 document.getElementById('dashboard-title').textContent = `Dashboard de ${currentUserProfile.full_name.split(' ')[0]}`;
             } 
         }
-        function showPage(pageId) { const appContainer = document.getElementById('app-container'); if (!appContainer) return; appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); const targetPage = appContainer.querySelector(`#${pageId}`); if (targetPage) targetPage.classList.add('active'); appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); if (activeLink) activeLink.classList.add('active'); }
+        function showPage(pageId) { const appContainer = document.getElementById('app-container'); if (!appContainer) return; appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); const targetPage = appContainer.querySelector(`#${pageId}`); if (targetPage) targetPage.classList.add('active'); appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); if (activeLink) activeLink.classList.add('active'); if(pageId === 'messages-page') loadMessages(); }
         async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); loadUserProfileData(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
         async function loadDashboardStats() { const { count: pendingCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }); const { count: urgentCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('priority', 'urgent'); document.getElementById('pending-messages-count').textContent = pendingCount || 0; document.getElementById('urgent-tickets-count').textContent = urgentCount || 0; }
         async function fetchAllUsersForSearch() { const { data, error } = await supabaseClient.from('profiles').select('id, full_name'); if(error) console.error("Erro ao buscar usuários para pesquisa:", error); else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; }
@@ -263,24 +261,16 @@
             }
         }
 
-        function customAttachFile() { document.getElementById('file-upload-input').click(); }
-        function handleFileUpload(event) { const file = event.target.files[0]; if (!file) return; showToast(`Simulando upload: ${file.name}`, 'info'); }
-
         function initializeQuillEditor() {
             if (document.getElementById('editor-container') && !quillEditor) {
-                const toolbarOptions = [ ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link', 'image'], [{ 'header': [1, 2, 3, false] }], ['clean'] ];
+                const toolbarOptions = [ ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link'], [{ 'header': [1, 2, 3, false] }], ['clean'] ];
                 quillEditor = new Quill('#editor-container', { modules: { toolbar: toolbarOptions }, placeholder: 'Escreva sua mensagem...', theme: 'snow' });
-                const attachButton = document.createElement('button'); attachButton.innerHTML = '<span class="material-icons" style="font-size: 18px; vertical-align: middle;">attach_file</span>'; attachButton.title = "Anexar arquivo"; attachButton.style.cssText = "width: auto; padding: 0 5px;"; attachButton.addEventListener('click', (e) => { e.preventDefault(); customAttachFile(); });
-                const firstFormatGroup = quillEditor.getModule('toolbar').container.querySelector('.ql-formats');
-                if(firstFormatGroup) firstFormatGroup.appendChild(attachButton);
             }
         }
-
         function openNewMessagePopup() { document.getElementById('new-message-popup').classList.add('visible'); if (!quillEditor) initializeQuillEditor(); }
         function closeNewMessagePopup() { document.getElementById('new-message-popup').classList.remove('visible'); document.getElementById('new-message-form').reset(); selectedRecipients = []; renderRecipientPills(); document.getElementById('recipient-suggestions').style.display = 'none'; if (quillEditor) quillEditor.setContents([]); document.getElementById('tipo-simples').checked = true; toggleChamadoFields(); }
         function toggleChamadoFields() { const isChamado = document.getElementById('tipo-chamado').checked; document.getElementById('chamado-fields').style.display = isChamado ? 'flex' : 'none'; }
         function setDueDate(days) { const date = new Date(); date.setDate(date.getDate() + days); document.getElementById('due_date').value = date.toISOString().split('T')[0]; }
-        
         function renderRecipientPills() { const wrapper = document.getElementById('recipient-input-wrapper'); const input = document.getElementById('destinatario-input'); wrapper.querySelectorAll('.recipient-pill').forEach(pill => pill.remove()); selectedRecipients.forEach(user => { const pill = document.createElement('span'); pill.className = 'recipient-pill'; pill.dataset.userId = user.id; pill.innerHTML = `${user.full_name} <span class="pill-remove" onclick="removeRecipient('${user.id}')">&times;</span>`; wrapper.insertBefore(pill, input); }); input.placeholder = selectedRecipients.length > 0 ? '' : 'Para:'; }
         function addRecipient(user) { if (!selectedRecipients.some(r => r.id === user.id)) { selectedRecipients.push(user); renderRecipientPills(); } const input = document.getElementById('destinatario-input'); input.value = ''; input.focus(); document.getElementById('recipient-suggestions').style.display = 'none'; }
         window.removeRecipient = (userId) => { selectedRecipients = selectedRecipients.filter(r => r.id !== userId); renderRecipientPills(); }
@@ -294,10 +284,9 @@
             
             const args = { p_subject: document.getElementById('assunto').value || "Sem assunto", p_type: document.querySelector('input[name="message-type"]:checked').value, p_priority: document.querySelector('.urgency-selector .btn.active').dataset.priority, p_requires_response: document.getElementById('requires_response').checked, p_due_date: document.getElementById('due_date').value || null, p_content: quillEditor.root.innerHTML, p_recipient_ids: selectedRecipients.map(u => u.id) };
             try {
-                const { data, error } = await supabaseClient.rpc('send_new_message_securely', args);
+                const { error } = await supabaseClient.rpc('send_new_message_securely', args);
                 if (error) throw error;
                 showToast("Mensagem enviada com sucesso! +5 pontos.", 'success');
-                // GAMIFICATION: Atualiza o score local e recarrega o perfil
                 currentUserProfile.score = (currentUserProfile.score || 0) + 5;
                 loadUserProfileData();
                 closeNewMessagePopup();
@@ -308,31 +297,59 @@
             }
         }
 
+        function renderMessageTable(conversations, containerId, type) {
+            const container = document.getElementById(containerId);
+            if (!conversations || conversations.length === 0) {
+                container.innerHTML = `<div class="empty-state">Nenhuma mensagem aqui.</div>`;
+                return;
+            }
+
+            const tableRows = conversations.map(conv => {
+                const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ').substring(0, 70) : '';
+                const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR') : '';
+                const participants = conv.other_participants_names || 'Você mesmo';
+
+                let tagsHTML = '';
+                if (conv.priority === 'urgent') tagsHTML += '<span class="tag-icon urgent" title="Urgente"><span class="material-icons">priority_high</span></span>';
+                if (conv.priority === 'important') tagsHTML += '<span class="tag-icon important" title="Importante"><span class="material-icons">label_important</span></span>';
+                if (conv.type === 'ticket') tagsHTML += '<span class="tag-icon ticket" title="Chamado"><span class="material-icons">support_agent</span></span>';
+                if (conv.requires_response) tagsHTML += '<span class="tag-icon" title="Exige Resposta"><span class="material-icons">reply</span></span>';
+                if (conv.due_date) tagsHTML += `<span class="tag-icon" title="Prazo: ${new Date(conv.due_date).toLocaleDateString('pt-BR')}"><span class="material-icons">event</span></span>`;
+                
+                return `
+                    <tr onclick="openConversation('${conv.id}')">
+                        <td class="col-who">${type === 'inbox' ? participants : `Para: ${participants}`}</td>
+                        <td class="col-subject"><strong>${conv.subject}</strong><span> - ${preview}...</span></td>
+                        <td class="col-tags"><div class="tags-container">${tagsHTML}</div></td>
+                        <td class="col-date">${timestamp}</td>
+                    </tr>`;
+            }).join('');
+            
+            container.innerHTML = `<table class="data-table-fino"><tbody>${tableRows}</tbody></table>`;
+        }
+
         async function loadMessages() {
             if (!currentUserProfile) return;
-            const container = document.getElementById('message-list-content');
-            container.innerHTML = '<div style="padding: 1rem; text-align: center;">Carregando...</div>';
+            const inboxContainer = document.getElementById('inbox-content');
+            const sentContainer = document.getElementById('sent-content');
+            inboxContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
+            sentContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
             
             const { data, error } = await supabaseClient.from('user_conversations_view').select('*').order('last_message_created_at', { ascending: false, nulls: 'last' });
 
-            if (error) { console.error('Erro ao buscar mensagens:', error); container.innerHTML = `<div style="padding: 1rem; text-align: center; color: var(--color-danger);">Erro ao carregar mensagens.</div>`; return; }
-            if (!data || data.length === 0) { container.innerHTML = '<div style="padding: 1rem; text-align: center;">Nenhuma mensagem encontrada.</div>'; return; }
-            
-            container.innerHTML = data.map(conv => {
-                const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ').substring(0, 100) + '...' : '';
-                const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR') : '';
-                const participants = conv.other_participants_names || 'Você mesmo';
-                const avatarInitial = participants.charAt(0).toUpperCase();
-                
-                let tagsHTML = '';
-                if (conv.priority === 'urgent') tagsHTML += '<span class="tag tag-urgent"><span class="material-icons">priority_high</span> Urgente</span>';
-                if (conv.priority === 'important') tagsHTML += '<span class="tag tag-important"><span class="material-icons">label_important</span> Importante</span>';
-                if (conv.type === 'ticket') tagsHTML += '<span class="tag tag-ticket"><span class="material-icons">support_agent</span> Chamado</span>';
-                if (conv.requires_response) tagsHTML += '<span class="tag tag-response"><span class="material-icons">reply</span> Exige Resposta</span>';
-                if (conv.due_date) tagsHTML += `<span class="tag tag-response"><span class="material-icons">event</span> Prazo: ${new Date(conv.due_date).toLocaleDateString('pt-BR')}</span>`;
+            if (error) {
+                console.error('Erro ao buscar mensagens:', error);
+                const errorMsg = `<div class="empty-state" style="color: var(--color-danger);">Erro ao carregar. Verifique se a VIEW foi atualizada no Supabase.</div>`;
+                inboxContainer.innerHTML = errorMsg;
+                sentContainer.innerHTML = errorMsg;
+                return;
+            }
 
-                return `<div class="message-item" onclick="openConversation('${conv.id}')"><div class="message-avatar">${avatarInitial}</div><div class="message-details"><div class="message-header"><span class="message-sender">${participants}</span><span class="message-timestamp">${timestamp}</span></div><div class="message-subject">${conv.subject}</div><p class="message-preview">${preview}</p><div class="message-tags">${tagsHTML}</div></div></div>`;
-            }).join('');
+            const inboxMessages = data.filter(conv => conv.last_message_sender_id !== currentUserProfile.id);
+            const sentMessages = data.filter(conv => conv.last_message_sender_id === currentUserProfile.id);
+
+            renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
+            renderMessageTable(sentMessages, 'sent-content', 'sent');
         }
 
         window.openConversation = async (conversationId) => {
@@ -341,7 +358,7 @@
             messagesContainer.innerHTML = '<div style="text-align: center;">Carregando conversa...</div>';
             
             const { data: messages, error } = await supabaseClient.from('conversation_messages_view').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true });
-            if (error) { showToast('Erro ao carregar mensagens da conversa.', 'danger'); console.error(error); messagesContainer.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--color-danger);">Erro ao carregar mensagens.</div>'; return; }
+            if (error) { showToast('Erro ao carregar mensagens da conversa.', 'danger'); console.error(error); return; }
 
             const { data: convData } = await supabaseClient.from('conversations').select('subject, conversation_participants(user_id, profiles(full_name))').eq('id', conversationId).single();
             if(convData) {
@@ -356,40 +373,28 @@
                 return `<div class="message-bubble-wrapper ${isSent ? 'sent' : 'received'}"><div class="message-bubble ${isSent ? 'sent' : 'received'}">${msg.content}</div><div class="message-metadata">${isSent ? 'Você' : msg.sender_name} • ${timestamp}</div></div>`;
             }).join('');
             
-            const lastMessage = messagesContainer.lastElementChild;
-            if(lastMessage) lastMessage.scrollIntoView({ behavior: 'smooth' });
+            messagesContainer.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
 
             const replyForm = document.getElementById('reply-form');
             replyForm.onsubmit = async (e) => {
                 e.preventDefault();
                 const replyInput = document.getElementById('reply-input');
                 const content = replyInput.value.trim();
-                const submitBtn = replyForm.querySelector('button[type="submit"]');
                 if (!content) return;
                 
-                submitBtn.disabled = true;
                 const { error: insertError } = await supabaseClient.from('messages').insert({ conversation_id: conversationId, sender_id: currentUserProfile.id, content: content });
 
-                if (insertError) {
-                    submitBtn.disabled = false;
-                    showToast('Erro ao enviar resposta.', 'danger');
-                    console.error(insertError);
-                } else {
-                    // GAMIFICATION: Incrementa o score em 2 pontos ao responder
+                if (insertError) { showToast('Erro ao enviar resposta.', 'danger'); } 
+                else {
                     const newScore = (currentUserProfile.score || 0) + 2;
                     const { error: updateError } = await supabaseClient.from('profiles').update({ score: newScore }).eq('id', currentUserProfile.id);
-
-                    if(updateError){
-                        showToast('Resposta enviada, mas houve um erro ao atualizar o score.', 'warning');
-                    } else {
-                        currentUserProfile.score = newScore; // Atualiza o estado local
-                        loadUserProfileData(); // Recarrega o card de perfil
+                    if(!updateError) {
+                        currentUserProfile.score = newScore;
+                        loadUserProfileData();
                         showToast('Resposta enviada! +2 pontos.', 'success');
                     }
-                    
                     replyInput.value = '';
-                    openConversation(conversationId); // Recarrega a conversa
-                    submitBtn.disabled = false;
+                    openConversation(conversationId);
                 }
             };
         }
@@ -398,42 +403,26 @@
             const tableBody = document.getElementById('user-table-body');
             tableBody.innerHTML = `<tr><td colspan="5">Carregando usuários...</td></tr>`;
             try {
-                // CORREÇÃO: Utiliza a nova VIEW segura
                 const { data: users, error } = await supabaseClient.from('users_with_email').select('*');
                 if (error) throw error;
-                
-                if (tableBody) {
-                    tableBody.innerHTML = users.map(user => `<tr>
-                        <td>${user.full_name || 'N/A'}</td>
-                        <td>${user.email || 'N/A'}</td>
-                        <td>${user.department || 'N/A'}</td>
-                        <td>${user.role || 'N/A'}</td>
-                        <td class="action-buttons">
-                            <button onclick='openUserModal(${JSON.stringify(user)})' title="Editar"><span class="material-icons">edit</span></button>
-                            <button onclick="deleteUser('${user.id}', '${user.full_name}')" title="Excluir"><span class="material-icons">delete</span></button>
-                        </td>
+                tableBody.innerHTML = users.map(user => `<tr>
+                        <td>${user.full_name || 'N/A'}</td><td>${user.email || 'N/A'}</td>
+                        <td>${user.department || 'N/A'}</td><td>${user.role || 'N/A'}</td>
+                        <td class="action-buttons"><button onclick='openUserModal(${JSON.stringify(user)})'><span class="material-icons">edit</span></button><button onclick="deleteUser('${user.id}')"><span class="material-icons">delete</span></button></td>
                     </tr>`).join('');
-                }
-            } catch(error) {
-                console.error("Erro ao carregar usuários:", error);
-                if(tableBody) tableBody.innerHTML = `<tr><td colspan="5">Erro ao carregar usuários. Verifique as permissões da view 'users_with_email'.</td></tr>`;
-            }
+            } catch(error) { tableBody.innerHTML = `<tr><td colspan="5">Erro ao carregar usuários.</td></tr>`; }
         }
         function openUserModal(user) { const modal = document.querySelector('#app-container #user-modal'); document.getElementById('user-form').reset(); const userEmailField = document.getElementById('user_email'); const passwordGroup = document.getElementById('password-group'); userEmailField.disabled = !!user; passwordGroup.style.display = user ? 'none' : 'block'; document.getElementById('user_password').required = !user; if (user) { document.getElementById('user-modal-title').textContent = 'Editar Usuário'; document.getElementById('user-id').value = user.id; document.getElementById('full_name').value = user.full_name; userEmailField.value = user.email || ''; document.getElementById('department').value = user.department; document.getElementById('role').value = user.role; } else { document.getElementById('user-modal-title').textContent = 'Novo Usuário'; document.getElementById('user-id').value = ''; } modal.classList.add('visible'); }
-        function closeUserModal() { const modal = document.querySelector('#app-container #user-modal'); if (modal) modal.classList.remove('visible'); }
-        
+        function closeUserModal() { document.querySelector('#app-container #user-modal')?.classList.remove('visible'); }
         async function saveUser() {
-            // Esta operação deve ser movida para uma Edge Function segura para produção.
             const SUPABASE_SERVICE_KEY_TEMP = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjc0NzYyMywiZXhwIjoyMDc4MzIzNjIzfQ.flhYf7ScWkiuGntgOqvPwUkLy1hCD6oMhzxgj-uHss';
             const supabaseAdminClient = supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY_TEMP);
-
             const userId = document.getElementById('user-id').value; const fullName = document.getElementById('full_name').value; const department = document.getElementById('department').value; const role = document.getElementById('role').value; const email = document.getElementById('user_email').value; const password = document.getElementById('user_password').value;
-            if (userId) { const { error } = await supabaseClient.from('profiles').update({ full_name: fullName, department: department, role: role }).eq('id', userId); if (error) { showToast("Erro ao atualizar perfil: " + error.message, 'danger'); } else { showToast("Perfil atualizado com sucesso!", 'success'); } }
-            else { if (!password) { showToast("A senha é obrigatória.", 'warning'); return; } const { data, error: authError } = await supabaseAdminClient.auth.admin.createUser({ email: email, password: password, email_confirm: true }); if (authError) { showToast("Erro ao criar usuário: " + authError.message, 'danger'); return; } const newUserId = data.user.id; await new Promise(resolve => setTimeout(resolve, 500)); const { error: profileError } = await supabaseClient.from('profiles').upsert({ id: newUserId, full_name: fullName, department: department, role: role }); if (profileError) { showToast("Erro ao criar perfil: " + profileError.message, 'danger'); } else { showToast("Usuário criado com sucesso!", 'success'); } }
+            if (userId) { const { error } = await supabaseClient.from('profiles').update({ full_name: fullName, department: department, role: role }).eq('id', userId); if (error) { showToast("Erro ao atualizar perfil: " + error.message, 'danger'); } else { showToast("Perfil atualizado!", 'success'); } }
+            else { if (!password) { showToast("A senha é obrigatória.", 'warning'); return; } const { data, error: authError } = await supabaseAdminClient.auth.admin.createUser({ email: email, password: password, email_confirm: true }); if (authError) { showToast("Erro ao criar usuário: " + authError.message, 'danger'); return; } const { error: profileError } = await supabaseClient.from('profiles').upsert({ id: data.user.id, full_name: fullName, department: department, role: role }); if (profileError) { showToast("Erro ao criar perfil: " + profileError.message, 'danger'); } else { showToast("Usuário criado!", 'success'); } }
             closeUserModal(); loadUsersForAdmin();
         }
-        async function deleteUser(userId, userName) { if (confirm(`Tem certeza?`)) { showToast("AVISO: Exclusão deve ser movida para uma Edge Function.", 'warning'); } }
-
+        async function deleteUser(userId) { if (confirm(`Tem certeza?`)) { showToast("AVISO: Exclusão deve ser movida para uma Edge Function.", 'warning'); } }
         const body = document.body;
         themeToggleBtn.addEventListener('click', () => applyTheme(body.classList.contains('dark-mode') ? 'light' : 'dark'));
         function applyTheme(theme) { body.classList.toggle('dark-mode', theme === 'dark'); localStorage.setItem('theme', theme); }
