@@ -240,7 +240,8 @@
             };
 
             try {
-                const { data, error } = await supabaseClient.rpc('create_new_conversation', args);
+                // CORREÇÃO: Chamando a função com o nome correto
+                const { data, error } = await supabaseClient.rpc('send_new_message_securely', args);
                 if (error) throw error;
                 showToast("Mensagem enviada com sucesso!", 'success');
                 closeNewMessagePopup();
