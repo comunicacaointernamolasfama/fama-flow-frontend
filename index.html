@@ -359,7 +359,7 @@
                 const { error } = await supabaseClient.from('messages').insert({ conversation_id: conversationId, sender_id: currentUserProfile.id, content: content });
                 submitBtn.disabled = false;
 
-                if (error) { showToast('Erro ao enviar resposta.', 'danger'); } 
+                if (error) { showToast('Erro ao enviar resposta.', 'danger'); console.error(error); } 
                 else { replyInput.value = ''; openConversation(conversationId); }
             };
         }
@@ -368,24 +368,31 @@
             const { data: users, error } = await supabaseClient.from('profiles').select('*');
             const tableBody = document.getElementById('user-table-body');
             if (error) { console.error("Erro ao buscar usuários:", error); if(tableBody) tableBody.innerHTML = `<tr><td colspan="5">Erro ao carregar usuários.</td></tr>`; return; }
-            if(tableBody) {
-                tableBody.innerHTML = users.map(user => `<tr>
-                    <td>${user.full_name || 'N/A'}</td>
-                    <td>Carregando...</td>
-                    <td>${user.department || 'N/A'}</td>
-                    <td>${user.role || 'N/A'}</td>
-                    <td class="action-buttons">
-                        <button onclick='openUserModal(${JSON.stringify(user)})' title="Editar"><span class="material-icons">edit</span></button>
-                        <button onclick="deleteUser('${user.id}', '${user.full_name}')" title="Excluir"><span class="material-icons">delete</span></button>
-                    </td>
-                </tr>`).join('');
-            }
+            if(!tableBody || !users) return;
+
+            // Esta operação deve ser movida para uma Edge Function segura
+            const SUPABASE_SERVICE_KEY_TEMP = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjc0NzYyMywiZXhwIjoyMDc4MzIzNjIzfQ.flhYf7ScWkiuGntgOqvPwUkLy1hCD6oMhzxgj-uHss';
+            const supabaseAdminClient = supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY_TEMP);
+            
+            const { data: authUsersResponse, error: authError } = await supabaseAdminClient.auth.admin.listUsers();
+            if(authError) console.error("Erro ao buscar emails dos usuários:", authError);
+            const emailMap = authUsersResponse ? new Map(authUsersResponse.users.map(u => [u.id, u.email])) : new Map();
+
+            tableBody.innerHTML = users.map(user => `<tr>
+                <td>${user.full_name || 'N/A'}</td>
+                <td>${emailMap.get(user.id) || 'N/A'}</td>
+                <td>${user.department || 'N/A'}</td>
+                <td>${user.role || 'N/A'}</td>
+                <td class="action-buttons">
+                    <button onclick='openUserModal(${JSON.stringify({...user, email: emailMap.get(user.id)})})' title="Editar"><span class="material-icons">edit</span></button>
+                    <button onclick="deleteUser('${user.id}', '${user.full_name}')" title="Excluir"><span class="material-icons">delete</span></button>
+                </td>
+            </tr>`).join('');
         }
         function openUserModal(user) { const modal = document.querySelector('#app-container #user-modal'); document.getElementById('user-form').reset(); const userEmailField = document.getElementById('user_email'); const passwordGroup = document.getElementById('password-group'); userEmailField.disabled = !!user; passwordGroup.style.display = user ? 'none' : 'block'; document.getElementById('user_password').required = !user; if (user) { document.getElementById('user-modal-title').textContent = 'Editar Usuário'; document.getElementById('user-id').value = user.id; document.getElementById('full_name').value = user.full_name; userEmailField.value = user.email || ''; document.getElementById('department').value = user.department; document.getElementById('role').value = user.role; } else { document.getElementById('user-modal-title').textContent = 'Novo Usuário'; document.getElementById('user-id').value = ''; } modal.classList.add('visible'); }
         function closeUserModal() { const modal = document.querySelector('#app-container #user-modal'); if (modal) modal.classList.remove('visible'); }
+        
         async function saveUser() {
-            // NOTE: Admin operations require a separate, secure environment like a serverless function.
-            // This is a simplified example and exposes the service key on the client, which is not recommended for production.
             const SUPABASE_SERVICE_KEY_TEMP = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjc0NzYyMywiZXhwIjoyMDc4MzIzNjIzfQ.flhYf7ScWkiuGntgOqvPwUkLy1hCD6oMhzxgj-uHss';
             const supabaseAdminClient = supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY_TEMP);
 
