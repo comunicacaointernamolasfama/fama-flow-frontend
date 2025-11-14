@@ -293,7 +293,19 @@
             if (selectedRecipients.length === 0) { showToast("Adicione pelo menos um destinatário.", 'warning'); return; }
             
             const args = { p_subject: document.getElementById('assunto').value || "Sem assunto", p_type: document.querySelector('input[name="message-type"]:checked').value, p_priority: document.querySelector('.urgency-selector .btn.active').dataset.priority, p_requires_response: document.getElementById('requires_response').checked, p_due_date: document.getElementById('due_date').value || null, p_content: quillEditor.root.innerHTML, p_recipient_ids: selectedRecipients.map(u => u.id) };
-            try { const { data, error } = await supabaseClient.rpc('send_new_message_securely', args); if (error) throw error; showToast("Mensagem enviada com sucesso!", 'success'); closeNewMessagePopup(); loadMessages(); } catch (error) { console.error("Erro ao enviar mensagem:", error); showToast("Falha ao enviar mensagem: " + error.message, 'danger'); }
+            try {
+                const { data, error } = await supabaseClient.rpc('send_new_message_securely', args);
+                if (error) throw error;
+                showToast("Mensagem enviada com sucesso! +5 pontos.", 'success');
+                // GAMIFICATION: Atualiza o score local e recarrega o perfil
+                currentUserProfile.score = (currentUserProfile.score || 0) + 5;
+                loadUserProfileData();
+                closeNewMessagePopup();
+                loadMessages();
+            } catch (error) {
+                console.error("Erro ao enviar mensagem:", error);
+                showToast("Falha ao enviar mensagem: " + error.message, 'danger');
+            }
         }
 
         async function loadMessages() {
@@ -356,11 +368,29 @@
                 if (!content) return;
                 
                 submitBtn.disabled = true;
-                const { error } = await supabaseClient.from('messages').insert({ conversation_id: conversationId, sender_id: currentUserProfile.id, content: content });
-                submitBtn.disabled = false;
+                const { error: insertError } = await supabaseClient.from('messages').insert({ conversation_id: conversationId, sender_id: currentUserProfile.id, content: content });
 
-                if (error) { showToast('Erro ao enviar resposta.', 'danger'); console.error(error); } 
-                else { replyInput.value = ''; openConversation(conversationId); }
+                if (insertError) {
+                    submitBtn.disabled = false;
+                    showToast('Erro ao enviar resposta.', 'danger');
+                    console.error(insertError);
+                } else {
+                    // GAMIFICATION: Incrementa o score em 2 pontos ao responder
+                    const newScore = (currentUserProfile.score || 0) + 2;
+                    const { error: updateError } = await supabaseClient.from('profiles').update({ score: newScore }).eq('id', currentUserProfile.id);
+
+                    if(updateError){
+                        showToast('Resposta enviada, mas houve um erro ao atualizar o score.', 'warning');
+                    } else {
+                        currentUserProfile.score = newScore; // Atualiza o estado local
+                        loadUserProfileData(); // Recarrega o card de perfil
+                        showToast('Resposta enviada! +2 pontos.', 'success');
+                    }
+                    
+                    replyInput.value = '';
+                    openConversation(conversationId); // Recarrega a conversa
+                    submitBtn.disabled = false;
+                }
             };
         }
 
