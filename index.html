@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
     <title>Fama Flow</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -66,27 +66,30 @@
         .stat-card .stat-info h3 { margin: 0; font-size: 1rem; color: var(--color-text-secondary); }
         .stat-card .stat-info p { margin: 0; font-size: 2rem; font-weight: 700; }
         .page-header .btn { padding: 0.5rem 1rem; }
-        .data-table-fino { width: 100%; border-collapse: collapse; }
-        .data-table-fino tr { cursor: pointer; }
-        .data-table-fino tr:hover { background-color: var(--color-background); }
-        .data-table-fino td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); white-space: nowrap; }
-        .data-table-fino .col-who { width: 20%; font-weight: 600; }
-        .data-table-fino .col-subject { width: 45%; }
-        .data-table-fino .col-subject strong { font-weight: 500; }
-        .data-table-fino .col-subject span { color: var(--color-text-secondary); margin-left: 0.5rem; }
-        .data-table-fino .col-tags { width: 20%; }
-        .data-table-fino .col-date { width: 15%; text-align: right; color: var(--color-text-secondary); font-size: 0.9rem; }
-        .data-table-fino .tags-container { display: flex; align-items: center; gap: 0.75rem; }
-        .data-table-fino .tag-icon { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; color: var(--color-text-secondary); }
-        .data-table-fino .tag-icon .material-icons { font-size: 18px; }
-        .data-table-fino .tag-icon.urgent { color: var(--color-danger); }
-        .data-table-fino .tag-icon.important { color: var(--color-warning); }
-        .data-table-fino .tag-icon.ticket { color: var(--color-info); }
         .tabs-container { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--color-border); margin-bottom: -1px; }
         .tab-link { background: none; border: none; padding: 0.75rem 1.25rem; cursor: pointer; color: var(--color-text-secondary); font-weight: 500; border-bottom: 2px solid transparent; }
         .tab-link.active { color: var(--color-brand-primary); border-bottom-color: var(--color-brand-primary); }
         .tab-content { display: none; } .tab-content.active { display: block; }
         .empty-state { padding: 3rem 1rem; text-align: center; color: var(--color-text-secondary); }
+        /* REFINEMENT: New styles for the refined message list */
+        .data-table-fino { width: 100%; border-collapse: collapse; }
+        .data-table-fino tr { cursor: pointer; }
+        .data-table-fino tr:hover { background-color: var(--color-background); }
+        .data-table-fino td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+        .data-table-fino .col-who { width: 20%; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .data-table-fino .col-subject { width: 50%; }
+        .data-table-fino .col-subject .subject-line { display: flex; align-items: center; gap: 0.5rem; font-weight: 500; margin-bottom: 0.1rem; }
+        .data-table-fino .col-subject .preview-text { color: var(--color-text-secondary); font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+        .data-table-fino .col-meta { width: 20%; text-align: right; }
+        .data-table-fino .col-meta .meta-tags { display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; }
+        .data-table-fino .col-date { width: 10%; text-align: right; color: var(--color-text-secondary); font-size: 0.9rem; white-space: nowrap; }
+        .tag-fino { font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 12px; display: inline-block; line-height: 1.2; }
+        .tag-fino.tag-urgent { background-color: var(--color-danger-bg); color: var(--color-danger); }
+        .tag-fino.tag-important { background-color: var(--color-warning-bg); color: var(--color-warning); }
+        .tag-icon { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; color: var(--color-text-secondary); }
+        .tag-icon .material-icons { font-size: 18px; }
+        .due-date-tag { font-weight: 500; color: var(--color-text-primary); }
+        /* End of refined styles */
         #new-message-popup { position: fixed; bottom: 0; right: 3rem; width: 600px; max-width: 90vw; background-color: var(--color-surface); border: 1px solid var(--color-border); border-top-left-radius: 12px; border-top-right-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); z-index: 1001; display: none; flex-direction: column; transition: transform 0.3s ease-out; transform: translateY(100%); }
         #new-message-popup.visible { display: flex; transform: translateY(0); }
         .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background-color: var(--color-background); border-bottom: 1px solid var(--color-border); cursor: move; }
@@ -297,6 +300,7 @@
             }
         }
 
+        // REFINEMENT: Updated function to render the new table layout
         function renderMessageTable(conversations, containerId, type) {
             const container = document.getElementById(containerId);
             if (!conversations || conversations.length === 0) {
@@ -305,22 +309,27 @@
             }
 
             const tableRows = conversations.map(conv => {
-                const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ').substring(0, 70) : '';
-                const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR') : '';
+                const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ').substring(0, 80) : '';
+                const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
                 const participants = conv.other_participants_names || 'Você mesmo';
 
-                let tagsHTML = '';
-                if (conv.priority === 'urgent') tagsHTML += '<span class="tag-icon urgent" title="Urgente"><span class="material-icons">priority_high</span></span>';
-                if (conv.priority === 'important') tagsHTML += '<span class="tag-icon important" title="Importante"><span class="material-icons">label_important</span></span>';
-                if (conv.type === 'ticket') tagsHTML += '<span class="tag-icon ticket" title="Chamado"><span class="material-icons">support_agent</span></span>';
-                if (conv.requires_response) tagsHTML += '<span class="tag-icon" title="Exige Resposta"><span class="material-icons">reply</span></span>';
-                if (conv.due_date) tagsHTML += `<span class="tag-icon" title="Prazo: ${new Date(conv.due_date).toLocaleDateString('pt-BR')}"><span class="material-icons">event</span></span>`;
+                let priorityTag = '';
+                if (conv.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
+                if (conv.priority === 'important') priorityTag = `<span class="tag-fino tag-important">Importante</span>`;
+
+                let metaTagsHTML = '';
+                if (conv.due_date) metaTagsHTML += `<span class="tag-icon due-date-tag" title="Prazo"><span class="material-icons">event</span> ${new Date(conv.due_date).toLocaleDateString('pt-BR')}</span>`;
+                if (conv.type === 'ticket') metaTagsHTML += '<span class="tag-icon" title="Chamado"><span class="material-icons">support_agent</span></span>';
+                if (conv.requires_response) metaTagsHTML += '<span class="tag-icon" title="Exige Resposta"><span class="material-icons">reply</span></span>';
                 
                 return `
                     <tr onclick="openConversation('${conv.id}')">
                         <td class="col-who">${type === 'inbox' ? participants : `Para: ${participants}`}</td>
-                        <td class="col-subject"><strong>${conv.subject}</strong><span> - ${preview}...</span></td>
-                        <td class="col-tags"><div class="tags-container">${tagsHTML}</div></td>
+                        <td class="col-subject">
+                            <div class="subject-line">${conv.subject} ${priorityTag}</div>
+                            <div class="preview-text">${preview}...</div>
+                        </td>
+                        <td class="col-meta"><div class="meta-tags">${metaTagsHTML}</div></td>
                         <td class="col-date">${timestamp}</td>
                     </tr>`;
             }).join('');
@@ -339,7 +348,7 @@
 
             if (error) {
                 console.error('Erro ao buscar mensagens:', error);
-                const errorMsg = `<div class="empty-state" style="color: var(--color-danger);">Erro ao carregar. Verifique se a VIEW foi atualizada no Supabase.</div>`;
+                const errorMsg = `<div class="empty-state" style="color: var(--color-danger);">Erro ao carregar mensagens.</div>`;
                 inboxContainer.innerHTML = errorMsg;
                 sentContainer.innerHTML = errorMsg;
                 return;
