@@ -47,6 +47,7 @@
         .grid { display: grid; gap: 1.5rem; } .grid-cols-2 { grid-template-columns: repeat(2, 1fr); } .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
         .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; border: none; transition: background-color 0.2s, opacity 0.2s;}
         .btn:hover { opacity: 0.9; } .btn .material-icons { margin-right: 0.5rem; font-size: 20px; }
+        .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
         .btn-secondary { background-color: var(--color-surface); color: var(--color-text-primary); border: 1px solid var(--color-border); }
         .btn-danger { background-color: var(--color-brand-primary); color: white; }
         .btn-success { background-color: var(--color-success); color: white; } .btn-warning { background-color: var(--color-warning); color: white; }
@@ -241,7 +242,7 @@
         function showPage(pageId) { const appContainer = document.getElementById('app-container'); if (!appContainer) return; appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); const targetPage = appContainer.querySelector(`#${pageId}`); if (targetPage) targetPage.classList.add('active'); appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); if (activeLink) activeLink.classList.add('active'); }
         async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); loadUserProfileData(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
         async function loadDashboardStats() { const { count: pendingCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }); const { count: urgentCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('priority', 'urgent'); document.getElementById('pending-messages-count').textContent = pendingCount || 0; document.getElementById('urgent-tickets-count').textContent = urgentCount || 0; }
-        async function fetchAllUsersForSearch() { const { data, error } = await supabaseClient.from('profiles').select('id, full_name, email'); if(error) console.error("Erro ao buscar usuários para pesquisa:", error); else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; }
+        async function fetchAllUsersForSearch() { const { data, error } = await supabaseClient.from('profiles').select('id, full_name'); if(error) console.error("Erro ao buscar usuários para pesquisa:", error); else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; }
         
         function loadUserProfileData() {
             const container = document.getElementById('user-profile-content');
@@ -284,7 +285,7 @@
         function addRecipient(user) { if (!selectedRecipients.some(r => r.id === user.id)) { selectedRecipients.push(user); renderRecipientPills(); } const input = document.getElementById('destinatario-input'); input.value = ''; input.focus(); document.getElementById('recipient-suggestions').style.display = 'none'; }
         window.removeRecipient = (userId) => { selectedRecipients = selectedRecipients.filter(r => r.id !== userId); renderRecipientPills(); }
         function handleRecipientBackspace(e) { const input = e.target; if (e.key === 'Backspace' && input.value === '' && selectedRecipients.length > 0) { removeRecipient(selectedRecipients[selectedRecipients.length - 1].id); } }
-        function handleRecipientSearch(e) { const query = e.target.value.toLowerCase(); const suggestionsContainer = document.getElementById('recipient-suggestions'); if (query.length < 1) { suggestionsContainer.style.display = 'none'; return; } const filteredUsers = allUsers.filter(user => (user.full_name && user.full_name.toLowerCase().includes(query)) || (user.email && user.email.toLowerCase().includes(query))); suggestionsContainer.innerHTML = ''; if (filteredUsers.length > 0) { filteredUsers.forEach(user => { const item = document.createElement('div'); item.className = 'suggestion-item'; item.textContent = `${user.full_name} (${user.email})`; item.onclick = () => addRecipient(user); suggestionsContainer.appendChild(item); }); suggestionsContainer.style.display = 'block'; } else { suggestionsContainer.style.display = 'none'; } }
+        function handleRecipientSearch(e) { const query = e.target.value.toLowerCase(); const suggestionsContainer = document.getElementById('recipient-suggestions'); if (query.length < 1) { suggestionsContainer.style.display = 'none'; return; } const filteredUsers = allUsers.filter(user => (user.full_name && user.full_name.toLowerCase().includes(query))); suggestionsContainer.innerHTML = ''; if (filteredUsers.length > 0) { filteredUsers.forEach(user => { const item = document.createElement('div'); item.className = 'suggestion-item'; item.textContent = `${user.full_name}`; item.onclick = () => addRecipient(user); suggestionsContainer.appendChild(item); }); suggestionsContainer.style.display = 'block'; } else { suggestionsContainer.style.display = 'none'; } }
 
         async function sendMessage(e) {
             e.preventDefault();
@@ -351,9 +352,13 @@
                 e.preventDefault();
                 const replyInput = document.getElementById('reply-input');
                 const content = replyInput.value.trim();
+                const submitBtn = replyForm.querySelector('button[type="submit"]');
                 if (!content) return;
                 
+                submitBtn.disabled = true;
                 const { error } = await supabaseClient.from('messages').insert({ conversation_id: conversationId, sender_id: currentUserProfile.id, content: content });
+                submitBtn.disabled = false;
+
                 if (error) { showToast('Erro ao enviar resposta.', 'danger'); } 
                 else { replyInput.value = ''; openConversation(conversationId); }
             };
@@ -364,20 +369,13 @@
             const tableBody = document.getElementById('user-table-body');
             if (error) { console.error("Erro ao buscar usuários:", error); if(tableBody) tableBody.innerHTML = `<tr><td colspan="5">Erro ao carregar usuários.</td></tr>`; return; }
             if(tableBody) {
-                // Fetch auth emails separately as they are not in the profiles table
-                const userIds = users.map(u => u.id);
-                const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-                if(authError) console.error("Erro ao buscar emails:", authError);
-
-                const emailMap = authUsers ? Object.fromEntries(authUsers.users.map(u => [u.id, u.email])) : {};
-
                 tableBody.innerHTML = users.map(user => `<tr>
                     <td>${user.full_name || 'N/A'}</td>
-                    <td>${emailMap[user.id] || 'N/A'}</td>
+                    <td>Carregando...</td>
                     <td>${user.department || 'N/A'}</td>
                     <td>${user.role || 'N/A'}</td>
                     <td class="action-buttons">
-                        <button onclick='openUserModal(${JSON.stringify({...user, email: emailMap[user.id]})})' title="Editar"><span class="material-icons">edit</span></button>
+                        <button onclick='openUserModal(${JSON.stringify(user)})' title="Editar"><span class="material-icons">edit</span></button>
                         <button onclick="deleteUser('${user.id}', '${user.full_name}')" title="Excluir"><span class="material-icons">delete</span></button>
                     </td>
                 </tr>`).join('');
@@ -385,10 +383,12 @@
         }
         function openUserModal(user) { const modal = document.querySelector('#app-container #user-modal'); document.getElementById('user-form').reset(); const userEmailField = document.getElementById('user_email'); const passwordGroup = document.getElementById('password-group'); userEmailField.disabled = !!user; passwordGroup.style.display = user ? 'none' : 'block'; document.getElementById('user_password').required = !user; if (user) { document.getElementById('user-modal-title').textContent = 'Editar Usuário'; document.getElementById('user-id').value = user.id; document.getElementById('full_name').value = user.full_name; userEmailField.value = user.email || ''; document.getElementById('department').value = user.department; document.getElementById('role').value = user.role; } else { document.getElementById('user-modal-title').textContent = 'Novo Usuário'; document.getElementById('user-id').value = ''; } modal.classList.add('visible'); }
         function closeUserModal() { const modal = document.querySelector('#app-container #user-modal'); if (modal) modal.classList.remove('visible'); }
-        
         async function saveUser() {
-            // Need to create a separate admin client for this server-side operation
-            const supabaseAdminClient = supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+            // NOTE: Admin operations require a separate, secure environment like a serverless function.
+            // This is a simplified example and exposes the service key on the client, which is not recommended for production.
+            const SUPABASE_SERVICE_KEY_TEMP = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjc0NzYyMywiZXhwIjoyMDc4MzIzNjIzfQ.flhYf7ScWkiuGntgOqvPwUkLy1hCD6oMhzxgj-uHss';
+            const supabaseAdminClient = supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY_TEMP);
+
             const userId = document.getElementById('user-id').value; const fullName = document.getElementById('full_name').value; const department = document.getElementById('department').value; const role = document.getElementById('role').value; const email = document.getElementById('user_email').value; const password = document.getElementById('user_password').value;
             if (userId) { const { error } = await supabaseClient.from('profiles').update({ full_name: fullName, department: department, role: role }).eq('id', userId); if (error) { showToast("Erro ao atualizar perfil: " + error.message, 'danger'); } else { showToast("Perfil atualizado com sucesso!", 'success'); } }
             else { if (!password) { showToast("A senha é obrigatória.", 'warning'); return; } const { data, error: authError } = await supabaseAdminClient.auth.admin.createUser({ email: email, password: password, email_confirm: true }); if (authError) { showToast("Erro ao criar usuário: " + authError.message, 'danger'); return; } const newUserId = data.user.id; await new Promise(resolve => setTimeout(resolve, 500)); const { error: profileError } = await supabaseClient.from('profiles').upsert({ id: newUserId, full_name: fullName, department: department, role: role }); if (profileError) { showToast("Erro ao criar perfil: " + profileError.message, 'danger'); } else { showToast("Usuário criado com sucesso!", 'success'); } }
