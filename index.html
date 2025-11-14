@@ -230,13 +230,13 @@
             if (selectedRecipients.length === 0) { showToast("Adicione pelo menos um destinatário.", 'warning'); return; }
             
             const args = {
-                recipient_ids: selectedRecipients.map(u => u.id),
-                subject: document.getElementById('assunto').value || "Sem assunto",
-                content: quillEditor.root.innerHTML,
-                type: document.querySelector('input[name="message-type"]:checked').value,
-                priority: document.querySelector('.urgency-selector .btn.active').dataset.priority,
-                requires_response: document.getElementById('requires_response').checked,
-                due_date: document.getElementById('due_date').value || null
+                p_subject: document.getElementById('assunto').value || "Sem assunto",
+                p_type: document.querySelector('input[name="message-type"]:checked').value,
+                p_priority: document.querySelector('.urgency-selector .btn.active').dataset.priority,
+                p_requires_response: document.getElementById('requires_response').checked,
+                p_due_date: document.getElementById('due_date').value || null,
+                p_content: quillEditor.root.innerHTML,
+                p_recipient_ids: selectedRecipients.map(u => u.id)
             };
 
             try {
