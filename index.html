@@ -83,34 +83,34 @@
         .popup-body .form-group { margin: 0; }
         .popup-body .input-field { background: transparent; border: none; border-bottom: 1px solid var(--color-border); border-radius: 0; padding: 0.75rem 0; font-size: 0.9rem; }
         .popup-body .input-field:focus { outline: none; border-bottom-color: var(--color-info); }
-        .ql-editor.ql-blank::before { color: var(--color-text-secondary); font-style: normal; pointer-events: none; } /* Fix for placeholder z-index issue */
+        .ql-editor.ql-blank::before { color: var(--color-text-secondary); font-style: normal; pointer-events: none; }
         #editor-wrapper { flex-grow: 1; display: flex; flex-direction: column; min-height: 0; }
-        #editor-wrapper .ql-toolbar { flex-shrink: 0; }
+        #editor-wrapper .ql-toolbar { flex-shrink: 0; border-bottom: 1px solid var(--color-border) !important; }
         #editor-wrapper .ql-container.ql-snow { border: none !important; flex-grow: 1; overflow-y: auto; }
         #editor-wrapper .ql-editor { padding: 1rem 0; }
-        .ql-snow .ql-attach-file::before { font-family: 'Material Icons'; content: 'attach_file'; vertical-align: middle; font-size: 18px; } /* Custom Icon */
         #recipient-group { position: relative; }
         #recipient-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; z-index: 1002; max-height: 200px; overflow-y: auto; display: none; box-shadow: var(--shadow); }
         .suggestion-item { padding: 0.5rem 1rem; cursor: pointer; }
         .suggestion-item:hover { background-color: var(--color-background); }
         .popup-footer { padding: 0.75rem 1rem; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; align-items: stretch; gap: 0.75rem; }
+        .popup-footer-top-row { display: flex; justify-content: space-between; align-items: center; min-height: 38px; }
         .popup-footer-main { display: flex; justify-content: space-between; align-items: center; }
-        .popup-options { display: flex; align-items: center; gap: 1rem; }
+        .popup-actions-left { display: flex; align-items: center; gap: 1rem; }
         .message-type-selector { display: flex; gap: 0.5rem; border: 1px solid var(--color-border); border-radius: 8px; padding: 0.25rem; background-color: var(--color-background);}
         .message-type-selector label { flex: 1; display: block; text-align: center; padding: 0.25rem 0.5rem; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 0.8rem; }
         .message-type-selector input[type="radio"] { display: none; }
         .message-type-selector input[type="radio"]:checked + label { background-color: var(--color-surface); box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-weight: 600; }
         .urgency-selector { display: flex; gap: 0.5rem; }
         .urgency-selector .btn { font-size: 0.8rem; padding: 0.4rem 0.8rem; border-radius: 20px; }
-        .custom-checkbox { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; }
+        .custom-checkbox { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; white-space: nowrap; }
         .custom-checkbox input[type="checkbox"] { display: none; }
-        .custom-checkbox .checkbox-box { width: 18px; height: 18px; border: 2px solid var(--color-border); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .custom-checkbox .checkbox-box { width: 18px; height: 18px; border: 2px solid var(--color-border); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
         .custom-checkbox .checkbox-box .material-icons { font-size: 14px; color: white; transform: scale(0); transition: transform 0.2s; }
         .custom-checkbox input[type="checkbox"]:checked + .checkbox-box { background-color: var(--color-info); border-color: var(--color-info); }
         .custom-checkbox input[type="checkbox"]:checked + .checkbox-box .material-icons { transform: scale(1); }
-        #chamado-fields { display: flex; align-items: center; gap: 0.75rem; background-color: var(--color-background); padding: 0.5rem 1rem; border-radius: 8px; }
-        #chamado-fields label { font-size: 0.9rem; margin-bottom: 0; color: var(--color-text-secondary); }
-        #chamado-fields .input-field { font-size: 0.9rem; padding: 0.4rem 0.8rem; }
+        #chamado-fields { display: flex; align-items: center; gap: 0.75rem; }
+        #chamado-fields label { font-size: 0.9rem; margin-bottom: 0; color: var(--color-text-secondary); white-space: nowrap; }
+        #chamado-fields .input-field { font-size: 0.9rem; padding: 0.4rem 0.8rem; border: 1px solid var(--color-border); background: var(--color-background); }
         #chamado-fields .date-presets { display: flex; gap: 0.25rem; }
         #chamado-fields .date-presets button { font-size: 0.8rem; padding: 0.25rem 0.5rem; }
     </style>
@@ -138,30 +138,30 @@
                 <input type="file" id="file-upload-input" style="display: none;" onchange="handleFileUpload(event)">
             </div>
             <div class="popup-footer">
-                <div id="chamado-fields" style="display:none;">
-                    <label for="due_date">Prazo:</label>
-                    <input type="date" id="due_date" class="input-field">
-                    <div class="date-presets">
-                        <button type="button" class="btn btn-secondary" onclick="setDueDate(1)">+1d</button>
-                        <button type="button" class="btn btn-secondary" onclick="setDueDate(7)">+7d</button>
+                <div class="popup-footer-top-row">
+                    <div class="urgency-selector">
+                        <button type="button" class="btn btn-success active" data-priority="normal">Normal</button>
+                        <button type="button" class="btn btn-secondary" data-priority="important">Importante</button>
+                        <button type="button" class="btn btn-secondary" data-priority="urgent">Urgente</button>
+                    </div>
+                    <div id="chamado-fields" style="display:none;">
+                        <label for="due_date">Prazo:</label>
+                        <input type="date" id="due_date" class="input-field">
+                        <div class="date-presets">
+                            <button type="button" class="btn btn-secondary" onclick="setDueDate(1)">+1d</button>
+                            <button type="button" class="btn btn-secondary" onclick="setDueDate(7)">+7d</button>
+                        </div>
                     </div>
                 </div>
                 <div class="popup-footer-main">
-                    <div class="popup-options">
+                    <div class="popup-actions-left">
                         <button type="submit" class="btn btn-danger">Enviar</button>
                         <div class="message-type-selector">
                             <div><input type="radio" id="tipo-simples" name="message-type" value="message" checked onchange="toggleChamadoFields()"><label for="tipo-simples">Simples</label></div>
                             <div><input type="radio" id="tipo-chamado" name="message-type" value="ticket" onchange="toggleChamadoFields()"><label for="tipo-chamado">Chamado</label></div>
                         </div>
                     </div>
-                    <div class="popup-options">
-                        <div class="urgency-selector">
-                            <button type="button" class="btn btn-success active" data-priority="normal">Normal</button>
-                            <button type="button" class="btn btn-secondary" data-priority="important">Importante</button>
-                            <button type="button" class="btn btn-secondary" data-priority="urgent">Urgente</button>
-                        </div>
-                        <label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label>
-                    </div>
+                    <label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label>
                 </div>
             </div>
         </form>
@@ -198,35 +198,21 @@
             }
         }
         
-        function renderAuthLayout() {
-            root.innerHTML = authHTML;
-            document.getElementById('login-form').addEventListener('submit', handleLogin);
-        }
-        
-        function renderAppLayout() {
-            root.innerHTML = appHTML;
-            setupEventListeners();
-            showApp();
-        }
+        function renderAuthLayout() { root.innerHTML = authHTML; document.getElementById('login-form').addEventListener('submit', handleLogin); }
+        function renderAppLayout() { root.innerHTML = appHTML; setupEventListeners(); showApp(); }
 
         function setupEventListeners() {
             document.getElementById('logout-button').addEventListener('click', handleLogout);
             document.getElementById('new-message-form').addEventListener('submit', sendMessage);
             document.getElementById('btn-new-user').addEventListener('click', () => openUserModal(null));
             document.getElementById('fab-new-message').addEventListener('click', openNewMessagePopup);
-            document.querySelectorAll('.nav-link[data-page]').forEach(link => {
-                link.addEventListener('click', (e) => { e.preventDefault(); showPage(e.currentTarget.dataset.page); });
-            });
+            document.querySelectorAll('.nav-link[data-page]').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); showPage(e.currentTarget.dataset.page); }); });
             document.querySelectorAll('.urgency-selector .btn').forEach(button => {
                 button.addEventListener('click', (e) => {
                     e.preventDefault();
-                    document.querySelectorAll('.urgency-selector .btn').forEach(btn => {
-                        btn.classList.remove('btn-success', 'btn-warning', 'btn-danger', 'active');
-                        btn.classList.add('btn-secondary');
-                    });
+                    document.querySelectorAll('.urgency-selector .btn').forEach(btn => { btn.classList.remove('btn-success', 'btn-warning', 'btn-danger', 'active'); btn.classList.add('btn-secondary'); });
                     const clickedButton = e.currentTarget;
-                    clickedButton.classList.remove('btn-secondary');
-                    clickedButton.classList.add('active');
+                    clickedButton.classList.remove('btn-secondary'); clickedButton.classList.add('active');
                     const priority = clickedButton.dataset.priority;
                     if (priority === 'normal') clickedButton.classList.add('btn-success');
                     else if (priority === 'important') clickedButton.classList.add('btn-warning');
@@ -241,33 +227,13 @@
         async function fetchUserProfile(userId) { const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', userId).single(); if (data) currentUserProfile = data; else console.error("Perfil não encontrado:", error); }
 
         function showApp() { const appContainer = document.getElementById('app-container'); if(appContainer) { appContainer.classList.add('visible'); document.getElementById('admin-section').style.display = (currentUserProfile && currentUserProfile.role === 'Admin') ? 'block' : 'none'; showPage('dashboard-page'); loadAllDynamicData(); } }
-        
-        function showPage(pageId) {
-            const appContainer = document.getElementById('app-container');
-            if (!appContainer) return;
-            appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active'));
-            const targetPage = appContainer.querySelector(`#${pageId}`);
-            if (targetPage) targetPage.classList.add('active');
-            
-            appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-            const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`);
-            if (activeLink) activeLink.classList.add('active');
-        }
-        
+        function showPage(pageId) { const appContainer = document.getElementById('app-container'); if (!appContainer) return; appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); const targetPage = appContainer.querySelector(`#${pageId}`); if (targetPage) targetPage.classList.add('active'); appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); if (activeLink) activeLink.classList.add('active'); }
         async function loadAllDynamicData() { loadDashboardStats(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
         async function loadDashboardStats() { const { count: pendingCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('status', 'open'); const { count: urgentCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('priority', 'urgent').eq('status', 'open'); document.getElementById('pending-messages-count').textContent = pendingCount || 0; document.getElementById('urgent-tickets-count').textContent = urgentCount || 0; }
         async function fetchAllUsersForSearch() { const { data, error } = await supabaseClient.from('user_details').select('id, full_name, email'); if(error) console.error("Erro ao buscar usuários para pesquisa:", error); else allUsers = data.filter(u => u.id !== currentUserProfile.id); }
 
-        function customAttachFile() {
-            document.getElementById('file-upload-input').click();
-        }
-
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            alert(`Simulando upload do arquivo: ${file.name}`);
-            // Aqui iria a lógica de upload para o Supabase Storage
-        }
+        function customAttachFile() { document.getElementById('file-upload-input').click(); }
+        function handleFileUpload(event) { const file = event.target.files[0]; if (!file) return; alert(`Simulando upload do arquivo: ${file.name}`); }
 
         function initializeQuillEditor() {
             if (document.getElementById('editor-container') && !quillEditor) {
@@ -284,16 +250,16 @@
                     theme: 'snow'
                 });
                 
-                // Adicionando botão customizado de anexo
                 const attachButton = document.createElement('button');
-                attachButton.innerHTML = '<span class="material-icons">attach_file</span>';
+                attachButton.innerHTML = '<span class="material-icons" style="font-size: 18px; vertical-align: middle;">attach_file</span>';
                 attachButton.title = "Anexar arquivo";
                 attachButton.style.cssText = "width: auto; padding: 0 5px;";
-                attachButton.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    customAttachFile();
-                });
-                quillEditor.getModule('toolbar').container.querySelector('.ql-formats').appendChild(attachButton);
+                attachButton.addEventListener('click', (e) => { e.preventDefault(); customAttachFile(); });
+                
+                const firstFormatGroup = quillEditor.getModule('toolbar').container.querySelector('.ql-formats');
+                if(firstFormatGroup) {
+                    firstFormatGroup.appendChild(attachButton);
+                }
             }
         }
 
@@ -305,37 +271,13 @@
             document.getElementById('destinatario-id').value = '';
             document.getElementById('recipient-suggestions').style.display = 'none';
             if (quillEditor) quillEditor.setContents([]);
-            document.getElementById('tipo-simples').checked = true; // Reset radio
-            toggleChamadoFields(); // Reset visibility
+            document.getElementById('tipo-simples').checked = true;
+            toggleChamadoFields();
         }
 
-        function toggleChamadoFields() {
-            const isChamado = document.getElementById('tipo-chamado').checked;
-            document.getElementById('chamado-fields').style.display = isChamado ? 'flex' : 'none';
-        }
-
+        function toggleChamadoFields() { const isChamado = document.getElementById('tipo-chamado').checked; document.getElementById('chamado-fields').style.display = isChamado ? 'flex' : 'none'; }
         function setDueDate(days) { const date = new Date(); date.setDate(date.getDate() + days); document.getElementById('due_date').value = date.toISOString().split('T')[0]; }
-
-        function handleRecipientSearch(e) {
-            const query = e.target.value.toLowerCase();
-            const suggestionsContainer = document.getElementById('recipient-suggestions');
-            if (query.length < 2) { suggestionsContainer.style.display = 'none'; return; }
-            const filteredUsers = allUsers.filter(user => (user.full_name && user.full_name.toLowerCase().includes(query)) || (user.email && user.email.toLowerCase().includes(query)));
-            suggestionsContainer.innerHTML = '';
-            if (filteredUsers.length > 0) {
-                filteredUsers.forEach(user => {
-                    const item = document.createElement('div');
-                    item.className = 'suggestion-item';
-                    item.textContent = `${user.full_name} (${user.email})`;
-                    item.onclick = () => selectRecipient(user);
-                    suggestionsContainer.appendChild(item);
-                });
-                suggestionsContainer.style.display = 'block';
-            } else {
-                suggestionsContainer.style.display = 'none';
-            }
-        }
-
+        function handleRecipientSearch(e) { const query = e.target.value.toLowerCase(); const suggestionsContainer = document.getElementById('recipient-suggestions'); if (query.length < 2) { suggestionsContainer.style.display = 'none'; return; } const filteredUsers = allUsers.filter(user => (user.full_name && user.full_name.toLowerCase().includes(query)) || (user.email && user.email.toLowerCase().includes(query))); suggestionsContainer.innerHTML = ''; if (filteredUsers.length > 0) { filteredUsers.forEach(user => { const item = document.createElement('div'); item.className = 'suggestion-item'; item.textContent = `${user.full_name} (${user.email})`; item.onclick = () => selectRecipient(user); suggestionsContainer.appendChild(item); }); suggestionsContainer.style.display = 'block'; } else { suggestionsContainer.style.display = 'none'; } }
         function selectRecipient(user) { document.getElementById('destinatario').value = user.full_name; document.getElementById('destinatario-id').value = user.id; document.getElementById('recipient-suggestions').style.display = 'none'; }
 
         async function sendMessage(e) {
@@ -349,7 +291,6 @@
             const priority = document.querySelector('.urgency-selector .btn.active').dataset.priority;
             const requiresResponse = document.getElementById('requires_response').checked;
             const dueDate = document.getElementById('due_date').value;
-
             try {
                 const { data: convData, error: convError } = await supabaseClient.from('conversations').insert({ subject, type, priority, status: 'open', requires_response: requiresResponse, due_date: type === 'ticket' ? dueDate : null }).select().single();
                 if (convError) throw convError;
@@ -363,47 +304,15 @@
             } catch (error) { console.error("Erro ao enviar mensagem:", error); alert("Falha ao enviar mensagem: " + error.message); }
         }
         
-        async function loadUsersForAdmin() {
-            const { data: users, error } = await supabaseClient.from('user_details').select('*');
-            const tableBody = document.getElementById('user-table-body');
-            if (error) { console.error("Erro ao buscar usuários:", error); if(tableBody) tableBody.innerHTML = `<tr><td colspan="5">Erro ao carregar usuários.</td></tr>`; return; }
-            if(tableBody) { tableBody.innerHTML = users.map(user => `<tr><td>${user.full_name || 'N/A'}</td><td>${user.email || 'N/A'}</td><td>${user.department || 'N/A'}</td><td>${user.role || 'N/A'}</td><td class="action-buttons"><button onclick='openUserModal(${JSON.stringify(user)})' title="Editar"><span class="material-icons">edit</span></button><button onclick="deleteUser('${user.id}', '${user.full_name}')" title="Excluir"><span class="material-icons">delete</span></button></td></tr>`).join(''); }
-        }
-        
-        function openUserModal(user) {
-            const modal = document.querySelector('#app-container #user-modal');
-            document.getElementById('user-form').reset();
-            const userEmailField = document.getElementById('user_email');
-            const passwordGroup = document.getElementById('password-group');
-            userEmailField.disabled = !!user;
-            passwordGroup.style.display = user ? 'none' : 'block';
-            document.getElementById('user_password').required = !user;
-            if (user) { document.getElementById('user-modal-title').textContent = 'Editar Usuário'; document.getElementById('user-id').value = user.id; document.getElementById('full_name').value = user.full_name; userEmailField.value = user.email || ''; document.getElementById('department').value = user.department; document.getElementById('role').value = user.role; }
-            else { document.getElementById('user-modal-title').textContent = 'Novo Usuário'; document.getElementById('user-id').value = ''; }
-            modal.classList.add('visible');
-        }
-
+        async function loadUsersForAdmin() { const { data: users, error } = await supabaseClient.from('user_details').select('*'); const tableBody = document.getElementById('user-table-body'); if (error) { console.error("Erro ao buscar usuários:", error); if(tableBody) tableBody.innerHTML = `<tr><td colspan="5">Erro ao carregar usuários.</td></tr>`; return; } if(tableBody) { tableBody.innerHTML = users.map(user => `<tr><td>${user.full_name || 'N/A'}</td><td>${user.email || 'N/A'}</td><td>${user.department || 'N/A'}</td><td>${user.role || 'N/A'}</td><td class="action-buttons"><button onclick='openUserModal(${JSON.stringify(user)})' title="Editar"><span class="material-icons">edit</span></button><button onclick="deleteUser('${user.id}', '${user.full_name}')" title="Excluir"><span class="material-icons">delete</span></button></td></tr>`).join(''); } }
+        function openUserModal(user) { const modal = document.querySelector('#app-container #user-modal'); document.getElementById('user-form').reset(); const userEmailField = document.getElementById('user_email'); const passwordGroup = document.getElementById('password-group'); userEmailField.disabled = !!user; passwordGroup.style.display = user ? 'none' : 'block'; document.getElementById('user_password').required = !user; if (user) { document.getElementById('user-modal-title').textContent = 'Editar Usuário'; document.getElementById('user-id').value = user.id; document.getElementById('full_name').value = user.full_name; userEmailField.value = user.email || ''; document.getElementById('department').value = user.department; document.getElementById('role').value = user.role; } else { document.getElementById('user-modal-title').textContent = 'Novo Usuário'; document.getElementById('user-id').value = ''; } modal.classList.add('visible'); }
         function closeUserModal() { const modal = document.querySelector('#app-container #user-modal'); if (modal) modal.classList.remove('visible'); }
-        
         async function saveUser() {
-            const userId = document.getElementById('user-id').value;
-            const fullName = document.getElementById('full_name').value;
-            const department = document.getElementById('department').value;
-            const role = document.getElementById('role').value;
-            const email = document.getElementById('user_email').value;
-            const password = document.getElementById('user_password').value;
+            const userId = document.getElementById('user-id').value; const fullName = document.getElementById('full_name').value; const department = document.getElementById('department').value; const role = document.getElementById('role').value; const email = document.getElementById('user_email').value; const password = document.getElementById('user_password').value;
             if (userId) { const { error } = await supabaseClient.from('profiles').update({ full_name: fullName, department: department, role: role }).eq('id', userId); if (error) { alert("Erro ao atualizar perfil: " + error.message); } else { alert("Perfil atualizado com sucesso!"); } }
-            else { if (!password) { alert("A senha é obrigatória para novos usuários."); return; }
-                const { data, error: authError } = await supabaseAdmin.auth.admin.createUser({ email: email, password: password, email_confirm: true });
-                if (authError) { alert("Erro ao criar usuário: " + authError.message); return; }
-                const newUserId = data.user.id;
-                await new Promise(resolve => setTimeout(resolve, 500));
-                const { error: profileError } = await supabaseClient.from('profiles').upsert({ id: newUserId, full_name: fullName, department: department, role: role });
-                if (profileError) { alert("Erro ao criar perfil do usuário: " + profileError.message); } else { alert("Usuário criado com sucesso!"); }
-            }
+            else { if (!password) { alert("A senha é obrigatória para novos usuários."); return; } const { data, error: authError } = await supabaseAdmin.auth.admin.createUser({ email: email, password: password, email_confirm: true }); if (authError) { alert("Erro ao criar usuário: " + authError.message); return; } const newUserId = data.user.id; await new Promise(resolve => setTimeout(resolve, 500)); const { error: profileError } = await supabaseClient.from('profiles').upsert({ id: newUserId, full_name: fullName, department: department, role: role }); if (profileError) { alert("Erro ao criar perfil do usuário: " + profileError.message); } else { alert("Usuário criado com sucesso!"); } }
             closeUserModal(); loadUsersForAdmin();
         }
-
         async function deleteUser(userId, userName) { if (confirm(`Tem certeza que deseja excluir o usuário ${userName}? Esta ação não pode ser desfeita.`)) { alert("AVISO: A exclusão de usuários deve ser movida para uma Edge Function segura para evitar expor a chave de serviço no cliente. Esta é uma simulação."); } }
 
         const body = document.body;
