@@ -27,7 +27,7 @@
         .login-subtitle { color: var(--color-text-secondary); margin-bottom: 2.5rem; font-size: 1rem; }
         .input-group { position: relative; margin-bottom: 1.5rem; text-align: left;}
         .input-field { width: 100%; padding: 1rem; background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-primary); font-size: 1rem; }
-        .btn-primary { padding: 1rem; border: none; border-radius: 8px; background-color: var(--color-brand-primary); color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+        .btn-primary { padding: 1rem; border: none; border-radius: 8px; background-color: var(--color-brand-primary); color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity: 0.2s; }
         #app-container, .login-wrapper { display: none; }
         #app-container.visible, .login-wrapper.visible { display: flex; }
         .sidebar { width: 260px; background-color: var(--color-surface); border-right: 1px solid var(--color-border); padding: 1.5rem; display: flex; flex-direction: column; height: 100vh; position: fixed; }
@@ -223,9 +223,10 @@
         async function fetchUserProfile(user) {
             const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
             if (data) {
-                currentUserProfile = { ...data, email: user.email }; // Merge auth email with profile data
+                currentUserProfile = { ...data, email: user.email };
             } else {
                 console.error("Perfil não encontrado:", error);
+                currentUserProfile = { id: user.id, email: user.email, full_name: 'Usuário' };
             }
         }
 
@@ -242,7 +243,7 @@
         function showPage(pageId) { const appContainer = document.getElementById('app-container'); if (!appContainer) return; appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); const targetPage = appContainer.querySelector(`#${pageId}`); if (targetPage) targetPage.classList.add('active'); appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); if (activeLink) activeLink.classList.add('active'); }
         async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); loadUserProfileData(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
         async function loadDashboardStats() { const { count: pendingCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('status', 'open'); const { count: urgentCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('priority', 'urgent').eq('status', 'open'); document.getElementById('pending-messages-count').textContent = pendingCount || 0; document.getElementById('urgent-tickets-count').textContent = urgentCount || 0; }
-        async function fetchAllUsersForSearch() { const { data, error } = await supabaseClient.from('user_details').select('id, full_name, email'); if(error) console.error("Erro ao buscar usuários para pesquisa:", error); else allUsers = data.filter(u => u.id !== currentUserProfile.id); }
+        async function fetchAllUsersForSearch() { const { data, error } = await supabaseClient.from('user_details').select('id, full_name, email'); if(error) console.error("Erro ao buscar usuários para pesquisa:", error); else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; }
         
         function loadUserProfileData() {
             const container = document.getElementById('user-profile-content');
@@ -300,8 +301,13 @@
             if (!currentUserProfile) return;
             const container = document.getElementById('message-list-content');
             container.innerHTML = '<div style="padding: 1rem; text-align: center;">Carregando...</div>';
-            const { data, error } = await supabaseClient.rpc('get_user_conversations_with_details');
-            if (error) { console.error('Erro ao buscar mensagens:', error); container.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--color-danger);">Erro ao carregar mensagens.</div>'; return; }
+            
+            const { data, error } = await supabaseClient
+                .from('user_conversations_view')
+                .select('*')
+                .order('last_message_created_at', { ascending: false, nulls: 'last' });
+
+            if (error) { console.error('Erro ao buscar mensagens:', error); container.innerHTML = `<div style="padding: 1rem; text-align: center; color: var(--color-danger);">Erro ao carregar mensagens. Tente recarregar a página.</div>`; return; }
             if (!data || data.length === 0) { container.innerHTML = '<div style="padding: 1rem; text-align: center;">Nenhuma mensagem encontrada.</div>'; return; }
             
             container.innerHTML = data.map(conv => {
@@ -326,14 +332,17 @@
             const messagesContainer = document.getElementById('conversation-messages');
             messagesContainer.innerHTML = '<div style="text-align: center;">Carregando conversa...</div>';
             
-            const { data, error } = await supabaseClient.from('conversations').select(`*, messages(*, profiles(full_name)), conversation_participants(*, profiles(full_name))`).eq('id', conversationId).single();
-            if (error) { showToast('Erro ao carregar conversa.', 'danger'); return; }
-            
-            document.getElementById('conversation-subject').textContent = data.subject;
-            const otherParticipants = data.conversation_participants.filter(p => p.profiles.id !== currentUserProfile.id).map(p => p.profiles.full_name).join(', ');
-            document.getElementById('conversation-participants').textContent = `Com: ${otherParticipants}`;
+            const { data, error } = await supabaseClient.from('messages').select(`*, profiles(full_name)`).eq('conversation_id', conversationId).order('created_at', { ascending: true });
+            if (error) { showToast('Erro ao carregar mensagens da conversa.', 'danger'); return; }
 
-            messagesContainer.innerHTML = data.messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)).map(msg => {
+            const { data: convData } = await supabaseClient.from('conversations').select('subject, conversation_participants(*, profiles(full_name))').eq('id', conversationId).single();
+            if(convData) {
+                document.getElementById('conversation-subject').textContent = convData.subject;
+                const otherParticipants = convData.conversation_participants.filter(p => p.profiles.id !== currentUserProfile.id).map(p => p.profiles.full_name).join(', ');
+                document.getElementById('conversation-participants').textContent = `Com: ${otherParticipants}`;
+            }
+
+            messagesContainer.innerHTML = data.map(msg => {
                 const isSent = msg.sender_id === currentUserProfile.id;
                 const timestamp = new Date(msg.created_at).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
                 return `<div class="message-bubble-wrapper ${isSent ? 'sent' : 'received'}"><div class="message-bubble ${isSent ? 'sent' : 'received'}">${msg.content}</div><div class="message-metadata">${isSent ? 'Você' : msg.profiles.full_name} • ${timestamp}</div></div>`;
