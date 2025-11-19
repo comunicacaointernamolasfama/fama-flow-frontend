@@ -167,7 +167,6 @@
         .toast.toast-danger { border-color: var(--color-danger); background-color: var(--color-danger-bg); } .toast.toast-danger .toast-icon { color: var(--color-danger); }
         .toast.toast-warning { border-color: var(--color-warning); background-color: var(--color-warning-bg); } .toast.toast-warning .toast-icon { color: var(--color-warning); }
         .toast.toast-info { border-color: var(--color-info); background-color: var(--color-info-bg); } .toast.toast-info .toast-icon { color: var(--color-info); }
-        
         /* NEW CONVERSATION VIEW STYLES */
         #conversation-view-page { display: flex; flex-direction: column; height: calc(100vh - 4rem); }
         #conversation-view-page .page-header { flex-shrink: 0; padding-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); }
@@ -295,10 +294,14 @@
         async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); loadUserProfileData(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
         async function loadDashboardStats() {
             const { count: pendingCount, error: pendingError } = await supabaseClient.from('conversation_participants').select('*', { count: 'exact', head: true }).eq('user_id', currentUserProfile.id).eq('is_read', false);
-            const { count: urgentCount, error: urgentError } = await supabaseClient.from('conversations').select('id', { count: 'exact', head: true }).eq('type', 'ticket').eq('priority', 'urgent').eq('status', 'open').filter('conversation_participants.user_id', 'eq', currentUserProfile.id);
+            const { data: urgentData, error: urgentError } = await supabaseClient.rpc('get_user_conversations_with_read_status');
+            
+            if (pendingError || urgentError) {
+                console.error("Erro ao carregar stats do dashboard:", pendingError || urgentError);
+            }
 
-            if(pendingError || urgentError) console.error("Erro ao carregar stats:", pendingError || urgentError);
-
+            const urgentCount = urgentData ? urgentData.filter(c => c.type === 'ticket' && c.priority === 'urgent' && c.status === 'open').length : 0;
+            
             document.getElementById('pending-messages-count').textContent = pendingCount || 0;
             document.getElementById('urgent-tickets-count').textContent = urgentCount || 0;
         }
@@ -415,8 +418,8 @@
                 return;
             }
 
-            const inboxMessages = data.filter(conv => conv.last_message_sender_id !== currentUserProfile.id);
-            const sentMessages = data.filter(conv => conv.last_message_sender_id === currentUserProfile.id);
+            const inboxMessages = data.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_ids === null));
+            const sentMessages = data.filter(conv => conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_ids !== null);
 
             renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
             renderMessageTable(sentMessages, 'sent-content', 'sent');
@@ -436,8 +439,10 @@
             if(convError) { console.error(convError); return; }
             
             document.getElementById('conversation-subject').textContent = convData.subject;
-            const otherParticipants = convData.conversation_participants.filter(p => p.user_id !== currentUserProfile.id).map(p => p.profiles.full_name).join(', ');
-            document.getElementById('conversation-participants').textContent = `De: ${otherParticipants || 'Você mesmo'} para: Você`;
+            const senderProfile = convData.conversation_participants.find(p => p.user_id === messages[0]?.sender_id);
+            const senderName = senderProfile ? senderProfile.profiles.full_name : 'Desconhecido';
+            const otherParticipants = convData.conversation_participants.filter(p => p.user_id !== senderProfile.user_id).map(p => p.profiles.full_name).join(', ');
+            document.getElementById('conversation-participants').textContent = `De: ${senderName} Para: ${otherParticipants || 'Você'}`;
 
             const actionsContainer = document.getElementById('conversation-actions');
             actionsContainer.innerHTML = '';
@@ -453,7 +458,7 @@
                 };
                 actionsContainer.appendChild(resolveBtn);
             } else if (convData.status === 'resolved') {
-                 actionsContainer.innerHTML = `<span class="tag-fino" style="background-color: var(--color-success-bg); color: var(--color-success);">Resolvido</span>`;
+                 actionsContainer.innerHTML = `<span class="tag-fino" style="background-color: var(--color-success-bg); color: var(--color-success); font-size: 0.8rem; padding: 0.4rem 0.8rem;">Resolvido</span>`;
             }
 
             messagesContainer.innerHTML = messages.map(msg => {
