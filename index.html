@@ -74,7 +74,6 @@
         .empty-state { padding: 3rem 1rem; text-align: center; color: var(--color-text-secondary); }
         .data-table-fino { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .data-table-fino tr { cursor: pointer; }
-        .data-table-fino tr.is-read .col-who, .data-table-fino tr.is-read .subject-title { font-weight: 400 !important; }
         .data-table-fino tr:hover { background-color: var(--color-background); }
         .data-table-fino td { padding: 0.6rem 1rem; border-bottom: 1px solid var(--color-border); vertical-align: middle; white-space: nowrap; }
         .data-table-fino .col-who { width: 18%; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
@@ -96,6 +95,7 @@
         #refresh-messages-btn:hover .material-icons { color: var(--color-text-primary); }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         #refresh-messages-btn.loading .material-icons { animation: spin 1s linear infinite; }
+        /* USER PAGE REFACTOR: New styles for the improved user table */
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--color-border); }
         .data-table thead th { background-color: var(--color-background); font-weight: 600; color: var(--color-text-secondary); font-size: 0.9rem; }
@@ -114,6 +114,7 @@
         .action-buttons { text-align: right; }
         .action-buttons .btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
         .action-buttons .btn:hover { background-color: var(--color-background); color: var(--color-text-primary); }
+        /* End of user page refactor styles */
         #new-message-popup { position: fixed; bottom: 0; right: 3rem; width: 600px; max-width: 90vw; background-color: var(--color-surface); border: 1px solid var(--color-border); border-top-left-radius: 12px; border-top-right-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); z-index: 1001; display: none; flex-direction: column; transition: transform 0.3s ease-out; transform: translateY(100%); }
         #new-message-popup.visible { display: flex; transform: translateY(0); }
         .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background-color: var(--color-background); border-bottom: 1px solid var(--color-border); cursor: move; }
@@ -167,15 +168,8 @@
         .toast.toast-danger { border-color: var(--color-danger); background-color: var(--color-danger-bg); } .toast.toast-danger .toast-icon { color: var(--color-danger); }
         .toast.toast-warning { border-color: var(--color-warning); background-color: var(--color-warning-bg); } .toast.toast-warning .toast-icon { color: var(--color-warning); }
         .toast.toast-info { border-color: var(--color-info); background-color: var(--color-info-bg); } .toast.toast-info .toast-icon { color: var(--color-info); }
-        /* NEW CONVERSATION VIEW STYLES */
-        #conversation-view-page { display: flex; flex-direction: column; height: calc(100vh - 4rem); }
-        #conversation-view-page .page-header { flex-shrink: 0; padding-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); }
-        .conversation-title-area h1 { font-size: 1.5rem; margin: 0; }
-        .conversation-title-area p { font-size: 0.9rem; margin: 0.25rem 0 0; color: var(--color-text-secondary); }
-        #conversation-view-page .card { flex-grow: 1; margin: 0; border-radius: 0; display: flex; flex-direction: column; padding: 0; }
+        #conversation-view-page .card { display: flex; flex-direction: column; height: calc(100vh - 8rem); padding: 0; }
         #conversation-messages { flex-grow: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-        #older-messages-toggle { text-align: center; margin-bottom: 1rem; }
-        #older-messages-toggle button { background: none; border: 1px solid var(--color-border); color: var(--color-text-secondary); }
         .message-bubble-wrapper { display: flex; flex-direction: column; max-width: 70%; }
         .message-bubble { padding: 0.75rem 1rem; border-radius: 18px; word-break: break-word; }
         .message-metadata { font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 0.25rem; }
@@ -183,11 +177,9 @@
         .message-bubble-wrapper.received { align-self: flex-start; align-items: flex-start; }
         .message-bubble.sent { background-color: var(--color-brand-primary); color: white; border-bottom-right-radius: 4px; }
         .message-bubble.received { background-color: var(--color-background); border: 1px solid var(--color-border); border-bottom-left-radius: 4px; }
-        #reply-form-wrapper { padding: 1rem 1.5rem; border-top: 1px solid var(--color-border); background-color: var(--color-surface); flex-shrink: 0; }
-        #reply-form { display: flex; flex-direction: column; gap: 1rem; }
+        #reply-form-wrapper { padding: 1rem 1.5rem; border-top: 1px solid var(--color-border); background-color: var(--color-surface); }
+        #reply-form { display: flex; gap: 1rem; }
         #reply-input { flex-grow: 1; }
-        #reply-actions { display: flex; justify-content: space-between; align-items: center; }
-        #reply-actions .btn-group { display: flex; gap: 0.5rem; }
         .profile-card-header { text-align: center; margin-bottom: 1.5rem; }
         .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background-color: var(--color-brand-primary); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 600; margin-bottom: 1rem; }
         .profile-card-header h3 { margin: 0; }
@@ -217,7 +209,7 @@
         const themeToggleBtn = document.getElementById('theme-toggle');
 
         const authHTML = `<div class="login-wrapper visible" id="auth-wrapper"><div id="auth-container" class="login-container"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo"><p class="login-subtitle">Comunicação interna Molas Fama</p><form id="login-form"><div class="input-group"><input type="email" id="email" class="input-field" placeholder="Email" required></div><div class="input-group"><input type="password" id="password" class="input-field" placeholder="Senha" required></div><button type="submit" class="btn-primary" style="width: 100%;">Entrar</button></form></div></div>`;
-        const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Urgentes</h3><p id="urgent-tickets-count">0</p></div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button></div><button id="refresh-messages-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div></div></div><div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"><button class="btn btn-secondary" onclick="showPage('messages-page')"><span class="material-icons">arrow_back</span> Voltar</button><div class="conversation-title-area"><h1 id="conversation-subject"></h1><p id="conversation-participants"></p></div><div class="conversation-header-actions" id="conversation-actions"></div></div><div class="card"><div id="conversation-messages"></div><div id="reply-form-wrapper"><form id="reply-form"><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><div id="reply-actions"><div class="btn-group"><button type="button" id="forward-btn" class="btn btn-secondary"><span class="material-icons">forward</span> Encaminhar</button></div><button type="submit" class="btn btn-danger">Enviar</button></div></form></div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><div id="users-page" class="page-content"><div class="page-header"><h1>Gerenciamento de Usuários</h1><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th>Usuário & Email</th><th>Departamento & Cargo</th><th>Score</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div class="card" id="user-profile-content">Carregando perfil...</div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div></div>`;
+        const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Urgentes</h3><p id="urgent-tickets-count">0</p></div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button></div><button id="refresh-messages-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div></div></div><div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"><button class="btn btn-secondary" onclick="showPage('messages-page')"><span class="material-icons">arrow_back</span> Voltar</button><div><h1 id="conversation-subject"></h1><p id="conversation-participants"></p></div><div class="conversation-header-actions"><button class="btn btn-secondary" onclick="document.getElementById('reply-input').focus()"><span class="material-icons">reply</span> Responder</button></div></div><div class="card"><div id="conversation-messages"></div><div id="reply-form-wrapper"><form id="reply-form"><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><!-- USER PAGE REFACTOR: New HTML for the user management page --><div id="users-page" class="page-content"><div class="page-header"><h1>Gerenciamento de Usuários</h1><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th>Usuário & Email</th><th>Departamento & Cargo</th><th>Score</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div class="card" id="user-profile-content">Carregando perfil...</div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div></div>`;
         
         document.addEventListener('DOMContentLoaded', checkUserSession);
         
@@ -290,22 +282,9 @@
                 document.getElementById('dashboard-title').textContent = `Dashboard de ${currentUserProfile.full_name.split(' ')[0]}`;
             } 
         }
-        function showPage(pageId) { const appContainer = document.getElementById('app-container'); if (!appContainer) return; appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); const targetPage = appContainer.querySelector(`#${pageId}`); if (targetPage) targetPage.classList.add('active'); appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); if (activeLink) activeLink.classList.add('active'); if(pageId === 'messages-page' || pageId === 'dashboard-page') { loadMessages(); loadDashboardStats(); } }
+        function showPage(pageId) { const appContainer = document.getElementById('app-container'); if (!appContainer) return; appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); const targetPage = appContainer.querySelector(`#${pageId}`); if (targetPage) targetPage.classList.add('active'); appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); if (activeLink) activeLink.classList.add('active'); if(pageId === 'messages-page') loadMessages(); }
         async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); loadUserProfileData(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
-        async function loadDashboardStats() {
-            const { count: pendingCount, error: pendingError } = await supabaseClient.from('conversation_participants').select('*', { count: 'exact', head: true }).eq('user_id', currentUserProfile.id).eq('is_read', false);
-            const { data: urgentData, error: urgentError } = await supabaseClient.rpc('get_user_conversations_with_read_status');
-            
-            if (pendingError || urgentError) {
-                console.error("Erro ao carregar stats do dashboard:", pendingError || urgentError);
-            }
-
-            const urgentCount = urgentData ? urgentData.filter(c => c.type === 'ticket' && c.priority === 'urgent' && c.status === 'open').length : 0;
-            
-            document.getElementById('pending-messages-count').textContent = pendingCount || 0;
-            document.getElementById('urgent-tickets-count').textContent = urgentCount || 0;
-        }
-
+        async function loadDashboardStats() { const { count: pendingCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }); const { count: urgentCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('priority', 'urgent'); document.getElementById('pending-messages-count').textContent = pendingCount || 0; document.getElementById('urgent-tickets-count').textContent = urgentCount || 0; }
         async function fetchAllUsersForSearch() { const { data, error } = await supabaseClient.from('profiles').select('id, full_name, score'); if(error) console.error("Erro ao buscar usuários para pesquisa:", error); else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; }
         
         function loadUserProfileData() {
@@ -374,7 +353,6 @@
                 const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ') : '';
                 const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
                 const participants = conv.other_participants_names || 'Você mesmo';
-                const isReadClass = (type === 'inbox' && conv.is_read) ? 'is-read' : '';
 
                 let priorityTag = '';
                 if (conv.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
@@ -386,7 +364,7 @@
                 if (conv.requires_response) metaTagsHTML += '<span class="tag-icon" title="Exige Resposta"><span class="material-icons">reply</span></span>';
                 
                 return `
-                    <tr onclick="openConversation('${conv.id}')" class="${isReadClass}">
+                    <tr onclick="openConversation('${conv.id}')">
                         <td class="col-who">${type === 'inbox' ? participants : `Para: ${participants}`}</td>
                         <td class="col-subject">
                             <span class="subject-title">${conv.subject}</span>
@@ -408,7 +386,7 @@
             inboxContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
             sentContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
             
-            const { data, error } = await supabaseClient.rpc('get_user_conversations_with_read_status');
+            const { data, error } = await supabaseClient.from('user_conversations_view').select('*').order('last_message_created_at', { ascending: false, nulls: 'last' });
 
             if (error) {
                 console.error('Erro ao buscar mensagens:', error);
@@ -418,16 +396,14 @@
                 return;
             }
 
-            const inboxMessages = data.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_ids === null));
-            const sentMessages = data.filter(conv => conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_ids !== null);
+            const inboxMessages = data.filter(conv => conv.last_message_sender_id !== currentUserProfile.id);
+            const sentMessages = data.filter(conv => conv.last_message_sender_id === currentUserProfile.id);
 
             renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
             renderMessageTable(sentMessages, 'sent-content', 'sent');
         }
 
         window.openConversation = async (conversationId) => {
-            await supabaseClient.from('conversation_participants').update({ is_read: true }).eq('conversation_id', conversationId).eq('user_id', currentUserProfile.id);
-
             showPage('conversation-view-page');
             const messagesContainer = document.getElementById('conversation-messages');
             messagesContainer.innerHTML = '<div style="text-align: center;">Carregando conversa...</div>';
@@ -435,30 +411,11 @@
             const { data: messages, error } = await supabaseClient.from('conversation_messages_view').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true });
             if (error) { showToast('Erro ao carregar mensagens da conversa.', 'danger'); console.error(error); return; }
 
-            const { data: convData, error: convError } = await supabaseClient.from('conversations').select('*, conversation_participants(user_id, profiles(full_name))').eq('id', conversationId).single();
-            if(convError) { console.error(convError); return; }
-            
-            document.getElementById('conversation-subject').textContent = convData.subject;
-            const senderProfile = convData.conversation_participants.find(p => p.user_id === messages[0]?.sender_id);
-            const senderName = senderProfile ? senderProfile.profiles.full_name : 'Desconhecido';
-            const otherParticipants = convData.conversation_participants.filter(p => p.user_id !== senderProfile.user_id).map(p => p.profiles.full_name).join(', ');
-            document.getElementById('conversation-participants').textContent = `De: ${senderName} Para: ${otherParticipants || 'Você'}`;
-
-            const actionsContainer = document.getElementById('conversation-actions');
-            actionsContainer.innerHTML = '';
-            const isTicketCreator = convData.type === 'ticket' && messages[0]?.sender_id === currentUserProfile.id;
-
-            if (isTicketCreator && convData.status === 'open') {
-                const resolveBtn = document.createElement('button');
-                resolveBtn.className = 'btn btn-success';
-                resolveBtn.innerHTML = '<span class="material-icons">check_circle</span> Marcar como Resolvido';
-                resolveBtn.onclick = async () => {
-                    const { error } = await supabaseClient.from('conversations').update({ status: 'resolved' }).eq('id', conversationId);
-                    if (error) { showToast('Erro ao resolver chamado.', 'danger'); } else { showToast('Chamado resolvido!', 'success'); openConversation(conversationId); }
-                };
-                actionsContainer.appendChild(resolveBtn);
-            } else if (convData.status === 'resolved') {
-                 actionsContainer.innerHTML = `<span class="tag-fino" style="background-color: var(--color-success-bg); color: var(--color-success); font-size: 0.8rem; padding: 0.4rem 0.8rem;">Resolvido</span>`;
+            const { data: convData } = await supabaseClient.from('conversations').select('subject, conversation_participants(user_id, profiles(full_name))').eq('id', conversationId).single();
+            if(convData) {
+                document.getElementById('conversation-subject').textContent = convData.subject;
+                const otherParticipants = convData.conversation_participants.filter(p => p.user_id !== currentUserProfile.id).map(p => p.profiles.full_name).join(', ');
+                document.getElementById('conversation-participants').textContent = `Com: ${otherParticipants}`;
             }
 
             messagesContainer.innerHTML = messages.map(msg => {
@@ -469,8 +426,6 @@
             
             messagesContainer.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
 
-            document.getElementById('forward-btn').onclick = () => { showToast('Funcionalidade "Encaminhar" a ser implementada.', 'info'); };
-
             const replyForm = document.getElementById('reply-form');
             replyForm.onsubmit = async (e) => {
                 e.preventDefault();
@@ -479,22 +434,23 @@
                 if (!content) return;
                 
                 const { error: insertError } = await supabaseClient.from('messages').insert({ conversation_id: conversationId, sender_id: currentUserProfile.id, content: content });
-                if (insertError) { showToast('Erro ao enviar resposta.', 'danger'); return; }
-                
-                await supabaseClient.from('conversation_participants').update({ is_read: false }).eq('conversation_id', conversationId).neq('user_id', currentUserProfile.id);
 
-                const newScore = (currentUserProfile.score || 0) + 2;
-                const { error: updateError } = await supabaseClient.from('profiles').update({ score: newScore }).eq('id', currentUserProfile.id);
-                if(!updateError) {
-                    currentUserProfile.score = newScore;
-                    loadUserProfileData();
-                    showToast('Resposta enviada! +2 pontos.', 'success');
+                if (insertError) { showToast('Erro ao enviar resposta.', 'danger'); } 
+                else {
+                    const newScore = (currentUserProfile.score || 0) + 2;
+                    const { error: updateError } = await supabaseClient.from('profiles').update({ score: newScore }).eq('id', currentUserProfile.id);
+                    if(!updateError) {
+                        currentUserProfile.score = newScore;
+                        loadUserProfileData();
+                        showToast('Resposta enviada! +2 pontos.', 'success');
+                    }
+                    replyInput.value = '';
+                    openConversation(conversationId);
                 }
-                replyInput.value = '';
-                openConversation(conversationId);
             };
         }
 
+        // USER PAGE REFACTOR: Updated function to render the new user table layout
         async function loadUsersForAdmin() {
             const tableBody = document.getElementById('user-table-body');
             if (!tableBody) return;
