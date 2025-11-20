@@ -95,7 +95,6 @@
         #refresh-messages-btn:hover .material-icons { color: var(--color-text-primary); }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         #refresh-messages-btn.loading .material-icons { animation: spin 1s linear infinite; }
-        /* USER PAGE REFACTOR: New styles for the improved user table */
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--color-border); }
         .data-table thead th { background-color: var(--color-background); font-weight: 600; color: var(--color-text-secondary); font-size: 0.9rem; }
@@ -114,7 +113,6 @@
         .action-buttons { text-align: right; }
         .action-buttons .btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
         .action-buttons .btn:hover { background-color: var(--color-background); color: var(--color-text-primary); }
-        /* End of user page refactor styles */
         #new-message-popup { position: fixed; bottom: 0; right: 3rem; width: 600px; max-width: 90vw; background-color: var(--color-surface); border: 1px solid var(--color-border); border-top-left-radius: 12px; border-top-right-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); z-index: 1001; display: none; flex-direction: column; transition: transform 0.3s ease-out; transform: translateY(100%); }
         #new-message-popup.visible { display: flex; transform: translateY(0); }
         .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background-color: var(--color-background); border-bottom: 1px solid var(--color-border); cursor: move; }
@@ -328,16 +326,34 @@
             if (selectedRecipients.length === 0) { showToast("Adicione pelo menos um destinatário.", 'warning'); return; }
             
             const args = { p_subject: document.getElementById('assunto').value || "Sem assunto", p_type: document.querySelector('input[name="message-type"]:checked').value, p_priority: document.querySelector('.urgency-selector .btn.active').dataset.priority, p_requires_response: document.getElementById('requires_response').checked, p_due_date: document.getElementById('due_date').value || null, p_content: quillEditor.root.innerHTML, p_recipient_ids: selectedRecipients.map(u => u.id) };
+            
             try {
-                const { error } = await supabaseClient.rpc('send_new_message_securely', args);
-                if (error) throw error;
-                showToast("Mensagem enviada com sucesso! +5 pontos.", 'success');
-                currentUserProfile.score = (currentUserProfile.score || 0) + 5;
-                loadUserProfileData();
+                const N8N_WEBHOOK_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/21446ed7-79bd-4a14-b954-ab729bb61f26';
+
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) throw new Error("Usuário não autenticado.");
+
+                const response = await fetch(N8N_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify(args)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Falha na comunicação com o servidor n8n.');
+                }
+                
+                showToast("Mensagem enviada com sucesso!", 'success');
+                // A lógica do score já está no n8n, não precisamos duplicar
+                loadUserProfileData(); // Recarregar para garantir consistência
                 closeNewMessagePopup();
                 loadMessages();
+
             } catch (error) {
-                console.error("Erro ao enviar mensagem:", error);
+                console.error("Erro ao enviar mensagem via n8n:", error);
                 showToast("Falha ao enviar mensagem: " + error.message, 'danger');
             }
         }
@@ -489,7 +505,7 @@
                             <button class="btn" onclick="deleteUser('${user.id}')" title="Excluir"><span class="material-icons">delete</span></button>
                         </td>
                     </tr>`;
-                }).join('');
+            }).join('');
             } catch(error) { 
                 console.error("Erro ao carregar usuários:", error);
                 tableBody.innerHTML = `<tr><td colspan="4">Erro ao carregar usuários.</td></tr>`;
