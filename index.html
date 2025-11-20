@@ -281,7 +281,7 @@
                 document.getElementById('dashboard-title').textContent = `Dashboard de ${currentUserProfile.full_name.split(' ')[0]}`;
             } 
         }
-        function showPage(pageId) { const appContainer = document.getElementById('app-container'); if (!appContainer) return; appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); const targetPage = appContainer.querySelector(`#${pageId}`); if (targetPage) targetPage.classList.add('active'); appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); if (activeLink) activeLink.classList.add('active'); if(pageId === 'messages-page') loadMessages(); }
+        function showPage(pageId) { const appContainer = document.getElementById('app-container'); if (!appContainer) return; appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); const targetPage = appContainer.querySelector(`#${pageId}`); if (targetPage) targetPage.classList.add('active'); appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); if (activeLink) activeLink.classList.add('active'); if(pageId === 'messages-page' || pageId === 'dashboard-page') { loadMessages(); loadDashboardStats(); } }
         async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); loadUserProfileData(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
         async function loadDashboardStats() { const { count: pendingCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }); const { count: urgentCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('priority', 'urgent'); document.getElementById('pending-messages-count').textContent = pendingCount || 0; document.getElementById('urgent-tickets-count').textContent = urgentCount || 0; }
         async function fetchAllUsersForSearch() { const { data, error } = await supabaseClient.from('profiles').select('id, full_name, score'); if(error) console.error("Erro ao buscar usuários para pesquisa:", error); else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; }
@@ -488,7 +488,7 @@
                             <button class="btn" onclick="deleteUser('${user.id}')" title="Excluir"><span class="material-icons">delete</span></button>
                         </td>
                     </tr>`;
-                }).join('');
+            }).join('');
             } catch(error) { 
                 console.error("Erro ao carregar usuários:", error);
                 tableBody.innerHTML = `<tr><td colspan="4">Erro ao carregar usuários.</td></tr>`;
