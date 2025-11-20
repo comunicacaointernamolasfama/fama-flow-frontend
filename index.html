@@ -247,6 +247,7 @@
                     refreshBtn.classList.add('loading');
                     try {
                         await loadMessages();
+                        await loadDashboardStats();
                         showToast("Caixa de entrada atualizada!", "info");
                     } catch (e) {
                         showToast("Falha ao atualizar.", "danger");
@@ -281,9 +282,44 @@
                 document.getElementById('dashboard-title').textContent = `Dashboard de ${currentUserProfile.full_name.split(' ')[0]}`;
             } 
         }
-        function showPage(pageId) { const appContainer = document.getElementById('app-container'); if (!appContainer) return; appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); const targetPage = appContainer.querySelector(`#${pageId}`); if (targetPage) targetPage.classList.add('active'); appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); if (activeLink) activeLink.classList.add('active'); if(pageId === 'messages-page' || pageId === 'dashboard-page') { loadMessages(); loadDashboardStats(); } }
-        async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); loadUserProfileData(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
-        async function loadDashboardStats() { const { count: pendingCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }); const { count: urgentCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('priority', 'urgent'); document.getElementById('pending-messages-count').textContent = pendingCount || 0; document.getElementById('urgent-tickets-count').textContent = urgentCount || 0; }
+        function showPage(pageId) { 
+            const appContainer = document.getElementById('app-container'); 
+            if (!appContainer) return; 
+            appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); 
+            const targetPage = appContainer.querySelector(`#${pageId}`); 
+            if (targetPage) targetPage.classList.add('active'); 
+            appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); 
+            const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); 
+            if (activeLink) activeLink.classList.add('active'); 
+            if(pageId === 'messages-page' || pageId === 'dashboard-page') { 
+                loadMessages(); 
+                loadDashboardStats();
+            } 
+        }
+        async function loadAllDynamicData() { 
+            await Promise.all([
+                loadDashboardStats(),
+                loadMessages(),
+                loadUserProfileData(),
+                fetchAllUsersForSearch()
+            ]);
+            if (currentUserProfile && currentUserProfile.role === 'Admin') {
+                loadUsersForAdmin();
+            }
+        }
+        async function loadDashboardStats() {
+            const { count: pendingCount, error: pendingError } = await supabaseClient.from('conversation_participants').select('*', { count: 'exact', head: true }).eq('user_id', currentUserProfile.id).eq('is_read', false);
+            const { data: urgentData, error: urgentError } = await supabaseClient.rpc('get_user_conversations_with_read_status');
+            
+            if (pendingError || urgentError) {
+                console.error("Erro ao carregar stats do dashboard:", pendingError || urgentError);
+            }
+
+            const urgentCount = urgentData ? urgentData.filter(c => c.type === 'ticket' && c.priority === 'urgent' && c.status === 'open').length : 0;
+            
+            document.getElementById('pending-messages-count').textContent = pendingCount || 0;
+            document.getElementById('urgent-tickets-count').textContent = urgentCount || 0;
+        }
         async function fetchAllUsersForSearch() { const { data, error } = await supabaseClient.from('profiles').select('id, full_name, score'); if(error) console.error("Erro ao buscar usuários para pesquisa:", error); else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; }
         
         function loadUserProfileData() {
@@ -335,6 +371,7 @@
                 loadUserProfileData();
                 closeNewMessagePopup();
                 loadMessages();
+                loadDashboardStats();
             } catch (error) {
                 console.error("Erro ao enviar mensagem:", error);
                 showToast("Falha ao enviar mensagem: " + error.message, 'danger');
@@ -352,6 +389,7 @@
                 const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ') : '';
                 const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
                 const participants = conv.other_participants_names || 'Você mesmo';
+                const isReadClass = (type === 'inbox' && !conv.is_read) ? '' : 'is-read';
 
                 let priorityTag = '';
                 if (conv.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
@@ -363,7 +401,7 @@
                 if (conv.requires_response) metaTagsHTML += '<span class="tag-icon" title="Exige Resposta"><span class="material-icons">reply</span></span>';
                 
                 return `
-                    <tr onclick="openConversation('${conv.id}')">
+                    <tr onclick="openConversation('${conv.id}')" class="${isReadClass}">
                         <td class="col-who">${type === 'inbox' ? participants : `Para: ${participants}`}</td>
                         <td class="col-subject">
                             <span class="subject-title">${conv.subject}</span>
@@ -385,7 +423,7 @@
             inboxContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
             sentContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
             
-            const { data, error } = await supabaseClient.from('user_conversations_view').select('*').order('last_message_created_at', { ascending: false, nulls: 'last' });
+            const { data, error } = await supabaseClient.rpc('get_user_conversations_with_read_status');
 
             if (error) {
                 console.error('Erro ao buscar mensagens:', error);
@@ -395,14 +433,16 @@
                 return;
             }
 
-            const inboxMessages = data.filter(conv => conv.last_message_sender_id !== currentUserProfile.id);
-            const sentMessages = data.filter(conv => conv.last_message_sender_id === currentUserProfile.id);
+            const inboxMessages = data.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_ids === null));
+            const sentMessages = data.filter(conv => conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_ids !== null);
 
             renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
             renderMessageTable(sentMessages, 'sent-content', 'sent');
         }
 
         window.openConversation = async (conversationId) => {
+            await supabaseClient.from('conversation_participants').update({ is_read: true }).eq('conversation_id', conversationId).eq('user_id', currentUserProfile.id);
+
             showPage('conversation-view-page');
             const messagesContainer = document.getElementById('conversation-messages');
             messagesContainer.innerHTML = '<div style="text-align: center;">Carregando conversa...</div>';
@@ -410,11 +450,28 @@
             const { data: messages, error } = await supabaseClient.from('conversation_messages_view').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true });
             if (error) { showToast('Erro ao carregar mensagens da conversa.', 'danger'); console.error(error); return; }
 
-            const { data: convData } = await supabaseClient.from('conversations').select('subject, conversation_participants(user_id, profiles(full_name))').eq('id', conversationId).single();
-            if(convData) {
-                document.getElementById('conversation-subject').textContent = convData.subject;
-                const otherParticipants = convData.conversation_participants.filter(p => p.user_id !== currentUserProfile.id).map(p => p.profiles.full_name).join(', ');
-                document.getElementById('conversation-participants').textContent = `Com: ${otherParticipants}`;
+            const { data: convData, error: convError } = await supabaseClient.from('conversations').select('*, conversation_participants(user_id, profiles(full_name))').eq('id', conversationId).single();
+            if(convError) { console.error(convError); return; }
+            
+            document.getElementById('conversation-subject').textContent = convData.subject;
+            const otherParticipants = convData.conversation_participants.filter(p => p.user_id !== currentUserProfile.id).map(p => p.profiles.full_name).join(', ');
+            document.getElementById('conversation-participants').textContent = `Com: ${otherParticipants}`;
+            
+            const actionsContainer = document.getElementById('conversation-actions');
+            actionsContainer.innerHTML = '';
+            const isTicketCreator = convData.type === 'ticket' && messages[0]?.sender_id === currentUserProfile.id;
+
+            if (isTicketCreator && convData.status === 'open') {
+                const resolveBtn = document.createElement('button');
+                resolveBtn.className = 'btn btn-success';
+                resolveBtn.innerHTML = '<span class="material-icons">check_circle</span> Marcar como Resolvido';
+                resolveBtn.onclick = async () => {
+                    const { error } = await supabaseClient.from('conversations').update({ status: 'resolved' }).eq('id', conversationId);
+                    if (error) { showToast('Erro ao resolver chamado.', 'danger'); } else { showToast('Chamado resolvido!', 'success'); openConversation(conversationId); }
+                };
+                actionsContainer.appendChild(resolveBtn);
+            } else if (convData.status === 'resolved') {
+                 actionsContainer.innerHTML = `<span class="tag-fino" style="background-color: var(--color-success-bg); color: var(--color-success); font-size: 0.8rem; padding: 0.4rem 0.8rem;">Resolvido</span>`;
             }
 
             messagesContainer.innerHTML = messages.map(msg => {
@@ -433,23 +490,22 @@
                 if (!content) return;
                 
                 const { error: insertError } = await supabaseClient.from('messages').insert({ conversation_id: conversationId, sender_id: currentUserProfile.id, content: content });
+                if (insertError) { showToast('Erro ao enviar resposta.', 'danger'); return; }
+                
+                await supabaseClient.from('conversation_participants').update({ is_read: false }).eq('conversation_id', conversationId).neq('user_id', currentUserProfile.id);
 
-                if (insertError) { showToast('Erro ao enviar resposta.', 'danger'); } 
-                else {
-                    const newScore = (currentUserProfile.score || 0) + 2;
-                    const { error: updateError } = await supabaseClient.from('profiles').update({ score: newScore }).eq('id', currentUserProfile.id);
-                    if(!updateError) {
-                        currentUserProfile.score = newScore;
-                        loadUserProfileData();
-                        showToast('Resposta enviada! +2 pontos.', 'success');
-                    }
-                    replyInput.value = '';
-                    openConversation(conversationId);
+                const newScore = (currentUserProfile.score || 0) + 2;
+                const { error: updateError } = await supabaseClient.from('profiles').update({ score: newScore }).eq('id', currentUserProfile.id);
+                if(!updateError) {
+                    currentUserProfile.score = newScore;
+                    loadUserProfileData();
+                    showToast('Resposta enviada! +2 pontos.', 'success');
                 }
+                replyInput.value = '';
+                openConversation(conversationId);
             };
         }
 
-        // USER PAGE REFACTOR: Updated function to render the new user table layout
         async function loadUsersForAdmin() {
             const tableBody = document.getElementById('user-table-body');
             if (!tableBody) return;
