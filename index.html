@@ -217,6 +217,11 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
+        // URLs dos seus Webhooks do n8n
+        const N8N_CREATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-user';
+        const N8N_UPDATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/update-user';
+        const N8N_DELETE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/delete-user';
+
         let currentUserProfile = null;
         let quillEditor = null;
         let allUsers = [];
@@ -589,15 +594,82 @@
 
         function openUserModal(user) { const modal = document.querySelector('#app-container #user-modal'); document.getElementById('user-form').reset(); const userEmailField = document.getElementById('user_email'); const passwordGroup = document.getElementById('password-group'); userEmailField.disabled = !!user; passwordGroup.style.display = user ? 'none' : 'block'; document.getElementById('user_password').required = !user; if (user) { document.getElementById('user-modal-title').textContent = 'Editar Usuário'; document.getElementById('user-id').value = user.id; document.getElementById('full_name').value = user.full_name; userEmailField.value = user.email || ''; document.getElementById('department').value = user.department; document.getElementById('role').value = user.role; } else { document.getElementById('user-modal-title').textContent = 'Novo Usuário'; document.getElementById('user-id').value = ''; } modal.classList.add('visible'); }
         function closeUserModal() { document.querySelector('#app-container #user-modal')?.classList.remove('visible'); }
+        
         async function saveUser() {
-            const SUPABASE_SERVICE_KEY_TEMP = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjc0NzYyMywiZXhwIjoyMDc4MzIzNjIzfQ.flhYf7ScWkiuGntgOqvPwUkLy1hCD6oMhzxgj-uHss';
-            const supabaseAdminClient = supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY_TEMP);
-            const userId = document.getElementById('user-id').value; const fullName = document.getElementById('full_name').value; const department = document.getElementById('department').value; const role = document.getElementById('role').value; const email = document.getElementById('user_email').value; const password = document.getElementById('user_password').value;
-            if (userId) { const { error } = await supabaseClient.from('profiles').update({ full_name: fullName, department: department, role: role }).eq('id', userId); if (error) { showToast("Erro ao atualizar perfil: " + error.message, 'danger'); } else { showToast("Perfil atualizado!", 'success'); } }
-            else { if (!password) { showToast("A senha é obrigatória.", 'warning'); return; } const { data, error: authError } = await supabaseAdminClient.auth.admin.createUser({ email: email, password: password, email_confirm: true }); if (authError) { showToast("Erro ao criar usuário: " + authError.message, 'danger'); return; } const { error: profileError } = await supabaseClient.from('profiles').upsert({ id: data.user.id, full_name: fullName, department: department, role: role }); if (profileError) { showToast("Erro ao criar perfil: " + profileError.message, 'danger'); } else { showToast("Usuário criado!", 'success'); } }
-            closeUserModal(); loadUsersForAdmin();
+            const userId = document.getElementById('user-id').value;
+            const fullName = document.getElementById('full_name').value;
+            const department = document.getElementById('department').value;
+            const role = document.getElementById('role').value;
+            const email = document.getElementById('user_email').value;
+            const password = document.getElementById('user_password').value;
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) { showToast("Sessão inválida.", 'danger'); return; }
+            
+            const headers = { 
+                'Content-Type': 'application/json', 
+                'Authorization': `Bearer ${session.access_token}` 
+            };
+
+            const btnSave = document.querySelector('#user-modal .btn-danger');
+            btnSave.disabled = true;
+            btnSave.textContent = "Salvando...";
+
+            try {
+                if (userId) {
+                    // EDITAR (Update)
+                    const response = await fetch(N8N_UPDATE_USER_URL, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({ id: userId, full_name: fullName, department: department, role: role })
+                    });
+                    if (!response.ok) throw new Error('Falha ao atualizar usuário.');
+                    showToast("Usuário atualizado com sucesso!", 'success');
+                } else {
+                    // CRIAR (Create)
+                    if (!password) { throw new Error("Senha é obrigatória para novos usuários."); }
+                    const response = await fetch(N8N_CREATE_USER_URL, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({ email: email, password: password, full_name: fullName, department: department, role: role })
+                    });
+                    if (!response.ok) throw new Error('Falha ao criar usuário.');
+                    showToast("Usuário criado com sucesso!", 'success');
+                }
+                closeUserModal();
+                loadUsersForAdmin();
+            } catch (error) {
+                console.error(error);
+                showToast(error.message, 'danger');
+            } finally {
+                btnSave.disabled = false;
+                btnSave.textContent = "Salvar";
+            }
         }
-        async function deleteUser(userId) { if (confirm(`Tem certeza?`)) { showToast("AVISO: Exclusão deve ser movida para uma Edge Function.", 'warning'); } }
+
+        async function deleteUser(userId) {
+            if (!confirm(`Tem certeza que deseja excluir este usuário? Esta ação é irreversível.`)) return;
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) return;
+
+            try {
+                const response = await fetch(N8N_DELETE_USER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                    body: JSON.stringify({ id: userId })
+                });
+
+                if (!response.ok) throw new Error('Falha ao excluir usuário.');
+                
+                showToast("Usuário excluído com sucesso!", 'success');
+                loadUsersForAdmin();
+            } catch (error) {
+                console.error(error);
+                showToast(error.message, 'danger');
+            }
+        }
+        
         const body = document.body;
         themeToggleBtn.addEventListener('click', () => applyTheme(body.classList.contains('dark-mode') ? 'light' : 'dark'));
         function applyTheme(theme) { body.classList.toggle('dark-mode', theme === 'dark'); localStorage.setItem('theme', theme); }
