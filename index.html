@@ -328,23 +328,24 @@
         async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); loadUserProfileData(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
         
         async function loadDashboardStats() {
-            // Segurança: garante que temos o perfil carregado
-            if (!currentUserProfile) return; 
+            if (!currentUserProfile) return;
 
-            // Consulta a View filtrando onde o remetente NÃO é o usuário atual (Mensagens recebidas)
-            // E que a mensagem NÃO foi lida
+            // Contador 1: Mensagens Pendentes (correto)
+            // Conta tudo na inbox que ainda não foi lido por você.
             const { count: pendingCount } = await supabaseClient
                 .from('user_conversations_view')
                 .select('*', { count: 'exact', head: true })
-                .neq('last_message_sender_id', currentUserProfile.id)
-                .eq('is_unread', true);
+                .neq('last_message_sender_id', currentUserProfile.id) // Apenas o que eu recebi
+                .eq('is_unread', true); // Apenas o que não li
 
-            // Consulta a View filtrando onde o remetente NÃO é o usuário atual E a prioridade é urgente
+            // Contador 2: Chamados Urgentes (CORRIGIDO)
+            // Conta apenas chamados urgentes que você RECEBEU.
             const { count: urgentCount } = await supabaseClient
                 .from('user_conversations_view')
                 .select('*', { count: 'exact', head: true })
-                .neq('last_message_sender_id', currentUserProfile.id)
-                .eq('priority', 'urgent');
+                .neq('last_message_sender_id', currentUserProfile.id) // FILTRO ESSENCIAL: Apenas o que eu recebi
+                .eq('type', 'ticket') // Apenas o que for do tipo "chamado"
+                .eq('priority', 'urgent'); // E que tenha prioridade "urgente"
 
             document.getElementById('pending-messages-count').textContent = pendingCount || 0;
             document.getElementById('urgent-tickets-count').textContent = urgentCount || 0;
