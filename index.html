@@ -44,6 +44,7 @@
         main.content { flex: 1; margin-left: 260px; padding: 2rem 3rem; overflow-y: auto; background-color: var(--color-background); position: relative; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         .page-header h1 { margin: 0; font-size: 1.8rem; display: flex; align-items: center; gap: 1rem;} .page-header p { margin: 5px 0 0 0; color: var(--color-text-secondary); }
+        .page-header-actions { display: flex; align-items: center; gap: 1rem; }
         .page-content { display: none; } .page-content.active { display: block; }
         .card { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
         .grid { display: grid; gap: 1.5rem; } .grid-cols-2 { grid-template-columns: repeat(2, 1fr); } .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
@@ -109,12 +110,12 @@
         .read-receipt.read .material-icons { color: var(--color-info); }
         .read-receipt.delivered .material-icons { color: var(--color-text-secondary); opacity: 0.6; }
 
-        #refresh-messages-btn { background: none; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; line-height: 1; }
-        #refresh-messages-btn:hover { background-color: var(--color-background); }
-        #refresh-messages-btn .material-icons { color: var(--color-text-secondary); transition: transform 0.3s; }
-        #refresh-messages-btn:hover .material-icons { color: var(--color-text-primary); }
+        .refresh-btn { background: none; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; line-height: 1; }
+        .refresh-btn:hover { background-color: var(--color-background); }
+        .refresh-btn .material-icons { color: var(--color-text-secondary); transition: transform 0.3s; }
+        .refresh-btn:hover .material-icons { color: var(--color-text-primary); }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        #refresh-messages-btn.loading .material-icons { animation: spin 1s linear infinite; }
+        .refresh-btn.loading .material-icons { animation: spin 1s linear infinite; }
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--color-border); }
         .data-table thead th { background-color: var(--color-background); font-weight: 600; color: var(--color-text-secondary); font-size: 0.9rem; }
@@ -128,7 +129,7 @@
         .user-tag.department { background-color: var(--color-info-bg); color: var(--color-info); }
         .user-tag.role-admin { background-color: var(--color-danger-bg); color: var(--color-danger); }
         .user-tag.role { background-color: var(--color-background); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
-        .score-cell { font-weight: 600; display: flex; align-items: center; gap: 0.25rem; }
+        .score-cell { font-weight: 600; display: flex; align-items: center; gap: 0.25rem; text-align: left !important; }
         .score-cell .material-icons { color: var(--color-warning); font-size: 18px; }
         .action-buttons { text-align: right; }
         .action-buttons .btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
@@ -251,7 +252,7 @@
         const themeToggleBtn = document.getElementById('theme-toggle');
 
         const authHTML = `<div class="login-wrapper visible" id="auth-wrapper"><div id="auth-container" class="login-container"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo"><p class="login-subtitle">Comunicação interna Molas Fama</p><form id="login-form"><div class="input-group"><input type="email" id="email" class="input-field" placeholder="Email" required></div><div class="input-group"><input type="password" id="password" class="input-field" placeholder="Senha" required></div><button type="submit" class="btn-primary" style="width: 100%;">Entrar</button></form></div></div>`;
-        const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Urgentes</h3><p id="urgent-tickets-count">0</p></div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button></div><button id="refresh-messages-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div></div></div><div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"><button class="btn btn-secondary" onclick="showPage('messages-page'); loadMessages();"><span class="material-icons">arrow_back</span> Voltar</button><div><h1 id="conversation-subject"></h1><p id="conversation-participants"></p></div><div class="conversation-header-actions"><button class="btn btn-secondary" onclick="document.getElementById('reply-input').focus()"><span class="material-icons">reply</span> Responder</button></div></div><div class="card"><div id="conversation-messages"></div><div id="reply-form-wrapper"><form id="reply-form"><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><div id="users-page" class="page-content"><div class="page-header"><h1>Gerenciamento de Usuários</h1><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th>Usuário & Email</th><th>Departamento & Cargo</th><th>Score</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div id="user-profile-content"></div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div></div>`;
+        const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Urgentes</h3><p id="urgent-tickets-count">0</p></div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button></div><button id="refresh-messages-btn" class="refresh-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div></div></div><div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"><button class="btn btn-secondary" onclick="showPage('messages-page'); loadMessages();"><span class="material-icons">arrow_back</span> Voltar</button><div><h1 id="conversation-subject"></h1><p id="conversation-participants"></p></div><div class="conversation-header-actions"><button class="btn btn-secondary" onclick="document.getElementById('reply-input').focus()"><span class="material-icons">reply</span> Responder</button></div></div><div class="card"><div id="conversation-messages"></div><div id="reply-form-wrapper"><form id="reply-form"><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><div id="users-page" class="page-content"><div class="page-header"><div class="page-header-title"><h1>Gerenciamento de Usuários</h1></div><div class="page-header-actions"><button id="refresh-users-btn" class="refresh-btn" title="Atualizar usuários"><span class="material-icons">refresh</span></button><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th>Usuário & Email</th><th>Departamento & Cargo</th><th>Score</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div id="user-profile-content"></div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div></div>`;
         
         document.addEventListener('DOMContentLoaded', checkUserSession);
         
@@ -283,19 +284,36 @@
             if (recipientInput) { recipientInput.addEventListener('input', handleRecipientSearch); recipientInput.addEventListener('keydown', handleRecipientBackspace); }
             document.querySelectorAll('#messages-page .tab-link').forEach(tab => { tab.addEventListener('click', (e) => { const targetId = e.currentTarget.dataset.tab; document.querySelectorAll('#messages-page .tab-link').forEach(t => t.classList.remove('active')); document.querySelectorAll('#messages-page .tab-content').forEach(c => c.classList.remove('active')); e.currentTarget.classList.add('active'); document.getElementById(targetId).classList.add('active'); }); });
             
-            const refreshBtn = document.getElementById('refresh-messages-btn');
-            if(refreshBtn) {
-                refreshBtn.addEventListener('click', async () => {
-                    refreshBtn.disabled = true;
-                    refreshBtn.classList.add('loading');
+            const refreshMessagesBtn = document.getElementById('refresh-messages-btn');
+            if(refreshMessagesBtn) {
+                refreshMessagesBtn.addEventListener('click', async () => {
+                    refreshMessagesBtn.disabled = true;
+                    refreshMessagesBtn.classList.add('loading');
                     try {
                         await loadMessages();
                         showToast("Caixa de entrada atualizada!", "info");
                     } catch (e) {
                         showToast("Falha ao atualizar.", "danger");
                     } finally {
-                        refreshBtn.classList.remove('loading');
-                        refreshBtn.disabled = false;
+                        refreshMessagesBtn.classList.remove('loading');
+                        refreshMessagesBtn.disabled = false;
+                    }
+                });
+            }
+
+            const refreshUsersBtn = document.getElementById('refresh-users-btn');
+            if(refreshUsersBtn) {
+                refreshUsersBtn.addEventListener('click', async () => {
+                    refreshUsersBtn.disabled = true;
+                    refreshUsersBtn.classList.add('loading');
+                    try {
+                        await loadUsersForAdmin();
+                        showToast("Lista de usuários atualizada!", "info");
+                    } catch (e) {
+                        showToast("Falha ao atualizar usuários.", "danger");
+                    } finally {
+                        refreshUsersBtn.classList.remove('loading');
+                        refreshUsersBtn.disabled = false;
                     }
                 });
             }
@@ -330,22 +348,18 @@
         async function loadDashboardStats() {
             if (!currentUserProfile) return;
 
-            // Contador 1: Mensagens Pendentes (correto)
-            // Conta tudo na inbox que ainda não foi lido por você.
             const { count: pendingCount } = await supabaseClient
                 .from('user_conversations_view')
                 .select('*', { count: 'exact', head: true })
-                .neq('last_message_sender_id', currentUserProfile.id) // Apenas o que eu recebi
-                .eq('is_unread', true); // Apenas o que não li
+                .neq('last_message_sender_id', currentUserProfile.id)
+                .eq('is_unread', true);
 
-            // Contador 2: Chamados Urgentes (CORRIGIDO)
-            // Conta apenas chamados urgentes que você RECEBEU.
             const { count: urgentCount } = await supabaseClient
                 .from('user_conversations_view')
                 .select('*', { count: 'exact', head: true })
-                .neq('last_message_sender_id', currentUserProfile.id) // FILTRO ESSENCIAL: Apenas o que eu recebi
-                .eq('type', 'ticket') // Apenas o que for do tipo "chamado"
-                .eq('priority', 'urgent'); // E que tenha prioridade "urgente"
+                .neq('last_message_sender_id', currentUserProfile.id)
+                .eq('type', 'ticket')
+                .eq('priority', 'urgent');
 
             document.getElementById('pending-messages-count').textContent = pendingCount || 0;
             document.getElementById('urgent-tickets-count').textContent = urgentCount || 0;
@@ -358,7 +372,7 @@
             if (container && currentUserProfile) {
                 const avatarInitial = currentUserProfile.full_name ? currentUserProfile.full_name.charAt(0).toUpperCase() : '?';
                 const score = currentUserProfile.score || 100;
-                const scorePercentage = Math.min((score / 200) * 100, 100); // Ex: Meta de 200 pontos
+                const scorePercentage = Math.min((score / 200) * 100, 100);
 
                 container.innerHTML = `
                     <div class="profile-header-card">
@@ -406,7 +420,6 @@
             const file = event.target.files[0];
             if (!file) return;
             showToast(`Simulando upload da imagem: ${file.name}. Backend a ser implementado.`, 'info');
-            // Futuramente, aqui entraria a lógica de upload para o Supabase Storage.
         }
 
         function initializeQuillEditor() {
@@ -432,7 +445,6 @@
             if (!currentUserProfile) { showToast("Você precisa estar logado.", 'warning'); return; }
             if (selectedRecipients.length === 0) { showToast("Adicione pelo menos um destinatário.", 'warning'); return; }
 
-            // 1. Desabilita o botão e muda o texto para dar feedback visual
             sendButton.disabled = true;
             sendButton.innerHTML = '<span class="material-icons" style="font-size: 18px; margin-right: 8px;">hourglass_top</span> Enviando...';
 
@@ -469,7 +481,6 @@
                 console.error("Erro ao enviar mensagem via n8n:", error);
                 showToast("Falha ao enviar mensagem: " + error.message, 'danger');
             } finally {
-                // 2. Reabilita o botão no final, aconteça o que acontecer (sucesso ou erro)
                 sendButton.disabled = false;
                 sendButton.innerHTML = 'Enviar';
             }
@@ -496,11 +507,9 @@
                 if (conv.type === 'ticket') metaTagsHTML += '<span class="tag-icon" title="Chamado"><span class="material-icons">support_agent</span></span>';
                 if (conv.requires_response) metaTagsHTML += '<span class="tag-icon" title="Exige Resposta"><span class="material-icons">reply</span></span>';
                 
-                // Lógica de Estilo para Inbox (Lido/Não Lido)
                 const isUnread = type === 'inbox' && conv.is_unread;
                 const rowClass = isUnread ? 'row-unread' : 'row-read';
 
-                // Lógica de Ícones para Enviados (Checks de Leitura)
                 let readReceiptHTML = '';
                 if (type === 'sent') {
                     const isReadByRecipient = conv.recipient_read_at && new Date(conv.recipient_read_at) >= new Date(conv.last_message_created_at);
@@ -555,7 +564,6 @@
         }
 
         window.openConversation = async (conversationId) => {
-            // Marca como lida ao abrir
             await supabaseClient
                 .from('conversation_participants')
                 .update({ last_read_at: new Date().toISOString() })
