@@ -497,22 +497,18 @@
                 if (conv.requires_response) metaTagsHTML += '<span class="tag-icon" title="Exige Resposta"><span class="material-icons">reply</span></span>';
                 
                 // Lógica de Estilo para Inbox (Lido/Não Lido)
-                let rowClass = '';
-                if (type === 'inbox') {
-                    rowClass = conv.is_unread ? 'row-unread' : 'row-read';
-                }
+                const isUnread = type === 'inbox' && conv.is_unread;
+                const rowClass = isUnread ? 'row-unread' : 'row-read';
 
                 // Lógica de Ícones para Enviados (Checks de Leitura)
                 let readReceiptHTML = '';
                 if (type === 'sent') {
-                    const isReadByRecipient = conv.recipient_read_at && new Date(conv.recipient_read_at) > new Date(conv.last_message_created_at);
+                    const isReadByRecipient = conv.recipient_read_at && new Date(conv.recipient_read_at) >= new Date(conv.last_message_created_at);
                     
                     if (isReadByRecipient) {
-                         // Dois Vistos Azuis (Lido)
-                         const readDate = new Date(conv.recipient_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                         const readDate = new Date(conv.recipient_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                          readReceiptHTML = `<span class="read-receipt read" title="Lida em: ${readDate}"><span class="material-icons">done_all</span></span>`;
                     } else {
-                         // Um Visto Cinza (Entregue/Enviado)
                          readReceiptHTML = `<span class="read-receipt delivered" title="Enviada"><span class="material-icons">check</span></span>`;
                     }
                 }
@@ -541,7 +537,6 @@
             inboxContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
             sentContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
             
-            // Agora a view traz o campo 'is_unread'
             const { data, error } = await supabaseClient.from('user_conversations_view').select('*').order('last_message_created_at', { ascending: false, nulls: 'last' });
 
             if (error) {
@@ -552,8 +547,8 @@
                 return;
             }
 
-            const inboxMessages = data.filter(conv => conv.last_message_sender_id !== currentUserProfile.id);
-            const sentMessages = data.filter(conv => conv.last_message_sender_id === currentUserProfile.id);
+            const inboxMessages = data.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_names === null));
+            const sentMessages = data.filter(conv => conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_names !== null);
 
             renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
             renderMessageTable(sentMessages, 'sent-content', 'sent');
