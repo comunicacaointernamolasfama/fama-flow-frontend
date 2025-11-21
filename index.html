@@ -230,7 +230,7 @@
     <div id="root"></div>
     <button class="theme-toggle" id="theme-toggle" title="Alterar tema" style="display: none;"><span class="material-icons" id="icon-moon">dark_mode</span><span class="material-icons" id="icon-sun">light_mode</span></button>
     <div id="toast-container"></div>
-    <div id="new-message-popup"><div class="popup-header"><h3>Nova Mensagem</h3><button onclick="closeNewMessagePopup()"><span class="material-icons">close</span></button></div><form id="new-message-form"><div class="popup-body"><div class="form-group" id="recipient-group"><div id="recipient-input-wrapper" onclick="document.getElementById('destinatario-input').focus()"><input type="text" id="destinatario-input" placeholder="Para:" autocomplete="off"></div><div id="recipient-suggestions"></div></div><div class="form-group"><input type="text" id="assunto" class="input-field" placeholder="Assunto"></div><div id="editor-wrapper"><div id="editor-container"></div></div><input type="file" id="file-upload-input" style="display: none;" onchange="handleFileUpload(event)"></div><div class="popup-footer"><div class="popup-footer-top-row"><div class="urgency-selector"><button type="button" class="btn btn-success active" data-priority="normal">Normal</button><button type="button" class="btn btn-secondary" data-priority="important">Importante</button><button type="button" class="btn btn-secondary" data-priority="urgent">Urgente</button></div><div id="chamado-fields" style="display:none;"><label for="due_date">Prazo:</label><input type="date" id="due_date" class="input-field"><div class="date-presets"><button type="button" class="btn btn-secondary" onclick="setDueDate(1)">+1d</button><button type="button" class="btn btn-secondary" onclick="setDueDate(7)">+7d</button></div></div></div><div class="popup-footer-main"><div class="popup-actions-left"><button type="submit" class="btn btn-danger">Enviar</button><div class="message-type-selector"><div><input type="radio" id="tipo-simples" name="message-type" value="message" checked onchange="toggleChamadoFields()"><label for="tipo-simples">Simples</label></div><div><input type="radio" id="tipo-chamado" name="message-type" value="ticket" onchange="toggleChamadoFields()"><label for="tipo-chamado">Chamado</label></div></div></div><label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label></div></div></form></div>
+    <div id="new-message-popup"><div class="popup-header"><h3>Nova Mensagem</h3><button onclick="closeNewMessagePopup()"><span class="material-icons">close</span></button></div><form id="new-message-form"><div class="popup-body"><div class="form-group" id="recipient-group"><div id="recipient-input-wrapper" onclick="document.getElementById('destinatario-input').focus()"><input type="text" id="destinatario-input" placeholder="Para:" autocomplete="off"></div><div id="recipient-suggestions"></div></div><div class="form-group"><input type="text" id="assunto" class="input-field" placeholder="Assunto"></div><div id="editor-wrapper"><div id="editor-container"></div></div><input type="file" id="file-upload-input" style="display: none;" onchange="handleFileUpload(event)"></div><div class="popup-footer"><div class="popup-footer-top-row"><div class="urgency-selector"><button type="button" class="btn btn-success active" data-priority="normal">Normal</button><button type="button" class="btn btn-secondary" data-priority="important">Importante</button><button type="button" class="btn btn-secondary" data-priority="urgent">Urgente</button></div><div id="chamado-fields" style="display:none;"><label for="due_date">Prazo:</label><input type="date" id="due_date" class="input-field"><div class="date-presets"><button type="button" class="btn btn-secondary" onclick="setDueDate(1)">+1d</button><button type="button" class="btn btn-secondary" onclick="setDueDate(7)">+7d</button></div></div></div><div class="popup-footer-main"><div class="popup-actions-left"><button type="submit" id="btn-send-message" class="btn btn-danger">Enviar</button><div class="message-type-selector"><div><input type="radio" id="tipo-simples" name="message-type" value="message" checked onchange="toggleChamadoFields()"><label for="tipo-simples">Simples</label></div><div><input type="radio" id="tipo-chamado" name="message-type" value="ticket" onchange="toggleChamadoFields()"><label for="tipo-chamado">Chamado</label></div></div></div><label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label></div></div></form></div>
 
     <script>
         const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
@@ -426,23 +426,33 @@
 
         async function sendMessage(e) {
             e.preventDefault();
+            const sendButton = document.getElementById('btn-send-message');
+
             if (!currentUserProfile) { showToast("Você precisa estar logado.", 'warning'); return; }
             if (selectedRecipients.length === 0) { showToast("Adicione pelo menos um destinatário.", 'warning'); return; }
-            
-            const args = { p_subject: document.getElementById('assunto').value || "Sem assunto", p_type: document.querySelector('input[name="message-type"]:checked').value, p_priority: document.querySelector('.urgency-selector .btn.active').dataset.priority, p_requires_response: document.getElementById('requires_response').checked, p_due_date: document.getElementById('due_date').value || null, p_content: quillEditor.root.innerHTML, p_recipient_ids: selectedRecipients.map(u => u.id) };
-            
-            try {
-                const N8N_WEBHOOK_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/21446ed7-79bd-4a14-b954-ab729bb61f26';
 
+            // 1. Desabilita o botão e muda o texto para dar feedback visual
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<span class="material-icons" style="font-size: 18px; margin-right: 8px;">hourglass_top</span> Enviando...';
+
+            try {
+                const args = {
+                    p_subject: document.getElementById('assunto').value || "Sem assunto",
+                    p_type: document.querySelector('input[name="message-type"]:checked').value,
+                    p_priority: document.querySelector('.urgency-selector .btn.active').dataset.priority,
+                    p_requires_response: document.getElementById('requires_response').checked,
+                    p_due_date: document.getElementById('due_date').value || null,
+                    p_content: quillEditor.root.innerHTML,
+                    p_recipient_ids: selectedRecipients.map(u => u.id)
+                };
+                
+                const N8N_WEBHOOK_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/21446ed7-79bd-4a14-b954-ab729bb61f26';
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) throw new Error("Usuário não autenticado.");
 
                 const response = await fetch(N8N_WEBHOOK_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${session.access_token}`
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
                     body: JSON.stringify(args)
                 });
 
@@ -451,13 +461,16 @@
                 }
                 
                 showToast("Mensagem enviada com sucesso!", 'success');
-                loadUserProfileData();
                 closeNewMessagePopup();
-                loadMessages();
+                await Promise.all([loadUserProfileData(), loadMessages()]);
 
             } catch (error) {
                 console.error("Erro ao enviar mensagem via n8n:", error);
                 showToast("Falha ao enviar mensagem: " + error.message, 'danger');
+            } finally {
+                // 2. Reabilita o botão no final, aconteça o que acontecer (sucesso ou erro)
+                sendButton.disabled = false;
+                sendButton.innerHTML = 'Enviar';
             }
         }
         
