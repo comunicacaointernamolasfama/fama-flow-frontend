@@ -301,7 +301,28 @@
         }
         function showPage(pageId) { const appContainer = document.getElementById('app-container'); if (!appContainer) return; appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); const targetPage = appContainer.querySelector(`#${pageId}`); if (targetPage) targetPage.classList.add('active'); appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); if (activeLink) activeLink.classList.add('active'); if(pageId === 'messages-page') loadMessages(); }
         async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); loadUserProfileData(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
-        async function loadDashboardStats() { const { count: pendingCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }); const { count: urgentCount } = await supabaseClient.from('conversations').select('*', { count: 'exact', head: true }).eq('priority', 'urgent'); document.getElementById('pending-messages-count').textContent = pendingCount || 0; document.getElementById('urgent-tickets-count').textContent = urgentCount || 0; }
+        
+        async function loadDashboardStats() {
+            // Segurança: garante que temos o perfil carregado
+            if (!currentUserProfile) return; 
+
+            // Consulta a View filtrando onde o remetente NÃO é o usuário atual (Mensagens recebidas)
+            const { count: pendingCount } = await supabaseClient
+                .from('user_conversations_view')
+                .select('*', { count: 'exact', head: true })
+                .neq('last_message_sender_id', currentUserProfile.id);
+
+            // Consulta a View filtrando onde o remetente NÃO é o usuário atual E a prioridade é urgente
+            const { count: urgentCount } = await supabaseClient
+                .from('user_conversations_view')
+                .select('*', { count: 'exact', head: true })
+                .neq('last_message_sender_id', currentUserProfile.id)
+                .eq('priority', 'urgent');
+
+            document.getElementById('pending-messages-count').textContent = pendingCount || 0;
+            document.getElementById('urgent-tickets-count').textContent = urgentCount || 0;
+        }
+
         async function fetchAllUsersForSearch() { const { data, error } = await supabaseClient.from('profiles').select('id, full_name, score'); if(error) console.error("Erro ao buscar usuários para pesquisa:", error); else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; }
         
         function loadUserProfileData() {
