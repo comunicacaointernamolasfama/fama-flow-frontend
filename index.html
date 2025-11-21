@@ -12,9 +12,11 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         :root {
             --color-background: #F9F9F9; --color-surface: #FFFFFF; --color-text-primary: #1E1E1E; --color-text-secondary: #6B7280; --color-brand-primary: #D81920; --color-border: #E0E0E0; --color-success: #10B981; --color-warning: #F59E0B; --color-danger: #D81920; --color-info: #3B82F6; --color-success-bg: #E7F8F2; --color-warning-bg: #FFFBEB; --color-danger-bg: #FEF2F2; --color-info-bg: #EFF6FF; --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --read-bg: #f3f4f6; --unread-bg: #FFFFFF;
         }
         body.dark-mode {
             --color-background: #121212; --color-surface: #1E1E1E; --color-text-primary: #FFFFFF; --color-text-secondary: #A8A8A8; --color-border: #383838; --color-success-bg: #052e16; --color-warning-bg: #2a2105; --color-danger-bg: #3b1212; --color-info-bg: #1e293b; --shadow: none;
+            --read-bg: #1a1a1a; --unread-bg: #252525;
         }
         body { font-family: 'Inter', sans-serif; margin: 0; background-color: var(--color-background); color: var(--color-text-primary); transition: background-color 0.3s, color 0.3s; line-height: 1.6; }
         * { box-sizing: border-box; }
@@ -73,16 +75,27 @@
         .tab-content { display: none; } .tab-content.active { display: block; }
         .empty-state { padding: 3rem 1rem; text-align: center; color: var(--color-text-secondary); }
         .data-table-fino { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        .data-table-fino tr { cursor: pointer; }
-        .data-table-fino tr:hover { background-color: var(--color-background); }
-        .data-table-fino td { padding: 0.6rem 1rem; border-bottom: 1px solid var(--color-border); vertical-align: middle; white-space: nowrap; }
-        .data-table-fino .col-who { width: 18%; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+        .data-table-fino tr { cursor: pointer; transition: background-color 0.2s; }
+        .data-table-fino tr.row-unread { background-color: var(--unread-bg); }
+        .data-table-fino tr.row-read { background-color: var(--read-bg); }
+        .data-table-fino tr:hover { filter: brightness(0.98); }
+        
+        .data-table-fino td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); vertical-align: middle; white-space: nowrap; }
+        
+        .data-table-fino .col-who { width: 20%; font-weight: 400; overflow: hidden; text-overflow: ellipsis; color: var(--color-text-primary); }
+        .row-unread .col-who { font-weight: 700; color: var(--color-text-primary); }
+        
         .data-table-fino .col-subject { width: 55%; overflow: hidden; text-overflow: ellipsis; }
-        .data-table-fino .subject-title { font-weight: 600; }
-        .data-table-fino .subject-preview { color: var(--color-text-secondary); margin-left: 0.5rem; }
-        .data-table-fino .col-meta { width: 17%; text-align: right; }
-        .data-table-fino .col-meta .meta-tags { display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; }
-        .data-table-fino .col-date { width: 10%; text-align: right; color: var(--color-text-secondary); font-size: 0.9rem; }
+        .data-table-fino .subject-title { font-weight: 400; color: var(--color-text-primary); }
+        .row-unread .subject-title { font-weight: 700; }
+        
+        .data-table-fino .subject-preview { color: var(--color-text-secondary); margin-left: 0.5rem; font-weight: 400; }
+        
+        .data-table-fino .col-meta { width: 15%; text-align: right; }
+        .data-table-fino .col-meta .meta-tags { display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; }
+        .data-table-fino .col-date { width: 10%; text-align: right; color: var(--color-text-secondary); font-size: 0.85rem; font-weight: 400; }
+        .row-unread .col-date { font-weight: 600; color: var(--color-text-primary); }
+
         .tag-fino { font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 12px; margin-left: 0.5rem; display: inline-block; line-height: 1.2; vertical-align: middle; }
         .tag-fino.tag-urgent { background-color: var(--color-danger-bg); color: var(--color-danger); }
         .tag-fino.tag-important { background-color: var(--color-warning-bg); color: var(--color-warning); }
@@ -312,10 +325,12 @@
             if (!currentUserProfile) return; 
 
             // Consulta a View filtrando onde o remetente NÃO é o usuário atual (Mensagens recebidas)
+            // E que a mensagem NÃO foi lida
             const { count: pendingCount } = await supabaseClient
                 .from('user_conversations_view')
                 .select('*', { count: 'exact', head: true })
-                .neq('last_message_sender_id', currentUserProfile.id);
+                .neq('last_message_sender_id', currentUserProfile.id)
+                .eq('is_unread', true);
 
             // Consulta a View filtrando onde o remetente NÃO é o usuário atual E a prioridade é urgente
             const { count: urgentCount } = await supabaseClient
@@ -460,8 +475,12 @@
                 if (conv.type === 'ticket') metaTagsHTML += '<span class="tag-icon" title="Chamado"><span class="material-icons">support_agent</span></span>';
                 if (conv.requires_response) metaTagsHTML += '<span class="tag-icon" title="Exige Resposta"><span class="material-icons">reply</span></span>';
                 
+                // Lógica de Estilo para mensagens não lidas
+                const isUnread = (type === 'inbox' && conv.is_unread);
+                const rowClass = isUnread ? 'row-unread' : 'row-read';
+
                 return `
-                    <tr onclick="openConversation('${conv.id}')">
+                    <tr class="${rowClass}" onclick="openConversation('${conv.id}')">
                         <td class="col-who">${type === 'inbox' ? participants : `Para: ${participants}`}</td>
                         <td class="col-subject">
                             <span class="subject-title">${conv.subject}</span>
@@ -483,6 +502,7 @@
             inboxContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
             sentContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
             
+            // Agora a view traz o campo 'is_unread'
             const { data, error } = await supabaseClient.from('user_conversations_view').select('*').order('last_message_created_at', { ascending: false, nulls: 'last' });
 
             if (error) {
@@ -501,6 +521,12 @@
         }
 
         window.openConversation = async (conversationId) => {
+            // Marca como lida ao abrir
+            await supabaseClient
+                .from('conversation_participants')
+                .update({ last_read_at: new Date().toISOString() })
+                .match({ conversation_id: conversationId, user_id: currentUserProfile.id });
+
             showPage('conversation-view-page');
             const messagesContainer = document.getElementById('conversation-messages');
             messagesContainer.innerHTML = '<div style="text-align: center;">Carregando conversa...</div>';
