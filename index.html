@@ -478,7 +478,7 @@
                 if (conv.priority === 'important') priorityTag = `<span class="tag-fino tag-important">Importante</span>`;
 
                 let metaTagsHTML = '';
-                if (conv.due_date) metaTagsHTML += `<span class="tag-icon due-date-tag" title="Prazo"><span class="material-icons">event</span> ${new Date(conv.due_date).toLocaleDateString('pt-BR')}</span>`;
+                if (conv.due_date) metaTagsHTML += `<span class="tag-icon due-date-tag" title="Prazo"><span class="material-icons">event</span> ${new Date(conv.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>`;
                 if (conv.type === 'ticket') metaTagsHTML += '<span class="tag-icon" title="Chamado"><span class="material-icons">support_agent</span></span>';
                 if (conv.requires_response) metaTagsHTML += '<span class="tag-icon" title="Exige Resposta"><span class="material-icons">reply</span></span>';
                 
