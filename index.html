@@ -102,6 +102,13 @@
         .tag-icon { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; color: var(--color-text-secondary); }
         .tag-icon .material-icons { font-size: 18px; }
         .due-date-tag { font-weight: 500; color: var(--color-text-primary); }
+        
+        /* Read receipts icons */
+        .read-receipt { display: inline-flex; vertical-align: middle; margin-right: 8px; }
+        .read-receipt .material-icons { font-size: 18px; }
+        .read-receipt.read .material-icons { color: var(--color-info); }
+        .read-receipt.delivered .material-icons { color: var(--color-text-secondary); opacity: 0.6; }
+
         #refresh-messages-btn { background: none; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; line-height: 1; }
         #refresh-messages-btn:hover { background-color: var(--color-background); }
         #refresh-messages-btn .material-icons { color: var(--color-text-secondary); transition: transform 0.3s; }
@@ -475,14 +482,32 @@
                 if (conv.type === 'ticket') metaTagsHTML += '<span class="tag-icon" title="Chamado"><span class="material-icons">support_agent</span></span>';
                 if (conv.requires_response) metaTagsHTML += '<span class="tag-icon" title="Exige Resposta"><span class="material-icons">reply</span></span>';
                 
-                // Lógica de Estilo para mensagens não lidas
-                const isUnread = (type === 'inbox' && conv.is_unread);
-                const rowClass = isUnread ? 'row-unread' : 'row-read';
+                // Lógica de Estilo para Inbox (Lido/Não Lido)
+                let rowClass = '';
+                if (type === 'inbox') {
+                    rowClass = conv.is_unread ? 'row-unread' : 'row-read';
+                }
 
+                // Lógica de Ícones para Enviados (Checks de Leitura)
+                let readReceiptHTML = '';
+                if (type === 'sent') {
+                    const isReadByRecipient = conv.recipient_read_at && new Date(conv.recipient_read_at) > new Date(conv.last_message_created_at);
+                    
+                    if (isReadByRecipient) {
+                         // Dois Vistos Azuis (Lido)
+                         const readDate = new Date(conv.recipient_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                         readReceiptHTML = `<span class="read-receipt read" title="Lida em: ${readDate}"><span class="material-icons">done_all</span></span>`;
+                    } else {
+                         // Um Visto Cinza (Entregue/Enviado)
+                         readReceiptHTML = `<span class="read-receipt delivered" title="Enviada"><span class="material-icons">check</span></span>`;
+                    }
+                }
+                
                 return `
                     <tr class="${rowClass}" onclick="openConversation('${conv.id}')">
                         <td class="col-who">${type === 'inbox' ? participants : `Para: ${participants}`}</td>
                         <td class="col-subject">
+                            ${readReceiptHTML}
                             <span class="subject-title">${conv.subject}</span>
                             ${priorityTag}
                             <span class="subject-preview"> - ${preview}</span>
