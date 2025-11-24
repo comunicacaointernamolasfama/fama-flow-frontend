@@ -51,7 +51,7 @@
         .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; border: none; transition: background-color 0.2s, opacity 0.2s;}
         .btn:hover { opacity: 0.9; } .btn .material-icons { margin-right: 0.5rem; font-size: 20px; }
         .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
-        .btn-icon { padding: 0.5rem; background: none; color: var(--color-text-secondary); } .btn-icon:hover { background-color: var(--color-background); color: var(--color-text-primary); }
+        .btn-icon { padding: 0.5rem; background: none; border: none; color: var(--color-text-secondary); border-radius: 50%; line-height: 1;} .btn-icon:hover { background-color: var(--color-background); color: var(--color-text-primary); }
         .btn-secondary { background-color: var(--color-surface); color: var(--color-text-primary); border: 1px solid var(--color-border); }
         .btn-danger { background-color: var(--color-brand-primary); color: white; }
         .btn-success { background-color: var(--color-success); color: white; } .btn-warning { background-color: var(--color-warning); color: white; }
@@ -207,7 +207,17 @@
         .toast.toast-danger { border-color: var(--color-danger); background-color: var(--color-danger-bg); } .toast.toast-danger .toast-icon { color: var(--color-danger); }
         .toast.toast-warning { border-color: var(--color-warning); background-color: var(--color-warning-bg); } .toast.toast-warning .toast-icon { color: var(--color-warning); }
         .toast.toast-info { border-color: var(--color-info); background-color: var(--color-info-bg); } .toast.toast-info .toast-icon { color: var(--color-info); }
-        #conversation-view-page .card { display: flex; flex-direction: column; height: calc(100vh - 8rem); padding: 0; }
+        
+        /* --- CONVERSATION VIEW REFACTOR --- */
+        #conversation-view-page .page-header { flex-direction: column; align-items: stretch; gap: 1rem; }
+        .conversation-main-header { display: flex; justify-content: space-between; align-items: center; }
+        .conversation-title-block { display: flex; flex-direction: column; gap: 0.25rem; }
+        .conversation-title-block h1 { font-size: 1.5rem; margin: 0; }
+        .conversation-title-block p { color: var(--color-text-secondary); margin: 0; cursor: pointer; }
+        .conversation-title-block .material-icons { font-size: 16px; vertical-align: middle; }
+        .conversation-ticket-info { background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
+        .conversation-ticket-info .tag-fino { font-size: 0.8rem; }
+        #conversation-view-page .card { display: flex; flex-direction: column; height: calc(100vh - 12rem); padding: 0; }
         #conversation-messages { flex-grow: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
         .message-bubble-wrapper { display: flex; flex-direction: column; max-width: 70%; }
         .message-bubble { padding: 0.75rem 1rem; border-radius: 18px; word-break: break-word; }
@@ -224,7 +234,7 @@
         #reply-form-wrapper { padding: 1rem 1.5rem; border-top: 1px solid var(--color-border); background-color: var(--color-surface); }
         #reply-form { display: flex; gap: 1rem; align-items: center; }
         #reply-input { flex-grow: 1; }
-        .conversation-header-actions { display: flex; gap: 0.5rem; }
+        #reply-attachment-preview { margin-top: 0.5rem; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -238,7 +248,6 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        // URLs dos seus Webhooks do n8n
         const N8N_CREATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-user';
         const N8N_UPDATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/update-user';
         const N8N_DELETE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/delete-user';
@@ -256,7 +265,7 @@
         const themeToggleBtn = document.getElementById('theme-toggle');
 
         const authHTML = `<div class="login-wrapper visible" id="auth-wrapper"><div id="auth-container" class="login-container"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo"><p class="login-subtitle">Comunicação interna Molas Fama</p><form id="login-form"><div class="input-group"><input type="email" id="email" class="input-field" placeholder="Email" required></div><div class="input-group"><input type="password" id="password" class="input-field" placeholder="Senha" required></div><button type="submit" class="btn-primary" style="width: 100%;">Entrar</button></form></div></div>`;
-        const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Urgentes</h3><p id="urgent-tickets-count">0</p></div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button><button class="tab-link" data-tab="archived-content">Arquivados</button></div><button id="refresh-messages-btn" class="refresh-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div><div id="archived-content" class="tab-content"></div></div></div><div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"><button class="btn btn-secondary" onclick="showPage('messages-page'); loadMessages();"><span class="material-icons">arrow_back</span> Voltar</button><div><h1 id="conversation-subject"></h1><p id="conversation-participants"></p></div><div class="conversation-header-actions"><button class="btn btn-secondary" onclick="document.getElementById('reply-input').focus()"><span class="material-icons">reply</span> Responder</button></div></div><div class="card"><div id="conversation-messages"></div><div id="reply-form-wrapper"><form id="reply-form"><button type="button" class="btn btn-icon" title="Anexar arquivo"><span class="material-icons">attachment</span></button><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><div id="users-page" class="page-content"><div class="page-header"><div class="page-header-title"><h1>Gerenciamento de Usuários</h1></div><div class="page-header-actions"><button id="refresh-users-btn" class="refresh-btn" title="Atualizar usuários"><span class="material-icons">refresh</span></button><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th>Usuário & Email</th><th>Departamento & Cargo</th><th>Score</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div id="user-profile-content"></div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div></div>`;
+        const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Urgentes</h3><p id="urgent-tickets-count">0</p></div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button><button class="tab-link" data-tab="archived-content">Arquivados</button></div><button id="refresh-messages-btn" class="refresh-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div><div id="archived-content" class="tab-content"></div></div></div><div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"></div><div class="card"><div id="conversation-messages">Carregando conversa...</div><div id="reply-form-wrapper"><div id="reply-attachment-preview"></div><form id="reply-form"><input type="file" id="reply-attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('reply-attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><div id="users-page" class="page-content"><div class="page-header"><div class="page-header-title"><h1>Gerenciamento de Usuários</h1></div><div class="page-header-actions"><button id="refresh-users-btn" class="refresh-btn" title="Atualizar usuários"><span class="material-icons">refresh</span></button><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th>Usuário & Email</th><th>Departamento & Cargo</th><th>Score</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div id="user-profile-content"></div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div></div>`;
         
         document.addEventListener('DOMContentLoaded', checkUserSession);
         
@@ -352,22 +361,10 @@
         
         async function loadDashboardStats() {
             if (!currentUserProfile) return;
-
-            const { count: pendingCount } = await supabaseClient
-                .from('user_conversations_view')
-                .select('*', { count: 'exact', head: true })
-                .neq('last_message_sender_id', currentUserProfile.id)
-                .eq('is_unread', true);
-
-            const { count: urgentCount } = await supabaseClient
-                .from('user_conversations_view')
-                .select('*', { count: 'exact', head: true })
-                .neq('last_message_sender_id', currentUserProfile.id)
-                .eq('type', 'ticket')
-                .eq('priority', 'urgent');
-
-            document.getElementById('pending-messages-count').textContent = pendingCount || 0;
-            document.getElementById('urgent-tickets-count').textContent = urgentCount || 0;
+            const { data, error } = await supabaseClient.rpc('get_dashboard_stats');
+            if (error) { console.error('Error fetching dashboard stats:', error); return; }
+            document.getElementById('pending-messages-count').textContent = data.pending_messages_count || 0;
+            document.getElementById('urgent-tickets-count').textContent = data.urgent_tickets_count || 0;
         }
 
         async function fetchAllUsersForSearch() { const { data, error } = await supabaseClient.from('profiles').select('id, full_name, score'); if(error) console.error("Erro ao buscar usuários para pesquisa:", error); else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; }
@@ -382,29 +379,16 @@
                 container.innerHTML = `
                     <div class="profile-header-card">
                         <div class="profile-avatar-wrapper" onclick="document.getElementById('avatar-upload-input').click()">
-                            <div class="profile-avatar">${avatarInitial}</div>
-                            <div class="profile-avatar-overlay">
-                                <span class="material-icons">photo_camera</span>
-                            </div>
+                            <div class="user-avatar" style="width: 80px; height: 80px; font-size: 2.5rem;">${avatarInitial}</div>
+                            <div class="profile-avatar-overlay"><span class="material-icons">photo_camera</span></div>
                         </div>
                         <input type="file" id="avatar-upload-input" style="display: none;" accept="image/*" onchange="handleAvatarUpload(event)">
-                        <div class="profile-info">
-                            <h3>${currentUserProfile.full_name}</h3>
-                            <p>${currentUserProfile.role || 'Membro'}</p>
-                             <p class="page-header-p" style="font-size: 1rem; margin-top: 0.5rem;">Acompanhe seu desempenho e conquistas</p>
-                        </div>
+                        <div class="profile-info"><h3>${currentUserProfile.full_name}</h3><p>${currentUserProfile.role || 'Membro'}</p></div>
                     </div>
-                    
-                    <div class="card">
-                        <h3 class="card-title"><span class="material-icons">radar</span> Radar de Engajamento</h3>
+                    <div class="card"><h3 class="card-title"><span class="material-icons">radar</span> Radar de Engajamento</h3>
                         <div>
-                            <div class="score-display">
-                                <span class="score-label">Meu Score</span>
-                                <span class="score-value">${score}</span>
-                            </div>
-                            <div class="progress-bar-container">
-                                <div class="progress-bar" style="width: ${scorePercentage}%;"></div>
-                            </div>
+                            <div class="score-display"><span class="score-label">Meu Score</span><span class="score-value">${score}</span></div>
+                            <div class="progress-bar-container"><div class="progress-bar" style="width: ${scorePercentage}%;"></div></div>
                         </div>
                         <div class="profile-metrics">
                             <div class="profile-metric"><h4>--</h4><p>Taxa de Resposta</p></div>
@@ -412,18 +396,12 @@
                             <div class="profile-metric"><h4>--</h4><p>Reconhecimentos</p></div>
                         </div>
                     </div>
-
-                    <div class="card">
-                        <h3 class="card-title"><span class="material-icons">emoji_events</span> Minhas Conquistas</h3>
-                        <p style="text-align: center; color: var(--color-text-secondary);">Em breve...</p>
-                    </div>
-                `;
+                    <div class="card"><h3 class="card-title"><span class="material-icons">emoji_events</span> Minhas Conquistas</h3><p style="text-align: center; color: var(--color-text-secondary);">Em breve...</p></div>`;
             }
         }
 
         function handleAvatarUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+            const file = event.target.files[0]; if (!file) return;
             showToast(`Simulando upload da imagem: ${file.name}. Backend a ser implementado.`, 'info');
         }
 
@@ -449,25 +427,18 @@
             if (file) {
                 selectedFile = file;
                 previewContainer.innerHTML = `<span>${file.name}</span> <span class="material-icons remove-attachment" onclick="clearAttachment()">close</span>`;
-            } else {
-                clearAttachment();
-            }
+            } else { clearAttachment(); }
         }
-        function clearAttachment() {
-            selectedFile = null;
-            document.getElementById('attachment-input').value = '';
-            document.getElementById('attachment-preview').innerHTML = '';
-        }
+        function clearAttachment() { selectedFile = null; document.getElementById('attachment-input').value = ''; document.getElementById('attachment-preview').innerHTML = ''; }
 
         async function sendMessage(e) {
             e.preventDefault();
             const sendButton = document.getElementById('btn-send-message');
-
+            if (sendButton.disabled) return;
             if (!currentUserProfile) { showToast("Você precisa estar logado.", 'warning'); return; }
             if (selectedRecipients.length === 0) { showToast("Adicione pelo menos um destinatário.", 'warning'); return; }
 
-            sendButton.disabled = true;
-            sendButton.innerHTML = '<span class="material-icons" style="font-size: 18px; margin-right: 8px;">hourglass_top</span> Enviando...';
+            sendButton.disabled = true; sendButton.innerHTML = '<span class="material-icons" style="font-size: 18px; margin-right: 8px;">hourglass_top</span> Enviando...';
 
             try {
                 const formData = new FormData();
@@ -475,126 +446,88 @@
                 formData.append('p_type', document.querySelector('input[name="message-type"]:checked').value);
                 formData.append('p_priority', document.querySelector('.urgency-selector .btn.active').dataset.priority);
                 formData.append('p_requires_response', document.getElementById('requires_response').checked);
-                formData.append('p_due_date', document.getElementById('due_date').value || null);
+                const dueDate = document.getElementById('due_date').value;
+                if (dueDate) { formData.append('p_due_date', dueDate); }
                 formData.append('p_content', quillEditor.root.innerHTML);
                 formData.append('p_recipient_ids', JSON.stringify(selectedRecipients.map(u => u.id)));
-                
-                if (selectedFile) {
-                    formData.append('file', selectedFile);
-                }
+                if (selectedFile) { formData.append('file', selectedFile); }
 
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) throw new Error("Usuário não autenticado.");
 
                 const response = await fetch(N8N_SEND_MESSAGE_URL, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${session.access_token}` }, // Content-Type is set automatically by browser for FormData
+                    headers: { 'Authorization': `Bearer ${session.access_token}` },
                     body: formData
                 });
 
-                if (!response.ok) {
-                    throw new Error('Falha na comunicação com o servidor n8n.');
-                }
+                if (!response.ok) { throw new Error('Falha na comunicação com o servidor n8n.'); }
                 
-                showToast("Mensagem enviada com sucesso!", 'success');
-                closeNewMessagePopup();
+                showToast("Mensagem enviada com sucesso!", 'success'); closeNewMessagePopup();
                 await Promise.all([loadUserProfileData(), loadMessages()]);
-
             } catch (error) {
                 console.error("Erro ao enviar mensagem via n8n:", error);
                 showToast("Falha ao enviar mensagem: " + error.message, 'danger');
             } finally {
-                sendButton.disabled = false;
-                sendButton.innerHTML = 'Enviar';
+                sendButton.disabled = false; sendButton.innerHTML = 'Enviar';
             }
         }
         
         function renderMessageTable(conversations, containerId, type) {
             const container = document.getElementById(containerId);
             if (!conversations || conversations.length === 0) {
-                container.innerHTML = `<div class="empty-state">Nenhuma mensagem aqui.</div>`;
-                return;
+                container.innerHTML = `<div class="empty-state">Nenhuma mensagem aqui.</div>`; return;
             }
-
             const tableRows = conversations.map(conv => {
                 const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ') : '';
                 const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
                 const participants = conv.other_participants_names || 'Você mesmo';
-
                 let priorityTag = '';
                 if (conv.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
                 if (conv.priority === 'important') priorityTag = `<span class="tag-fino tag-important">Importante</span>`;
-
                 let metaTagsHTML = '';
                 if (conv.due_date) metaTagsHTML += `<span class="tag-icon due-date-tag" title="Prazo"><span class="material-icons">event</span> ${new Date(conv.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>`;
                 if (conv.type === 'ticket') metaTagsHTML += '<span class="tag-icon" title="Chamado"><span class="material-icons">support_agent</span></span>';
                 if (conv.requires_response) metaTagsHTML += '<span class="tag-icon" title="Exige Resposta"><span class="material-icons">reply</span></span>';
-                
                 const isUnread = type === 'inbox' && conv.is_unread;
                 const rowClass = isUnread ? 'row-unread' : 'row-read';
-
                 let readReceiptHTML = '';
                 if (type === 'sent') {
                     const isReadByRecipient = conv.recipient_read_at && new Date(conv.recipient_read_at) >= new Date(conv.last_message_created_at);
-                    
                     if (isReadByRecipient) {
                          const readDate = new Date(conv.recipient_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                          readReceiptHTML = `<span class="read-receipt read" title="Lida em: ${readDate}"><span class="material-icons">done_all</span></span>`;
-                    } else {
-                         readReceiptHTML = `<span class="read-receipt delivered" title="Enviada"><span class="material-icons">check</span></span>`;
-                    }
+                    } else { readReceiptHTML = `<span class="read-receipt delivered" title="Enviada"><span class="material-icons">check</span></span>`; }
                 }
-
                 const archiveIcon = conv.is_archived ? 'unarchive' : 'archive';
                 const archiveTitle = conv.is_archived ? 'Desarquivar' : 'Arquivar';
-                
-                return `
-                    <tr class="${rowClass}" data-conversation-id="${conv.id}">
+                return `<tr class="${rowClass}" data-conversation-id="${conv.id}">
                         <td class="col-who" onclick="openConversation(this.parentElement)">${type === 'inbox' || type === 'archived' ? participants : `Para: ${participants}`}</td>
-                        <td class="col-subject" onclick="openConversation(this.parentElement)">
-                            ${readReceiptHTML}
-                            <span class="subject-title">${conv.subject}</span>
-                            ${priorityTag}
-                            <span class="subject-preview"> - ${preview}</span>
-                        </td>
+                        <td class="col-subject" onclick="openConversation(this.parentElement)">${readReceiptHTML}<span class="subject-title">${conv.subject}</span>${priorityTag}<span class="subject-preview"> - ${preview}</span></td>
                         <td class="col-meta" onclick="openConversation(this.parentElement)"><div class="meta-tags">${metaTagsHTML}</div></td>
                         <td class="col-date" onclick="openConversation(this.parentElement)">${timestamp}</td>
-                        <td class="col-actions">
-                            <button title="${archiveTitle}" onclick="toggleArchive(this, '${conv.id}')"><span class="material-icons">${archiveIcon}</span></button>
-                        </td>
+                        <td class="col-actions"><button title="${archiveTitle}" onclick="toggleArchive(this, '${conv.id}')"><span class="material-icons">${archiveIcon}</span></button></td>
                     </tr>`;
             }).join('');
-            
             container.innerHTML = `<table class="data-table-fino"><tbody>${tableRows}</tbody></table>`;
         }
 
         async function loadMessages() {
             if (!currentUserProfile) return;
-            const inboxContainer = document.getElementById('inbox-content');
-            const sentContainer = document.getElementById('sent-content');
-            const archivedContainer = document.getElementById('archived-content');
-
-            inboxContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
-            sentContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
-            archivedContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
-
+            const containers = ['inbox-content', 'sent-content', 'archived-content'];
+            containers.forEach(id => document.getElementById(id).innerHTML = '<div class="empty-state">Carregando...</div>');
+            
             const { data, error } = await supabaseClient.from('user_conversations_view').select('*').order('last_message_created_at', { ascending: false, nulls: 'last' });
 
             if (error) {
                 console.error('Erro ao buscar mensagens:', error);
                 const errorMsg = `<div class="empty-state" style="color: var(--color-danger);">Erro ao carregar mensagens.</div>`;
-                inboxContainer.innerHTML = errorMsg;
-                sentContainer.innerHTML = errorMsg;
-                archivedContainer.innerHTML = errorMsg;
-                return;
+                containers.forEach(id => document.getElementById(id).innerHTML = errorMsg); return;
             }
-
             const nonArchived = data.filter(conv => !conv.is_archived);
             const archived = data.filter(conv => conv.is_archived);
-
             const inboxMessages = nonArchived.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_names === null));
             const sentMessages = nonArchived.filter(conv => conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_names !== null);
-
             renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
             renderMessageTable(sentMessages, 'sent-content', 'sent');
             renderMessageTable(archived, 'archived-content', 'archived');
@@ -602,39 +535,28 @@
 
         async function toggleArchive(buttonElement, conversationId) {
             const row = buttonElement.closest('tr');
-            if (row) {
-                row.style.transition = 'opacity 0.3s ease-out';
-                row.style.opacity = '0';
-                setTimeout(() => row.remove(), 300);
-            }
-
+            if (row) { row.style.transition = 'opacity 0.3s ease-out'; row.style.opacity = '0'; setTimeout(() => row.remove(), 300); }
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) throw new Error("Sessão expirou.");
-                
                 const response = await fetch(N8N_TOGGLE_ARCHIVE_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
                     body: JSON.stringify({ conversation_id: conversationId })
                 });
-
                 if (!response.ok) throw new Error("Falha ao comunicar com o servidor.");
-                
                 showToast("Status da conversa alterado.", 'success');
             } catch (e) {
-                console.error("Erro ao arquivar:", e.message);
-                showToast("Falha ao arquivar conversa.", 'danger');
+                console.error("Erro ao arquivar:", e.message); showToast("Falha ao arquivar conversa.", 'danger');
                 if (row) row.style.opacity = '1';
             }
         }
 
         async function openConversation(rowElement) {
             const conversationId = rowElement.dataset.conversationId;
+            if (!conversationId) { showToast('ID da conversa não encontrado.', 'danger'); return; }
 
-            if (rowElement.classList.contains('row-unread')) {
-                rowElement.classList.remove('row-unread');
-                rowElement.classList.add('row-read');
-            }
+            if (rowElement.classList.contains('row-unread')) { rowElement.classList.remove('row-unread'); rowElement.classList.add('row-read'); }
 
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
@@ -645,67 +567,74 @@
                         body: JSON.stringify({ conversation_id: conversationId })
                     });
                 }
-            } catch (e) {
-                console.warn("Não foi possível marcar a mensagem como lida:", e.message);
-            }
+            } catch (e) { console.warn("Não foi possível marcar a mensagem como lida:", e.message); }
 
             showPage('conversation-view-page');
-            const messagesContainer = document.getElementById('conversation-messages');
-            messagesContainer.innerHTML = '<div style="text-align: center;">Carregando conversa...</div>';
-            
+            document.getElementById('conversation-header').innerHTML = 'Carregando...';
+            document.getElementById('conversation-messages').innerHTML = 'Carregando mensagens...';
+
             const [messagesRes, attachmentsRes, convDataRes] = await Promise.all([
                 supabaseClient.from('conversation_messages_view').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true }),
                 supabaseClient.from('message_attachments_view').select('*'),
-                supabaseClient.from('conversations').select('subject, conversation_participants(user_id, profiles(full_name))').eq('id', conversationId).single()
+                supabaseClient.from('user_conversations_view').select('*').eq('id', conversationId).single()
             ]);
 
             if (messagesRes.error || attachmentsRes.error || convDataRes.error) {
                 showToast('Erro ao carregar detalhes da conversa.', 'danger');
                 console.error(messagesRes.error || attachmentsRes.error || convDataRes.error);
-                return;
+                document.getElementById('conversation-header').innerHTML = ''; document.getElementById('conversation-messages').innerHTML = '<div class="empty-state">Falha ao carregar.</div>'; return;
             }
 
             const { data: messages } = messagesRes;
             const { data: allAttachments } = attachmentsRes;
             const { data: convData } = convDataRes;
-
-            if (convData) {
-                document.getElementById('conversation-subject').textContent = convData.subject;
-                const otherParticipants = convData.conversation_participants.filter(p => p.user_id !== currentUserProfile.id).map(p => p.profiles.full_name).join(', ');
-                document.getElementById('conversation-participants').textContent = `Com: ${otherParticipants}`;
+            
+            // Render Header
+            const headerContainer = document.getElementById('conversation-header');
+            let ticketInfoHTML = '';
+            if (convData.type === 'ticket') {
+                let priorityTag = '';
+                if (convData.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
+                if (convData.priority === 'important') priorityTag = `<span class="tag-fino tag-important">Importante</span>`;
+                const dueDateHTML = convData.due_date ? `<strong>Prazo:</strong> ${new Date(convData.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}` : '';
+                ticketInfoHTML = `<div class="conversation-ticket-info"><span class="material-icons">support_agent</span> <div>${priorityTag}</div> <div>${dueDateHTML}</div></div>`;
             }
+            headerContainer.innerHTML = `
+                <div class="conversation-main-header">
+                    <button class="btn btn-secondary" onclick="showPage('messages-page'); loadMessages();"><span class="material-icons">arrow_back</span> Voltar</button>
+                    <div class="conversation-title-block">
+                        <h1>${convData.subject}</h1>
+                        <p><strong>De:</strong> ${convData.last_message_sender_name} <strong>Para:</strong> ${convData.other_participants_names || 'Você'}</p>
+                    </div>
+                    <button class="btn btn-icon" title="Mais opções"><span class="material-icons">more_vert</span></button>
+                </div>
+                ${ticketInfoHTML}
+            `;
 
+            // Render Messages
+            const messagesContainer = document.getElementById('conversation-messages');
             messagesContainer.innerHTML = messages.map(msg => {
                 const isSent = msg.sender_id === currentUserProfile.id;
                 const timestamp = new Date(msg.created_at).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-
                 const msgAttachments = allAttachments.filter(att => att.message_id === msg.id);
                 const attachmentsHTML = msgAttachments.map(att => `
                     <div class="message-attachment">
                         <a href="https://drive.google.com/file/d/${att.google_drive_file_id}/view" target="_blank" class="message-attachment-link">
-                            <span class="material-icons">attach_file</span>
-                            ${att.file_name}
+                            <span class="material-icons">attach_file</span>${att.file_name}
                         </a>
-                    </div>
-                `).join('');
+                    </div>`).join('');
 
                 return `<div class="message-bubble-wrapper ${isSent ? 'sent' : 'received'}">
-                            <div class="message-bubble ${isSent ? 'sent' : 'received'}">
-                                ${msg.content}
-                                ${attachmentsHTML}
-                            </div>
+                            <div class="message-bubble ${isSent ? 'sent' : 'received'}">${msg.content}${attachmentsHTML}</div>
                             <div class="message-metadata">${isSent ? 'Você' : msg.sender_name} • ${timestamp}</div>
                         </div>`;
             }).join('');
             
             messagesContainer.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
 
-            // Reply form logic (needs modification to support attachments)
-            const replyForm = document.getElementById('reply-form');
-            replyForm.onsubmit = async (e) => {
+            document.getElementById('reply-form').onsubmit = (e) => {
                 e.preventDefault();
                 showToast('Respostas com anexo ainda não implementadas.', 'info');
-                // Placeholder for future implementation
             };
         }
 
@@ -716,38 +645,20 @@
             try {
                 const { data: users, error } = await supabaseClient.from('users_with_email').select('*');
                 if (error) throw error;
-                
                 tableBody.innerHTML = users.map(user => {
                     const avatarInitial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
-                    const roleTag = user.role === 'Admin' 
-                        ? `<span class="user-tag role-admin">`
-                        : (user.role ? `<span class="user-tag role">${user.role}</span>` : '');
+                    const roleTag = user.role === 'Admin' ? `<span class="user-tag role-admin">Admin</span>` : (user.role ? `<span class="user-tag role">${user.role}</span>` : '');
                     const departmentTag = user.department ? `<span class="user-tag department">${user.department}</span>` : '';
-
                     return `<tr>
-                        <td>
-                            <div class="user-info-cell">
-                                <div class="user-avatar">${avatarInitial}</div>
-                                <div>
-                                    <div class="user-name">${user.full_name || 'N/A'}</div>
-                                    <div class="user-email">${user.email || 'N/A'}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="user-meta-cell">
-                                <div class="user-tags">${departmentTag}${roleTag}</div>
-                            </div>
-                        </td>
-                        <td class="score-cell">
-                           <span class="material-icons">star</span> ${user.score || 100}
-                        </td>
+                        <td><div class="user-info-cell"><div class="user-avatar">${avatarInitial}</div><div><div class="user-name">${user.full_name||'N/A'}</div><div class="user-email">${user.email||'N/A'}</div></div></div></td>
+                        <td><div class="user-meta-cell"><div class="user-tags">${departmentTag}${roleTag}</div></div></td>
+                        <td class="score-cell"><span class="material-icons">star</span> ${user.score||100}</td>
                         <td class="action-buttons">
-                            <button class="btn" onclick='openUserModal(${JSON.stringify(user)})' title="Editar"><span class="material-icons">edit</span></button>
-                            <button class="btn" onclick="deleteUser('${user.id}')" title="Excluir"><span class="material-icons">delete</span></button>
+                            <button class="btn btn-icon" onclick='openUserModal(${JSON.stringify(user)})' title="Editar"><span class="material-icons">edit</span></button>
+                            <button class="btn btn-icon" onclick="deleteUser('${user.id}')" title="Excluir"><span class="material-icons">delete</span></button>
                         </td>
                     </tr>`;
-            }).join('');
+                }).join('');
             } catch(error) { 
                 console.error("Erro ao carregar usuários:", error);
                 tableBody.innerHTML = `<tr><td colspan="4">Erro ao carregar usuários.</td></tr>`;
@@ -764,69 +675,38 @@
             const role = document.getElementById('role').value;
             const email = document.getElementById('user_email').value;
             const password = document.getElementById('user_password').value;
-
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) { showToast("Sessão inválida.", 'danger'); return; }
-            
-            const headers = { 
-                'Content-Type': 'application/json', 
-                'Authorization': `Bearer ${session.access_token}` 
-            };
-
+            const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` };
             const btnSave = document.querySelector('#user-modal .btn-danger');
-            btnSave.disabled = true;
-            btnSave.textContent = "Salvando...";
-
+            btnSave.disabled = true; btnSave.textContent = "Salvando...";
             try {
                 if (userId) {
-                    const response = await fetch(N8N_UPDATE_USER_URL, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify({ id: userId, full_name: fullName, department: department, role: role })
-                    });
-                    if (!response.ok) throw new Error('Falha ao atualizar usuário.');
-                    showToast("Usuário atualizado com sucesso!", 'success');
+                    const response = await fetch(N8N_UPDATE_USER_URL, { method: 'POST', headers: headers, body: JSON.stringify({ id: userId, full_name: fullName, department: department, role: role }) });
+                    if (!response.ok) throw new Error('Falha ao atualizar usuário.'); showToast("Usuário atualizado com sucesso!", 'success');
                 } else {
                     if (!password) { throw new Error("Senha é obrigatória para novos usuários."); }
-                    const response = await fetch(N8N_CREATE_USER_URL, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify({ email: email, password: password, full_name: fullName, department: department, role: role })
-                    });
-                    if (!response.ok) throw new Error('Falha ao criar usuário.');
-                    showToast("Usuário criado com sucesso!", 'success');
+                    const response = await fetch(N8N_CREATE_USER_URL, { method: 'POST', headers: headers, body: JSON.stringify({ email: email, password: password, full_name: fullName, department: department, role: role }) });
+                    if (!response.ok) throw new Error('Falha ao criar usuário.'); showToast("Usuário criado com sucesso!", 'success');
                 }
-                closeUserModal();
-                loadUsersForAdmin();
+                closeUserModal(); loadUsersForAdmin();
             } catch (error) {
-                console.error(error);
-                showToast(error.message, 'danger');
+                console.error(error); showToast(error.message, 'danger');
             } finally {
-                btnSave.disabled = false;
-                btnSave.textContent = "Salvar";
+                btnSave.disabled = false; btnSave.textContent = "Salvar";
             }
         }
 
         async function deleteUser(userId) {
             if (!confirm(`Tem certeza que deseja excluir este usuário? Esta ação é irreversível.`)) return;
-
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) return;
-
             try {
-                const response = await fetch(N8N_DELETE_USER_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                    body: JSON.stringify({ id: userId })
-                });
-
+                const response = await fetch(N8N_DELETE_USER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ id: userId }) });
                 if (!response.ok) throw new Error('Falha ao excluir usuário.');
-                
-                showToast("Usuário excluído com sucesso!", 'success');
-                loadUsersForAdmin();
+                showToast("Usuário excluído com sucesso!", 'success'); loadUsersForAdmin();
             } catch (error) {
-                console.error(error);
-                showToast(error.message, 'danger');
+                console.error(error); showToast(error.message, 'danger');
             }
         }
         
