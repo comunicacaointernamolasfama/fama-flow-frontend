@@ -56,6 +56,7 @@
         .btn-danger { background-color: var(--color-brand-primary); color: white; }
         .btn-success { background-color: var(--color-success); color: white; } .btn-warning { background-color: var(--color-warning); color: white; }
         .fab { position: fixed; right: 3rem; bottom: 3rem; width: 56px; height: 56px; background-color: var(--color-brand-primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.15); cursor: pointer; border: none; z-index: 100; transition: transform 0.2s; } .fab:hover { transform: scale(1.05); }
+        .fab.hidden { display: none; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; }
         .modal-overlay.visible { display: flex; }
         .modal-content { background-color: var(--color-surface); padding: 0; border-radius: 12px; width: 100%; max-width: 500px; overflow: hidden; }
@@ -209,16 +210,15 @@
         .toast.toast-info { border-color: var(--color-info); background-color: var(--color-info-bg); } .toast.toast-info .toast-icon { color: var(--color-info); }
         
         /* --- CONVERSATION VIEW REFACTOR --- */
-        #conversation-view-page .page-header { flex-direction: column; align-items: stretch; gap: 1rem; }
-        .conversation-main-header { display: flex; justify-content: space-between; align-items: center; }
-        .conversation-title-block { display: flex; flex-direction: column; gap: 0.25rem; flex-grow: 1; }
-        .conversation-title-block h1 { font-size: 1.5rem; margin: 0; }
-        .conversation-title-block p { color: var(--color-text-secondary); margin: 0; }
-        .conversation-title-block .material-icons { font-size: 16px; vertical-align: middle; }
+        #conversation-view-page .page-header { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+        .conversation-main-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .conversation-info-block { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; padding: 0.75rem; background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: 8px; font-size: 0.9rem; }
+        .conversation-info-block h1 { font-size: 1.5rem; margin: 0 0 0.5rem 0; }
+        .conversation-info-block p { color: var(--color-text-secondary); margin: 0; }
         .conversation-ticket-info { background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-around; align-items: center; font-size: 0.9rem; gap: 1rem; }
         .conversation-ticket-info div { display: flex; align-items: center; gap: 0.5rem; }
         .conversation-ticket-info .tag-fino { font-size: 0.8rem; }
-        #conversation-view-page .card { display: flex; flex-direction: column; height: calc(100vh - 14rem); padding: 0; }
+        #conversation-view-page .card { display: flex; flex-direction: column; height: calc(100vh - 16rem); padding: 0; }
         #conversation-messages { flex-grow: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
         .message-bubble-wrapper { display: flex; flex-direction: column; max-width: 70%; }
         .message-bubble { padding: 0.75rem 1rem; border-radius: 18px; word-break: break-word; }
@@ -358,7 +358,20 @@
                 document.getElementById('dashboard-title').textContent = `Dashboard de ${currentUserProfile.full_name.split(' ')[0]}`;
             } 
         }
-        function showPage(pageId) { const appContainer = document.getElementById('app-container'); if (!appContainer) return; appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); const targetPage = appContainer.querySelector(`#${pageId}`); if (targetPage) targetPage.classList.add('active'); appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); if (activeLink) activeLink.classList.add('active'); if(pageId === 'messages-page') loadMessages(); }
+        function showPage(pageId) { 
+            const appContainer = document.getElementById('app-container'); if (!appContainer) return;
+            appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); 
+            const targetPage = appContainer.querySelector(`#${pageId}`); 
+            if (targetPage) targetPage.classList.add('active'); 
+            appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); 
+            const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); 
+            if (activeLink) activeLink.classList.add('active');
+            
+            // CORREÇÃO: Esconder o FAB na tela de conversa
+            document.getElementById('fab-new-message').classList.toggle('hidden', pageId === 'conversation-view-page');
+
+            if(pageId === 'messages-page') loadMessages(); 
+        }
         async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); loadUserProfileData(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
         
         async function loadDashboardStats() {
@@ -490,7 +503,7 @@
                 const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
                 
                 let who = 'Você mesmo';
-                if (type === 'inbox' || type === 'archived') { who = conv.last_message_sender_id === currentUserProfile.id ? 'Você' : (conv.other_participants_names || conv.last_message_sender_name); } 
+                if (type === 'inbox' || type === 'archived') { who = conv.created_by === currentUserProfile.id ? `Para: ${conv.other_participants_names}` : (conv.other_participants_names || conv.last_message_sender_name); } 
                 else { who = `Para: ${conv.other_participants_names}`; }
 
                 let priorityTag = '';
@@ -584,7 +597,7 @@
                 
                 showToast("Chamado resolvido com sucesso!", 'success');
                 const rowElement = document.querySelector(`tr[data-conversation-id="${conversationId}"]`);
-                if (rowElement) openConversation(rowElement); // Re-abre a conversa para atualizar o status
+                if (rowElement) openConversation(rowElement);
                 loadDashboardStats();
 
             } catch(e) {
@@ -637,35 +650,38 @@
             if (convData.type === 'ticket') {
                 let priorityTag = '';
                 if (convData.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
-                if (convData.priority === 'important') priorityTag = `<span class="tag-fino tag-important">Importante</span>`;
+                else if (convData.priority === 'important') priorityTag = `<span class="tag-fino tag-important">Importante</span>`;
+                
                 const dueDateHTML = convData.due_date ? `<div><span class="material-icons">event</span><strong>Prazo:</strong> ${new Date(convData.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : '';
                 
                 if (convData.status === 'resolved') {
                     ticketInfoHTML = `<div class="conversation-ticket-info" style="justify-content:center;"><div><span class="material-icons" style="color: var(--color-success);">check_circle</span><strong>Chamado Resolvido</strong></div></div>`;
-                    document.getElementById('reply-form').style.display = 'none';
+                    document.getElementById('reply-form-wrapper').style.display = 'none';
                 } else {
                     ticketInfoHTML = `<div class="conversation-ticket-info"><div><span class="material-icons">support_agent</span> <strong>Chamado Aberto</strong></div> <div>${priorityTag}</div> ${dueDateHTML}</div>`;
-                    document.getElementById('reply-form').style.display = 'flex';
+                    document.getElementById('reply-form-wrapper').style.display = 'block';
                 }
 
                 if (convData.created_by === currentUserProfile.id && convData.status === 'open') {
                     actionButtonsHTML = `<button class="btn btn-success" onclick="resolveTicket('${convData.id}')"><span class="material-icons">check_circle</span> Resolver Chamado</button>`;
                 }
             } else {
-                document.getElementById('reply-form').style.display = 'flex';
+                document.getElementById('reply-form-wrapper').style.display = 'block';
             }
 
-            const senderName = (convData.last_message_sender_id === currentUserProfile.id) ? 'Você' : convData.last_message_sender_name;
-            const recipientNames = (convData.last_message_sender_id === currentUserProfile.id) ? convData.other_participants_names : (convData.other_participants_names ? `Você, ${convData.other_participants_names.replace(currentUserProfile.full_name, '').replace(/, ,/g,',').trim().replace(/^, /,'').replace(/,$/,'')}` : 'Você');
-
+            const creatorProfile = await supabaseClient.from('profiles').select('full_name').eq('id', convData.created_by).single();
+            const senderName = creatorProfile.data ? creatorProfile.data.full_name : 'Desconhecido';
+            const recipientNames = convData.other_participants_names ? `Você, ${convData.other_participants_names}`.replace(`, ${currentUserProfile.full_name}`, '').replace(`${currentUserProfile.full_name}, `, '') : 'Você';
+            
             headerContainer.innerHTML = `
                 <div class="conversation-main-header">
                     <button class="btn btn-secondary" onclick="showPage('messages-page'); loadMessages();"><span class="material-icons">arrow_back</span> Voltar</button>
-                    <div class="conversation-title-block">
-                        <h1>${convData.subject}</h1>
-                        <p><strong>De:</strong> ${senderName} <strong>Para:</strong> ${recipientNames || '...'}</p>
-                    </div>
-                    <div class="page-header-actions">${actionButtonsHTML}</div>
+                    <div class="page-header-actions">${actionButtonsHTML}<button class="btn btn-icon" title="Mais opções"><span class="material-icons">more_vert</span></button></div>
+                </div>
+                <div class="conversation-info-block">
+                    <h1>${convData.subject}</h1>
+                    <p><strong>De:</strong> ${senderName}</p>
+                    <p><strong>Para:</strong> ${recipientNames}</p>
                 </div>
                 ${ticketInfoHTML}
             `;
