@@ -190,9 +190,9 @@
         .custom-checkbox .checkbox-box .material-icons { font-size: 14px; color: white; transform: scale(0); transition: transform 0.2s; }
         .custom-checkbox input[type="checkbox"]:checked + .checkbox-box { background-color: var(--color-info); border-color: var(--color-info); }
         .custom-checkbox input[type="checkbox"]:checked + .checkbox-box .material-icons { transform: scale(1); }
-        #chamado-fields { display: flex; align-items: center; gap: 0.75rem; }
-        #chamado-fields label { font-size: 0.9rem; margin-bottom: 0; color: var(--color-text-secondary); white-space: nowrap; }
-        #chamado-fields .input-field { font-size: 0.9rem; padding: 0.4rem 0.8rem; border: 1px solid var(--color-border); background: var(--color-background); }
+        #chamado-fields { display: flex; align-items: center; gap: 1rem; }
+        #chamado-fields > div { display: flex; align-items: center; gap: 0.5rem; }
+        #chamado-fields label { margin-bottom: 0; }
         #recipient-input-wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--color-border); padding: 0.5rem 0; }
         #recipient-input-wrapper .btn-link { background: none; border: none; color: var(--color-info); font-weight: 600; cursor: pointer; padding: 0; font-size: 0.9rem; }
         .recipient-pill { display: inline-flex; align-items: center; gap: 0.5rem; background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: 16px; padding: 0.25rem 0.75rem; font-size: 0.9rem; }
@@ -289,12 +289,12 @@
                     </div>
                     <div><label for="due_date">Prazo:</label><input type="date" id="due_date" class="input-field" style="padding: 0.4rem 0.8rem;"></div>
                 </div>
-                <div class="popup-footer-row" style="margin-top: 1rem;">
+                <div class="popup-footer-row" style="margin-top: 1rem; justify-content: flex-end;">
                     <div class="popup-actions-left">
-                         <button type="submit" id="btn-send-message" class="btn btn-danger">Enviar</button>
-                         <input type="file" id="attachment-input" style="display: none;">
                          <button type="button" class="btn btn-icon" onclick="document.getElementById('attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button>
+                         <button type="submit" id="btn-send-message" class="btn btn-danger">Enviar</button>
                     </div>
+                    <input type="file" id="attachment-input" style="display: none;">
                 </div>
             </div>
         </form>
@@ -310,8 +310,8 @@
             <div class="modal-body">
                 <div class="search-modal-layout">
                     <div class="search-modal-sidebar" id="recipient-search-tabs">
-                        <button class="tab-link active" data-tab="search-by-department">Departamento</button>
-                        <button class="tab-link" data-tab="search-by-role">Cargo</button>
+                        <button class="tab-link active" data-tab="department">Departamento</button>
+                        <button class="tab-link" data-tab="role">Cargo</button>
                     </div>
                     <div class="search-modal-main">
                         <div class="search-input-wrapper"><input type="text" id="advanced-search-input" class="input-field" placeholder="Filtrar resultados..."></div>
@@ -324,7 +324,7 @@
             </div>
         </div>
     </div>
-
+    
     <script>
         const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
@@ -420,7 +420,7 @@
                     const targetId = e.currentTarget.dataset.tab;
                     document.querySelectorAll('#recipient-search-tabs .tab-link').forEach(t => t.classList.remove('active'));
                     e.currentTarget.classList.add('active');
-                    populateAdvancedSearchList(targetId.split('-').pop());
+                    populateAdvancedSearchList(targetId);
                 });
             });
 
@@ -467,16 +467,23 @@
             document.getElementById('fab-new-message').classList.toggle('hidden', pageId === 'conversation-view-page');
             if(pageId === 'messages-page') loadMessages(); 
         }
+        
         async function loadAllDynamicData() { 
             const { data, error } = await supabaseClient.from('profiles').select('id, full_name, email, department, role, score');
             if(error) {
                 console.error("Erro fatal ao buscar todos os usuários:", error);
                 showToast('Não foi possível carregar os dados dos usuários.', 'danger');
+                allUsers = [];
             } else {
                 allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : [];
             }
-            loadDashboardStats(); loadMessages(); loadUserProfileData(); 
-            if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); 
+            // CORREÇÃO: Garante que as funções que dependem de `allUsers` rodem depois.
+            loadDashboardStats(); 
+            loadMessages(); 
+            loadUserProfileData(); 
+            if (currentUserProfile && currentUserProfile.role === 'Admin') {
+                loadUsersForAdmin(); 
+            }
         }
         
         async function loadDashboardStats() {
@@ -537,11 +544,10 @@
         function openNewMessagePopup() { document.getElementById('new-message-popup').classList.add('visible'); if (!quillEditor) initializeQuillEditor(); }
         function closeNewMessagePopup() { document.getElementById('new-message-popup').classList.remove('visible'); document.getElementById('new-message-form').reset(); selectedRecipients = []; renderRecipientPills(); document.getElementById('recipient-suggestions').style.display = 'none'; if (quillEditor) quillEditor.setContents([]); document.getElementById('tipo-simples').checked = true; toggleChamadoFields(); clearAttachment(); }
         function toggleChamadoFields() { const isChamado = document.getElementById('tipo-chamado').checked; document.getElementById('chamado-fields').style.display = isChamado ? 'flex' : 'none'; }
-        function setDueDate(days) { const date = new Date(); date.setDate(date.getDate() + days); document.getElementById('due_date').value = date.toISOString().split('T')[0]; }
+        
         function renderRecipientPills() { 
             const wrapper = document.getElementById('recipient-input-wrapper'); 
             const input = document.getElementById('destinatario-input'); 
-            const searchBtn = wrapper.querySelector('.btn-link');
             wrapper.querySelectorAll('.recipient-pill').forEach(pill => pill.remove()); 
             selectedRecipients.forEach(user => { 
                 const pill = document.createElement('span'); 
@@ -559,7 +565,7 @@
         }
         window.removeRecipient = (userId) => { selectedRecipients = selectedRecipients.filter(r => r.id !== userId); renderRecipientPills(); }
         function handleRecipientBackspace(e) { const input = e.target; if (e.key === 'Backspace' && input.value === '' && selectedRecipients.length > 0) { removeRecipient(selectedRecipients[selectedRecipients.length - 1].id); } }
-        function handleRecipientSearch(e) { const query = e.target.value.toLowerCase(); const suggestionsContainer = document.getElementById('recipient-suggestions'); if (query.length < 1) { suggestionsContainer.style.display = 'none'; return; } const filteredUsers = allUsers.filter(user => (user.full_name && user.full_name.toLowerCase().includes(query))); suggestionsContainer.innerHTML = ''; if (filteredUsers.length > 0) { filteredUsers.forEach(user => { const item = document.createElement('div'); item.className = 'suggestion-item'; item.textContent = `${user.full_name} (${user.department})`; item.onclick = () => addRecipient(user); suggestionsContainer.appendChild(item); }); suggestionsContainer.style.display = 'block'; } else { suggestionsContainer.style.display = 'none'; } }
+        function handleRecipientSearch(e) { const query = e.target.value.toLowerCase(); const suggestionsContainer = document.getElementById('recipient-suggestions'); if (query.length < 1) { suggestionsContainer.style.display = 'none'; return; } const filteredUsers = allUsers.filter(user => (user.full_name && user.full_name.toLowerCase().includes(query) && !selectedRecipients.some(r => r.id === user.id))); suggestionsContainer.innerHTML = ''; if (filteredUsers.length > 0) { filteredUsers.forEach(user => { const item = document.createElement('div'); item.className = 'suggestion-item'; item.textContent = `${user.full_name} (${user.department})`; item.onclick = () => addRecipient(user); suggestionsContainer.appendChild(item); }); suggestionsContainer.style.display = 'block'; } else { suggestionsContainer.style.display = 'none'; } }
         
         function handleFileSelection(event) {
             const file = event.target.files[0];
@@ -681,8 +687,8 @@
             }
             const nonArchived = data.filter(conv => !conv.is_archived);
             const archived = data.filter(conv => conv.is_archived);
-            const inboxMessages = nonArchived.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.other_participants_names === null));
-            const sentMessages = nonArchived.filter(conv => conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_names !== null);
+            const inboxMessages = nonArchived.filter(conv => conv.created_by !== currentUserProfile.id || (conv.created_by === currentUserProfile.id && conv.other_participants_names === null));
+            const sentMessages = nonArchived.filter(conv => conv.created_by === currentUserProfile.id && conv.other_participants_names !== null);
             renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
             renderMessageTable(sentMessages, 'sent-content', 'sent');
             renderMessageTable(archived, 'archived-content', 'archived');
@@ -799,9 +805,8 @@
             const { data: creatorProfile } = await supabaseClient.from('profiles').select('full_name').eq('id', convData.created_by).single();
             const senderName = creatorProfile ? creatorProfile.full_name : 'Desconhecido';
             
-            let recipientNames = convData.other_participants_names || '';
-            let otherRecipientNames = recipientNames.split(', ').filter(name => name !== currentUserProfile.full_name).join(', ');
-            const finalRecipientText = (convData.last_message_sender_id === currentUserProfile.id) ? otherRecipientNames : 'Você' + (otherRecipientNames ? `, ${otherRecipientNames}` : '');
+            let otherRecipientNames = (convData.other_participants_names || '').split(', ').filter(name => name && name !== currentUserProfile.full_name).join(', ');
+            const finalRecipientText = (senderName === currentUserProfile.full_name) ? otherRecipientNames : 'Você' + (otherRecipientNames ? `, ${otherRecipientNames}` : '');
             
             headerContainer.innerHTML = `
                 <div class="conversation-main-header">
@@ -811,7 +816,7 @@
                 <div class="conversation-info-block">
                     <h1>${convData.subject}</h1>
                     <p><strong>De:</strong> ${senderName}</p>
-                    <p><strong>Para:</strong> ${finalRecipientText}</p>
+                    <p><strong>Para:</strong> ${finalRecipientText || '...'}</p>
                 </div>
                 ${ticketInfoHTML}
             `;
@@ -894,29 +899,28 @@
 
         async function loadUsersForAdmin() {
             const tableBody = document.getElementById('user-table-body');
-            if (!tableBody) return;
-            tableBody.innerHTML = `<tr><td colspan="4">Carregando usuários...</td></tr>`;
-            try {
-                const { data: users, error } = await supabaseClient.from('users_with_email').select('*');
-                if (error) throw error;
-                tableBody.innerHTML = users.map(user => {
-                    const avatarInitial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
-                    const roleTag = user.role === 'Admin' ? `<span class="user-tag role-admin">Admin</span>` : (user.role ? `<span class="user-tag role">${user.role}</span>` : '');
-                    const departmentTag = user.department ? `<span class="user-tag department">${user.department}</span>` : '';
-                    return `<tr>
-                        <td><div class="user-info-cell"><div class="user-avatar">${avatarInitial}</div><div><div class="user-name">${user.full_name||'N/A'}</div><div class="user-email">${user.email||'N/A'}</div></div></div></td>
-                        <td><div class="user-meta-cell"><div class="user-tags">${departmentTag}${roleTag}</div></div></td>
-                        <td class="score-cell"><span class="material-icons">star</span> ${user.score||100}</td>
-                        <td class="action-buttons">
-                            <button class="btn btn-icon" onclick='openUserModal(${JSON.stringify(user)})' title="Editar"><span class="material-icons">edit</span></button>
-                            <button class="btn btn-icon" onclick="deleteUser('${user.id}')" title="Excluir"><span class="material-icons">delete</span></button>
-                        </td>
-                    </tr>`;
-                }).join('');
-            } catch(error) { 
-                console.error("Erro ao carregar usuários:", error);
-                tableBody.innerHTML = `<tr><td colspan="4">Erro ao carregar usuários.</td></tr>`;
-            }
+            if (!tableBody || allUsers.length === 0) return;
+            
+            const { data: usersWithEmail, error } = await supabaseClient.from('users_with_email').select('id, email');
+            if (error) { console.error("Erro ao carregar emails:", error); return; }
+            
+            const usersMap = new Map(usersWithEmail.map(u => [u.id, u.email]));
+            const fullUserList = allUsers.map(u => ({ ...u, email: usersMap.get(u.id) || 'N/A' }));
+
+            tableBody.innerHTML = fullUserList.map(user => {
+                const avatarInitial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
+                const roleTag = user.role === 'Admin' ? `<span class="user-tag role-admin">Admin</span>` : (user.role ? `<span class="user-tag role">${user.role}</span>` : '');
+                const departmentTag = user.department ? `<span class="user-tag department">${user.department}</span>` : '';
+                return `<tr>
+                    <td><div class="user-info-cell"><div class="user-avatar">${avatarInitial}</div><div><div class="user-name">${user.full_name||'N/A'}</div><div class="user-email">${user.email||'N/A'}</div></div></div></td>
+                    <td><div class="user-meta-cell"><div class="user-tags">${departmentTag}${roleTag}</div></div></td>
+                    <td class="score-cell"><span class="material-icons">star</span> ${user.score||100}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-icon" onclick='openUserModal(${JSON.stringify(user)})' title="Editar"><span class="material-icons">edit</span></button>
+                        <button class="btn btn-icon" onclick="deleteUser('${user.id}')" title="Excluir"><span class="material-icons">delete</span></button>
+                    </td>
+                </tr>`;
+            }).join('');
         }
 
         function openUserModal(user) { const modal = document.querySelector('#app-container #user-modal'); document.getElementById('user-form').reset(); const userEmailField = document.getElementById('user_email'); const passwordGroup = document.getElementById('password-group'); userEmailField.disabled = !!user; passwordGroup.style.display = user ? 'none' : 'block'; document.getElementById('user_password').required = !user; if (user) { document.getElementById('user-modal-title').textContent = 'Editar Usuário'; document.getElementById('user-id').value = user.id; document.getElementById('full_name').value = user.full_name; userEmailField.value = user.email || ''; document.getElementById('department').value = user.department; document.getElementById('role').value = user.role; } else { document.getElementById('user-modal-title').textContent = 'Novo Usuário'; document.getElementById('user-id').value = ''; } modal.classList.add('visible'); }
@@ -943,7 +947,7 @@
                     const response = await fetch(N8N_CREATE_USER_URL, { method: 'POST', headers: headers, body: JSON.stringify({ email: email, password: password, full_name: fullName, department: department, role: role }) });
                     if (!response.ok) throw new Error('Falha ao criar usuário.'); showToast("Usuário criado com sucesso!", 'success');
                 }
-                closeUserModal(); loadUsersForAdmin();
+                closeUserModal(); loadAllDynamicData();
             } catch (error) {
                 console.error(error); showToast(error.message, 'danger');
             } finally {
@@ -958,7 +962,7 @@
             try {
                 const response = await fetch(N8N_DELETE_USER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ id: userId }) });
                 if (!response.ok) throw new Error('Falha ao excluir usuário.');
-                showToast("Usuário excluído com sucesso!", 'success'); loadUsersForAdmin();
+                showToast("Usuário excluído com sucesso!", 'success'); loadAllDynamicData();
             } catch (error) {
                 console.error(error); showToast(error.message, 'danger');
             }
