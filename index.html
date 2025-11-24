@@ -242,6 +242,10 @@
         const N8N_CREATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-user';
         const N8N_UPDATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/update-user';
         const N8N_DELETE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/delete-user';
+        const N8N_SEND_MESSAGE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/21446ed7-79bd-4a14-b954-ab729bb61f26';
+        // !!! ATENÇÃO: COLOQUE A URL DO SEU NOVO WEBHOOK "mark-as-read" AQUI !!!
+        const N8N_MARK_AS_READ_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/mark-as-read';
+
 
         let currentUserProfile = null;
         let quillEditor = null;
@@ -459,11 +463,10 @@
                     p_recipient_ids: selectedRecipients.map(u => u.id)
                 };
                 
-                const N8N_WEBHOOK_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/21446ed7-79bd-4a14-b954-ab729bb61f26';
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) throw new Error("Usuário não autenticado.");
 
-                const response = await fetch(N8N_WEBHOOK_URL, {
+                const response = await fetch(N8N_SEND_MESSAGE_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
                     body: JSON.stringify(args)
@@ -523,7 +526,7 @@
                 }
                 
                 return `
-                    <tr class="${rowClass}" onclick="openConversation('${conv.id}')">
+                    <tr class="${rowClass}" data-conversation-id="${conv.id}" onclick="openConversation(this)">
                         <td class="col-who">${type === 'inbox' ? participants : `Para: ${participants}`}</td>
                         <td class="col-subject">
                             ${readReceiptHTML}
@@ -563,11 +566,34 @@
             renderMessageTable(sentMessages, 'sent-content', 'sent');
         }
 
-        window.openConversation = async (conversationId) => {
-            await supabaseClient
-                .from('conversation_participants')
-                .update({ last_read_at: new Date().toISOString() })
-                .match({ conversation_id: conversationId, user_id: currentUserProfile.id });
+        window.openConversation = async (rowElement) => {
+            const conversationId = rowElement.dataset.conversationId;
+
+            // ---- INÍCIO DA CORREÇÃO ----
+            // 1. Atualização visual imediata (Bônus de UX)
+            if (rowElement.classList.contains('row-unread')) {
+                rowElement.classList.remove('row-unread');
+                rowElement.classList.add('row-read');
+            }
+
+            // 2. Chamar o Webhook n8n para marcar como lido no backend
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) throw new Error("Sessão expirou. Faça login novamente.");
+                
+                // Chamada assíncrona, não precisamos esperar (fire and forget)
+                fetch(N8N_MARK_AS_READ_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                    body: JSON.stringify({ conversation_id: conversationId })
+                });
+
+            } catch (e) {
+                console.warn("Não foi possível marcar a mensagem como lida no servidor:", e.message);
+                // Não precisa mostrar erro ao usuário, a falha é silenciosa.
+            }
+            // ---- FIM DA CORREÇÃO ----
+
 
             showPage('conversation-view-page');
             const messagesContainer = document.getElementById('conversation-messages');
@@ -610,7 +636,7 @@
                         showToast('Resposta enviada! +2 pontos.', 'success');
                     }
                     replyInput.value = '';
-                    openConversation(conversationId);
+                    openConversation(rowElement); // Passando o elemento da linha para reabrir
                 }
             };
         }
