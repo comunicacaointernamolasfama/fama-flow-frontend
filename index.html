@@ -82,20 +82,19 @@
         .data-table-fino tr:hover { filter: brightness(0.98); }
         
         .data-table-fino td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); vertical-align: middle; white-space: nowrap; }
-        
         .data-table-fino .col-who { width: 20%; font-weight: 400; overflow: hidden; text-overflow: ellipsis; color: var(--color-text-primary); }
         .row-unread .col-who { font-weight: 700; color: var(--color-text-primary); }
-        
-        .data-table-fino .col-subject { width: 55%; overflow: hidden; text-overflow: ellipsis; }
+        .data-table-fino .col-subject { width: 50%; overflow: hidden; text-overflow: ellipsis; }
         .data-table-fino .subject-title { font-weight: 400; color: var(--color-text-primary); }
         .row-unread .subject-title { font-weight: 700; }
-        
         .data-table-fino .subject-preview { color: var(--color-text-secondary); margin-left: 0.5rem; font-weight: 400; }
-        
         .data-table-fino .col-meta { width: 15%; text-align: right; }
         .data-table-fino .col-meta .meta-tags { display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; }
         .data-table-fino .col-date { width: 10%; text-align: right; color: var(--color-text-secondary); font-size: 0.85rem; font-weight: 400; }
         .row-unread .col-date { font-weight: 600; color: var(--color-text-primary); }
+        .data-table-fino .col-actions { width: 5%; text-align: center; }
+        .data-table-fino .col-actions button { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
+        .data-table-fino .col-actions button:hover { background-color: var(--color-background); color: var(--color-text-primary); }
 
         .tag-fino { font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 12px; margin-left: 0.5rem; display: inline-block; line-height: 1.2; vertical-align: middle; }
         .tag-fino.tag-urgent { background-color: var(--color-danger-bg); color: var(--color-danger); }
@@ -104,7 +103,6 @@
         .tag-icon .material-icons { font-size: 18px; }
         .due-date-tag { font-weight: 500; color: var(--color-text-primary); }
         
-        /* Read receipts icons */
         .read-receipt { display: inline-flex; vertical-align: middle; margin-right: 8px; }
         .read-receipt .material-icons { font-size: 18px; }
         .read-receipt.read .material-icons { color: var(--color-info); }
@@ -243,8 +241,9 @@
         const N8N_UPDATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/update-user';
         const N8N_DELETE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/delete-user';
         const N8N_SEND_MESSAGE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/21446ed7-79bd-4a14-b954-ab729bb61f26';
-        // !!! ATENÇÃO: COLOQUE A URL DO SEU NOVO WEBHOOK "mark-as-read" AQUI !!!
         const N8N_MARK_AS_READ_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/mark-as-read';
+        // !!! ATENÇÃO: COLOQUE A URL DO SEU NOVO WEBHOOK "toggle-archive" AQUI !!!
+        const N8N_TOGGLE_ARCHIVE_URL = 'COLE_SUA_URL_AQUI';
 
 
         let currentUserProfile = null;
@@ -256,7 +255,7 @@
         const themeToggleBtn = document.getElementById('theme-toggle');
 
         const authHTML = `<div class="login-wrapper visible" id="auth-wrapper"><div id="auth-container" class="login-container"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo"><p class="login-subtitle">Comunicação interna Molas Fama</p><form id="login-form"><div class="input-group"><input type="email" id="email" class="input-field" placeholder="Email" required></div><div class="input-group"><input type="password" id="password" class="input-field" placeholder="Senha" required></div><button type="submit" class="btn-primary" style="width: 100%;">Entrar</button></form></div></div>`;
-        const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Urgentes</h3><p id="urgent-tickets-count">0</p></div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button></div><button id="refresh-messages-btn" class="refresh-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div></div></div><div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"><button class="btn btn-secondary" onclick="showPage('messages-page'); loadMessages();"><span class="material-icons">arrow_back</span> Voltar</button><div><h1 id="conversation-subject"></h1><p id="conversation-participants"></p></div><div class="conversation-header-actions"><button class="btn btn-secondary" onclick="document.getElementById('reply-input').focus()"><span class="material-icons">reply</span> Responder</button></div></div><div class="card"><div id="conversation-messages"></div><div id="reply-form-wrapper"><form id="reply-form"><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><div id="users-page" class="page-content"><div class="page-header"><div class="page-header-title"><h1>Gerenciamento de Usuários</h1></div><div class="page-header-actions"><button id="refresh-users-btn" class="refresh-btn" title="Atualizar usuários"><span class="material-icons">refresh</span></button><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th>Usuário & Email</th><th>Departamento & Cargo</th><th>Score</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div id="user-profile-content"></div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div></div>`;
+        const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Urgentes</h3><p id="urgent-tickets-count">0</p></div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button><button class="tab-link" data-tab="archived-content">Arquivados</button></div><button id="refresh-messages-btn" class="refresh-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div><div id="archived-content" class="tab-content"></div></div></div><div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"><button class="btn btn-secondary" onclick="showPage('messages-page'); loadMessages();"><span class="material-icons">arrow_back</span> Voltar</button><div><h1 id="conversation-subject"></h1><p id="conversation-participants"></p></div><div class="conversation-header-actions"><button class="btn btn-secondary" onclick="document.getElementById('reply-input').focus()"><span class="material-icons">reply</span> Responder</button></div></div><div class="card"><div id="conversation-messages"></div><div id="reply-form-wrapper"><form id="reply-form"><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><div id="users-page" class="page-content"><div class="page-header"><div class="page-header-title"><h1>Gerenciamento de Usuários</h1></div><div class="page-header-actions"><button id="refresh-users-btn" class="refresh-btn" title="Atualizar usuários"><span class="material-icons">refresh</span></button><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th>Usuário & Email</th><th>Departamento & Cargo</th><th>Score</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div id="user-profile-content"></div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div></div>`;
         
         document.addEventListener('DOMContentLoaded', checkUserSession);
         
@@ -524,18 +523,24 @@
                          readReceiptHTML = `<span class="read-receipt delivered" title="Enviada"><span class="material-icons">check</span></span>`;
                     }
                 }
+
+                const archiveIcon = conv.is_archived ? 'unarchive' : 'archive';
+                const archiveTitle = conv.is_archived ? 'Desarquivar' : 'Arquivar';
                 
                 return `
-                    <tr class="${rowClass}" data-conversation-id="${conv.id}" onclick="openConversation(this)">
-                        <td class="col-who">${type === 'inbox' ? participants : `Para: ${participants}`}</td>
-                        <td class="col-subject">
+                    <tr class="${rowClass}" data-conversation-id="${conv.id}">
+                        <td class="col-who" onclick="openConversation(this.parentElement)">${type === 'inbox' || type === 'archived' ? participants : `Para: ${participants}`}</td>
+                        <td class="col-subject" onclick="openConversation(this.parentElement)">
                             ${readReceiptHTML}
                             <span class="subject-title">${conv.subject}</span>
                             ${priorityTag}
                             <span class="subject-preview"> - ${preview}</span>
                         </td>
-                        <td class="col-meta"><div class="meta-tags">${metaTagsHTML}</div></td>
-                        <td class="col-date">${timestamp}</td>
+                        <td class="col-meta" onclick="openConversation(this.parentElement)"><div class="meta-tags">${metaTagsHTML}</div></td>
+                        <td class="col-date" onclick="openConversation(this.parentElement)">${timestamp}</td>
+                        <td class="col-actions">
+                            <button title="${archiveTitle}" onclick="toggleArchive(this, '${conv.id}')"><span class="material-icons">${archiveIcon}</span></button>
+                        </td>
                     </tr>`;
             }).join('');
             
@@ -546,9 +551,12 @@
             if (!currentUserProfile) return;
             const inboxContainer = document.getElementById('inbox-content');
             const sentContainer = document.getElementById('sent-content');
+            const archivedContainer = document.getElementById('archived-content');
+
             inboxContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
             sentContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
-            
+            archivedContainer.innerHTML = '<div class="empty-state">Carregando...</div>';
+
             const { data, error } = await supabaseClient.from('user_conversations_view').select('*').order('last_message_created_at', { ascending: false, nulls: 'last' });
 
             if (error) {
@@ -556,32 +564,68 @@
                 const errorMsg = `<div class="empty-state" style="color: var(--color-danger);">Erro ao carregar mensagens.</div>`;
                 inboxContainer.innerHTML = errorMsg;
                 sentContainer.innerHTML = errorMsg;
+                archivedContainer.innerHTML = errorMsg;
                 return;
             }
 
-            const inboxMessages = data.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_names === null));
-            const sentMessages = data.filter(conv => conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_names !== null);
+            const nonArchived = data.filter(conv => !conv.is_archived);
+            const archived = data.filter(conv => conv.is_archived);
+
+            const inboxMessages = nonArchived.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_names === null));
+            const sentMessages = nonArchived.filter(conv => conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_names !== null);
 
             renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
             renderMessageTable(sentMessages, 'sent-content', 'sent');
+            renderMessageTable(archived, 'archived-content', 'archived');
         }
+
+        async function toggleArchive(buttonElement, conversationId) {
+            const row = buttonElement.closest('tr');
+            if (row) {
+                // Optimistic UI update for instant feedback
+                row.style.transition = 'opacity 0.3s ease-out';
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 300);
+            }
+
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) throw new Error("Sessão expirou.");
+                
+                const response = await fetch(N8N_TOGGLE_ARCHIVE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                    body: JSON.stringify({ conversation_id: conversationId })
+                });
+
+                if (!response.ok) throw new Error("Falha ao comunicar com o servidor.");
+                
+                showToast("Status da conversa alterado.", 'success');
+                // The optimistic removal is enough, but a full reload can be done if needed
+                // loadMessages(); 
+            } catch (e) {
+                console.error("Erro ao arquivar:", e.message);
+                showToast("Falha ao arquivar conversa.", 'danger');
+                // Revert UI change if API call fails
+                if (row) {
+                    row.style.opacity = '1';
+                }
+            }
+        }
+
 
         window.openConversation = async (rowElement) => {
             const conversationId = rowElement.dataset.conversationId;
 
-            // ---- INÍCIO DA CORREÇÃO ----
-            // 1. Atualização visual imediata (Bônus de UX)
             if (rowElement.classList.contains('row-unread')) {
                 rowElement.classList.remove('row-unread');
                 rowElement.classList.add('row-read');
             }
 
-            // 2. Chamar o Webhook n8n para marcar como lido no backend
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) throw new Error("Sessão expirou. Faça login novamente.");
                 
-                // Chamada assíncrona, não precisamos esperar (fire and forget)
                 fetch(N8N_MARK_AS_READ_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
@@ -590,9 +634,7 @@
 
             } catch (e) {
                 console.warn("Não foi possível marcar a mensagem como lida no servidor:", e.message);
-                // Não precisa mostrar erro ao usuário, a falha é silenciosa.
             }
-            // ---- FIM DA CORREÇÃO ----
 
 
             showPage('conversation-view-page');
