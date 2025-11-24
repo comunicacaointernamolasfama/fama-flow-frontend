@@ -361,8 +361,14 @@
         
         async function loadDashboardStats() {
             if (!currentUserProfile) return;
-            const { data, error } = await supabaseClient.rpc('get_dashboard_stats');
-            if (error) { console.error('Error fetching dashboard stats:', error); return; }
+            // CORREÇÃO: Usar a função RPC que criamos
+            const { data, error } = await supabaseClient.rpc('get_dashboard_stats').single();
+            if (error) { 
+                console.error('Error fetching dashboard stats:', error); 
+                document.getElementById('pending-messages-count').textContent = 'X';
+                document.getElementById('urgent-tickets-count').textContent = 'X';
+                return;
+            }
             document.getElementById('pending-messages-count').textContent = data.pending_messages_count || 0;
             document.getElementById('urgent-tickets-count').textContent = data.urgent_tickets_count || 0;
         }
@@ -481,7 +487,15 @@
             const tableRows = conversations.map(conv => {
                 const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ') : '';
                 const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
-                const participants = conv.other_participants_names || 'Você mesmo';
+                
+                // CORREÇÃO: Define quem é o "who" corretamente.
+                let who = 'Você mesmo';
+                if (type === 'inbox' || type === 'archived') {
+                    who = conv.last_message_sender_id === currentUserProfile.id ? 'Você' : (conv.other_participants_names || conv.last_message_sender_name);
+                } else { // Sent
+                    who = `Para: ${conv.other_participants_names}`;
+                }
+
                 let priorityTag = '';
                 if (conv.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
                 if (conv.priority === 'important') priorityTag = `<span class="tag-fino tag-important">Importante</span>`;
@@ -502,7 +516,7 @@
                 const archiveIcon = conv.is_archived ? 'unarchive' : 'archive';
                 const archiveTitle = conv.is_archived ? 'Desarquivar' : 'Arquivar';
                 return `<tr class="${rowClass}" data-conversation-id="${conv.id}">
-                        <td class="col-who" onclick="openConversation(this.parentElement)">${type === 'inbox' || type === 'archived' ? participants : `Para: ${participants}`}</td>
+                        <td class="col-who" onclick="openConversation(this.parentElement)">${who}</td>
                         <td class="col-subject" onclick="openConversation(this.parentElement)">${readReceiptHTML}<span class="subject-title">${conv.subject}</span>${priorityTag}<span class="subject-preview"> - ${preview}</span></td>
                         <td class="col-meta" onclick="openConversation(this.parentElement)"><div class="meta-tags">${metaTagsHTML}</div></td>
                         <td class="col-date" onclick="openConversation(this.parentElement)">${timestamp}</td>
@@ -526,7 +540,7 @@
             }
             const nonArchived = data.filter(conv => !conv.is_archived);
             const archived = data.filter(conv => conv.is_archived);
-            const inboxMessages = nonArchived.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_names === null));
+            const inboxMessages = nonArchived.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.other_participants_names === null));
             const sentMessages = nonArchived.filter(conv => conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_names !== null);
             renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
             renderMessageTable(sentMessages, 'sent-content', 'sent');
@@ -589,7 +603,7 @@
             const { data: allAttachments } = attachmentsRes;
             const { data: convData } = convDataRes;
             
-            // Render Header
+            // Render Header - CORRIGIDO
             const headerContainer = document.getElementById('conversation-header');
             let ticketInfoHTML = '';
             if (convData.type === 'ticket') {
@@ -599,12 +613,17 @@
                 const dueDateHTML = convData.due_date ? `<strong>Prazo:</strong> ${new Date(convData.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}` : '';
                 ticketInfoHTML = `<div class="conversation-ticket-info"><span class="material-icons">support_agent</span> <div>${priorityTag}</div> <div>${dueDateHTML}</div></div>`;
             }
+            
+            // CORREÇÃO: Lógica para determinar "De" e "Para"
+            const senderName = (convData.last_message_sender_id === currentUserProfile.id) ? 'Você' : convData.last_message_sender_name;
+            const recipientNames = (convData.last_message_sender_id === currentUserProfile.id) ? convData.other_participants_names : (convData.other_participants_names ? `Você, ${convData.other_participants_names.replace(currentUserProfile.full_name, '').replace(', ,',',').trim()}` : 'Você');
+
             headerContainer.innerHTML = `
                 <div class="conversation-main-header">
                     <button class="btn btn-secondary" onclick="showPage('messages-page'); loadMessages();"><span class="material-icons">arrow_back</span> Voltar</button>
                     <div class="conversation-title-block">
                         <h1>${convData.subject}</h1>
-                        <p><strong>De:</strong> ${convData.last_message_sender_name} <strong>Para:</strong> ${convData.other_participants_names || 'Você'}</p>
+                        <p><strong>De:</strong> ${senderName} <strong>Para:</strong> ${recipientNames || '...'}</p>
                     </div>
                     <button class="btn btn-icon" title="Mais opções"><span class="material-icons">more_vert</span></button>
                 </div>
