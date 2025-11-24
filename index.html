@@ -211,13 +211,14 @@
         /* --- CONVERSATION VIEW REFACTOR --- */
         #conversation-view-page .page-header { flex-direction: column; align-items: stretch; gap: 1rem; }
         .conversation-main-header { display: flex; justify-content: space-between; align-items: center; }
-        .conversation-title-block { display: flex; flex-direction: column; gap: 0.25rem; }
+        .conversation-title-block { display: flex; flex-direction: column; gap: 0.25rem; flex-grow: 1; }
         .conversation-title-block h1 { font-size: 1.5rem; margin: 0; }
-        .conversation-title-block p { color: var(--color-text-secondary); margin: 0; cursor: pointer; }
+        .conversation-title-block p { color: var(--color-text-secondary); margin: 0; }
         .conversation-title-block .material-icons { font-size: 16px; vertical-align: middle; }
-        .conversation-ticket-info { background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
+        .conversation-ticket-info { background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-around; align-items: center; font-size: 0.9rem; gap: 1rem; }
+        .conversation-ticket-info div { display: flex; align-items: center; gap: 0.5rem; }
         .conversation-ticket-info .tag-fino { font-size: 0.8rem; }
-        #conversation-view-page .card { display: flex; flex-direction: column; height: calc(100vh - 12rem); padding: 0; }
+        #conversation-view-page .card { display: flex; flex-direction: column; height: calc(100vh - 14rem); padding: 0; }
         #conversation-messages { flex-grow: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
         .message-bubble-wrapper { display: flex; flex-direction: column; max-width: 70%; }
         .message-bubble { padding: 0.75rem 1rem; border-radius: 18px; word-break: break-word; }
@@ -254,6 +255,7 @@
         const N8N_SEND_MESSAGE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/21446ed7-79bd-4a14-b954-ab729bb61f26';
         const N8N_MARK_AS_READ_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/mark-as-read';
         const N8N_TOGGLE_ARCHIVE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/toggle-archive';
+        const N8N_RESOLVE_TICKET_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/resolve-ticket';
 
         let currentUserProfile = null;
         let quillEditor = null;
@@ -361,7 +363,6 @@
         
         async function loadDashboardStats() {
             if (!currentUserProfile) return;
-            // CORREÇÃO: Usar a função RPC que criamos
             const { data, error } = await supabaseClient.rpc('get_dashboard_stats').single();
             if (error) { 
                 console.error('Error fetching dashboard stats:', error); 
@@ -470,7 +471,7 @@
                 if (!response.ok) { throw new Error('Falha na comunicação com o servidor n8n.'); }
                 
                 showToast("Mensagem enviada com sucesso!", 'success'); closeNewMessagePopup();
-                await Promise.all([loadUserProfileData(), loadMessages()]);
+                await Promise.all([loadUserProfileData(), loadMessages(), loadDashboardStats()]);
             } catch (error) {
                 console.error("Erro ao enviar mensagem via n8n:", error);
                 showToast("Falha ao enviar mensagem: " + error.message, 'danger');
@@ -488,20 +489,20 @@
                 const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ') : '';
                 const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
                 
-                // CORREÇÃO: Define quem é o "who" corretamente.
                 let who = 'Você mesmo';
-                if (type === 'inbox' || type === 'archived') {
-                    who = conv.last_message_sender_id === currentUserProfile.id ? 'Você' : (conv.other_participants_names || conv.last_message_sender_name);
-                } else { // Sent
-                    who = `Para: ${conv.other_participants_names}`;
-                }
+                if (type === 'inbox' || type === 'archived') { who = conv.last_message_sender_id === currentUserProfile.id ? 'Você' : (conv.other_participants_names || conv.last_message_sender_name); } 
+                else { who = `Para: ${conv.other_participants_names}`; }
 
                 let priorityTag = '';
                 if (conv.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
                 if (conv.priority === 'important') priorityTag = `<span class="tag-fino tag-important">Importante</span>`;
                 let metaTagsHTML = '';
                 if (conv.due_date) metaTagsHTML += `<span class="tag-icon due-date-tag" title="Prazo"><span class="material-icons">event</span> ${new Date(conv.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>`;
-                if (conv.type === 'ticket') metaTagsHTML += '<span class="tag-icon" title="Chamado"><span class="material-icons">support_agent</span></span>';
+                if (conv.type === 'ticket') {
+                    const statusIcon = conv.status === 'resolved' ? 'check_circle' : 'support_agent';
+                    const statusTitle = conv.status === 'resolved' ? 'Chamado Resolvido' : 'Chamado';
+                    metaTagsHTML += `<span class="tag-icon" title="${statusTitle}"><span class="material-icons">${statusIcon}</span></span>`;
+                }
                 if (conv.requires_response) metaTagsHTML += '<span class="tag-icon" title="Exige Resposta"><span class="material-icons">reply</span></span>';
                 const isUnread = type === 'inbox' && conv.is_unread;
                 const rowClass = isUnread ? 'row-unread' : 'row-read';
@@ -565,6 +566,32 @@
                 if (row) row.style.opacity = '1';
             }
         }
+        
+        async function resolveTicket(conversationId) {
+            if (!confirm("Tem certeza que deseja marcar este chamado como resolvido? Esta ação não pode ser desfeita.")) return;
+
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) throw new Error("Sessão expirou.");
+
+                const response = await fetch(N8N_RESOLVE_TICKET_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                    body: JSON.stringify({ conversation_id: conversationId })
+                });
+
+                if (!response.ok) throw new Error("Falha ao resolver o chamado. Você pode não ter permissão.");
+                
+                showToast("Chamado resolvido com sucesso!", 'success');
+                const rowElement = document.querySelector(`tr[data-conversation-id="${conversationId}"]`);
+                if (rowElement) openConversation(rowElement); // Re-abre a conversa para atualizar o status
+                loadDashboardStats();
+
+            } catch(e) {
+                console.error("Erro ao resolver chamado:", e.message);
+                showToast(e.message, 'danger');
+            }
+        }
 
         async function openConversation(rowElement) {
             const conversationId = rowElement.dataset.conversationId;
@@ -584,8 +611,8 @@
             } catch (e) { console.warn("Não foi possível marcar a mensagem como lida:", e.message); }
 
             showPage('conversation-view-page');
-            document.getElementById('conversation-header').innerHTML = 'Carregando...';
-            document.getElementById('conversation-messages').innerHTML = 'Carregando mensagens...';
+            document.getElementById('conversation-header').innerHTML = '<div class="empty-state">Carregando...</div>';
+            document.getElementById('conversation-messages').innerHTML = '<div class="empty-state">Carregando mensagens...</div>';
 
             const [messagesRes, attachmentsRes, convDataRes] = await Promise.all([
                 supabaseClient.from('conversation_messages_view').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true }),
@@ -603,20 +630,33 @@
             const { data: allAttachments } = attachmentsRes;
             const { data: convData } = convDataRes;
             
-            // Render Header - CORRIGIDO
             const headerContainer = document.getElementById('conversation-header');
             let ticketInfoHTML = '';
+            let actionButtonsHTML = '';
+            
             if (convData.type === 'ticket') {
                 let priorityTag = '';
                 if (convData.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
                 if (convData.priority === 'important') priorityTag = `<span class="tag-fino tag-important">Importante</span>`;
-                const dueDateHTML = convData.due_date ? `<strong>Prazo:</strong> ${new Date(convData.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}` : '';
-                ticketInfoHTML = `<div class="conversation-ticket-info"><span class="material-icons">support_agent</span> <div>${priorityTag}</div> <div>${dueDateHTML}</div></div>`;
+                const dueDateHTML = convData.due_date ? `<div><span class="material-icons">event</span><strong>Prazo:</strong> ${new Date(convData.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : '';
+                
+                if (convData.status === 'resolved') {
+                    ticketInfoHTML = `<div class="conversation-ticket-info" style="justify-content:center;"><div><span class="material-icons" style="color: var(--color-success);">check_circle</span><strong>Chamado Resolvido</strong></div></div>`;
+                    document.getElementById('reply-form').style.display = 'none';
+                } else {
+                    ticketInfoHTML = `<div class="conversation-ticket-info"><div><span class="material-icons">support_agent</span> <strong>Chamado Aberto</strong></div> <div>${priorityTag}</div> ${dueDateHTML}</div>`;
+                    document.getElementById('reply-form').style.display = 'flex';
+                }
+
+                if (convData.created_by === currentUserProfile.id && convData.status === 'open') {
+                    actionButtonsHTML = `<button class="btn btn-success" onclick="resolveTicket('${convData.id}')"><span class="material-icons">check_circle</span> Resolver Chamado</button>`;
+                }
+            } else {
+                document.getElementById('reply-form').style.display = 'flex';
             }
-            
-            // CORREÇÃO: Lógica para determinar "De" e "Para"
+
             const senderName = (convData.last_message_sender_id === currentUserProfile.id) ? 'Você' : convData.last_message_sender_name;
-            const recipientNames = (convData.last_message_sender_id === currentUserProfile.id) ? convData.other_participants_names : (convData.other_participants_names ? `Você, ${convData.other_participants_names.replace(currentUserProfile.full_name, '').replace(', ,',',').trim()}` : 'Você');
+            const recipientNames = (convData.last_message_sender_id === currentUserProfile.id) ? convData.other_participants_names : (convData.other_participants_names ? `Você, ${convData.other_participants_names.replace(currentUserProfile.full_name, '').replace(/, ,/g,',').trim().replace(/^, /,'').replace(/,$/,'')}` : 'Você');
 
             headerContainer.innerHTML = `
                 <div class="conversation-main-header">
@@ -625,12 +665,11 @@
                         <h1>${convData.subject}</h1>
                         <p><strong>De:</strong> ${senderName} <strong>Para:</strong> ${recipientNames || '...'}</p>
                     </div>
-                    <button class="btn btn-icon" title="Mais opções"><span class="material-icons">more_vert</span></button>
+                    <div class="page-header-actions">${actionButtonsHTML}</div>
                 </div>
                 ${ticketInfoHTML}
             `;
 
-            // Render Messages
             const messagesContainer = document.getElementById('conversation-messages');
             messagesContainer.innerHTML = messages.map(msg => {
                 const isSent = msg.sender_id === currentUserProfile.id;
@@ -642,7 +681,6 @@
                             <span class="material-icons">attach_file</span>${att.file_name}
                         </a>
                     </div>`).join('');
-
                 return `<div class="message-bubble-wrapper ${isSent ? 'sent' : 'received'}">
                             <div class="message-bubble ${isSent ? 'sent' : 'received'}">${msg.content}${attachmentsHTML}</div>
                             <div class="message-metadata">${isSent ? 'Você' : msg.sender_name} • ${timestamp}</div>
@@ -653,7 +691,7 @@
 
             document.getElementById('reply-form').onsubmit = (e) => {
                 e.preventDefault();
-                showToast('Respostas com anexo ainda não implementadas.', 'info');
+                showToast('Respostas ainda não implementadas nesta tela.', 'info');
             };
         }
 
