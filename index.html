@@ -153,29 +153,27 @@
         .achievement-badge.unlocked { opacity: 1; }
         .achievement-badge .badge-icon { font-size: 48px; color: var(--color-warning); }
         .achievement-badge p { font-weight: 500; margin: 0.5rem 0 0; font-size: 0.9rem; }
-        
-        /* --- NOVA MENSAGEM REFACTOR --- */
         #new-message-popup { position: fixed; bottom: 0; right: 3rem; width: 600px; max-width: 90vw; background-color: var(--color-surface); border: 1px solid var(--color-border); border-top-left-radius: 12px; border-top-right-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); z-index: 1001; display: none; flex-direction: column; transition: transform 0.3s ease-out; transform: translateY(100%); }
         #new-message-popup.visible { display: flex; transform: translateY(0); }
         .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background-color: var(--color-background); border-bottom: 1px solid var(--color-border); cursor: move; }
         .popup-header h3 { margin: 0; font-size: 1rem; }
-        #new-message-form { display: flex; flex-direction: column; max-height: 80vh; }
-        .popup-body { padding: 1rem; flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        #new-message-form { display: flex; flex-direction: column; height: 500px; max-height: 70vh; }
+        .popup-body { padding: 0.5rem 1rem; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .popup-body .form-group { margin: 0; }
         .popup-body .input-field { background: transparent; border: none; border-bottom: 1px solid var(--color-border); border-radius: 0; padding: 0.75rem 0; font-size: 0.9rem; }
         .popup-body .input-field:focus { outline: none; border-bottom-color: var(--color-info); }
         .ql-editor.ql-blank::before { color: var(--color-text-secondary); font-style: normal; pointer-events: none; }
-        #editor-wrapper { min-height: 200px; display: flex; flex-direction: column; margin-top: 1rem; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; }
-        #editor-wrapper .ql-toolbar { flex-shrink: 0; border: none !important; border-bottom: 1px solid var(--color-border) !important; }
-        #editor-wrapper .ql-container.ql-snow { border: none !important; flex-grow: 1; }
+        #editor-wrapper { flex-grow: 1; display: flex; flex-direction: column; min-height: 0; }
+        #editor-wrapper .ql-toolbar { flex-shrink: 0; border-bottom: 1px solid var(--color-border) !important; }
+        #editor-wrapper .ql-container.ql-snow { border: none !important; flex-grow: 1; overflow-y: auto; }
         #recipient-group { position: relative; }
         #recipient-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; z-index: 1002; max-height: 200px; overflow-y: auto; display: none; box-shadow: var(--shadow); }
         .suggestion-item { padding: 0.5rem 1rem; cursor: pointer; }
         .suggestion-item:hover { background-color: var(--color-background); }
-        .popup-footer { padding: 1rem; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 1rem; }
-        .popup-footer-row { display: flex; justify-content: space-between; align-items: center; }
+        .popup-footer { padding: 0.75rem 1rem; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; align-items: stretch; gap: 0.75rem; }
+        .popup-footer-top-row { display: flex; justify-content: space-between; align-items: center; min-height: 38px; }
+        .popup-footer-main { display: flex; justify-content: space-between; align-items: center; }
         .popup-actions-left { display: flex; align-items: center; gap: 1rem; }
-        #attachment-preview-container { padding-top: 1rem; border-top: 1px solid var(--color-border); margin-top: 1rem; }
         #attachment-preview { font-size: 0.8rem; color: var(--color-text-secondary); background-color: var(--color-background); padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.5rem; }
         #attachment-preview .remove-attachment { cursor: pointer; }
         .message-type-selector { display: flex; gap: 0.5rem; border: 1px solid var(--color-border); border-radius: 8px; padding: 0.25rem; background-color: var(--color-background);}
@@ -190,14 +188,17 @@
         .custom-checkbox .checkbox-box .material-icons { font-size: 14px; color: white; transform: scale(0); transition: transform 0.2s; }
         .custom-checkbox input[type="checkbox"]:checked + .checkbox-box { background-color: var(--color-info); border-color: var(--color-info); }
         .custom-checkbox input[type="checkbox"]:checked + .checkbox-box .material-icons { transform: scale(1); }
-        #chamado-fields { display: flex; align-items: center; gap: 1rem; }
-        #chamado-fields > div { display: flex; align-items: center; gap: 0.5rem; }
-        #chamado-fields label { margin-bottom: 0; }
-        #recipient-input-wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--color-border); padding: 0.5rem 0; }
-        #recipient-input-wrapper .btn-link { background: none; border: none; color: var(--color-info); font-weight: 600; cursor: pointer; padding: 0; font-size: 0.9rem; }
+        #chamado-fields { display: flex; align-items: center; gap: 0.75rem; }
+        #chamado-fields label { font-size: 0.9rem; margin-bottom: 0; color: var(--color-text-secondary); white-space: nowrap; }
+        #chamado-fields .input-field { font-size: 0.9rem; padding: 0.4rem 0.8rem; border: 1px solid var(--color-border); background: var(--color-background); }
+        #chamado-fields .date-presets { display: flex; gap: 0.25rem; }
+        #chamado-fields .date-presets button { font-size: 0.8rem; padding: 0.25rem 0.5rem; }
+        #recipient-input-wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--color-border); padding: 0.375rem 0; cursor: text; }
+        #recipient-input-wrapper:focus-within { border-bottom-color: var(--color-info); }
         .recipient-pill { display: inline-flex; align-items: center; gap: 0.5rem; background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: 16px; padding: 0.25rem 0.75rem; font-size: 0.9rem; }
         .recipient-pill .pill-remove { cursor: pointer; font-size: 1rem; font-weight: 700; color: var(--color-text-secondary); }
         #destinatario-input { border: none; outline: none; background: transparent; flex-grow: 1; min-width: 100px; font-size: 0.9rem; padding: 0.375rem 0; }
+        #toast-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.75rem; }
         .toast { display: flex; align-items: center; gap: 1rem; padding: 1rem; background-color: var(--color-surface); border-radius: 8px; box-shadow: var(--shadow); border-left: 4px solid; min-width: 300px; transform: translateX(120%); opacity: 0; transition: transform 0.4s ease-out, opacity 0.4s ease-out; }
         .toast.show { transform: translateX(0); opacity: 1; }
         .toast .toast-icon { font-size: 24px; }
@@ -207,18 +208,6 @@
         .toast.toast-danger { border-color: var(--color-danger); background-color: var(--color-danger-bg); } .toast.toast-danger .toast-icon { color: var(--color-danger); }
         .toast.toast-warning { border-color: var(--color-warning); background-color: var(--color-warning-bg); } .toast.toast-warning .toast-icon { color: var(--color-warning); }
         .toast.toast-info { border-color: var(--color-info); background-color: var(--color-info-bg); } .toast.toast-info .toast-icon { color: var(--color-info); }
-        #recipient-search-modal .modal-content { max-width: 700px; z-index: 2001; }
-        #recipient-search-modal .modal-body { padding: 0; }
-        .search-modal-layout { display: flex; height: 60vh; }
-        .search-modal-sidebar { width: 200px; border-right: 1px solid var(--color-border); padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; background-color: var(--color-background); }
-        .search-modal-sidebar .tab-link { text-align: left; border-radius: 6px; }
-        .search-modal-main { flex: 1; display: flex; flex-direction: column; }
-        .search-modal-main .search-input-wrapper { padding: 1rem; border-bottom: 1px solid var(--color-border); }
-        .search-modal-main .user-list { flex: 1; overflow-y: auto; }
-        .user-list-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); cursor: pointer; }
-        .user-list-item:hover { background-color: var(--color-background); }
-        .user-list-item .user-info-cell { gap: 0.75rem; }
-        .user-list-item .user-avatar { width: 32px; height: 32px; font-size: 1rem; }
         
         /* --- CONVERSATION VIEW REFACTOR --- */
         #conversation-view-page .page-header { flex-direction: column; align-items: stretch; gap: 0.75rem; }
@@ -253,78 +242,8 @@
     <div id="root"></div>
     <button class="theme-toggle" id="theme-toggle" title="Alterar tema" style="display: none;"><span class="material-icons" id="icon-moon">dark_mode</span><span class="material-icons" id="icon-sun">light_mode</span></button>
     <div id="toast-container"></div>
-    <div id="new-message-popup">
-        <div class="popup-header"><h3>Nova Mensagem</h3><button class="btn-icon" onclick="closeNewMessagePopup()"><span class="material-icons">close</span></button></div>
-        <form id="new-message-form">
-            <div class="popup-body">
-                <div id="recipient-input-wrapper">
-                    <!-- Pills serão inseridas aqui pelo JS -->
-                    <input type="text" id="destinatario-input" placeholder="Buscar por nome..." autocomplete="off">
-                    <button type="button" class="btn-link" onclick="openRecipientSearchModal()">Busca Avançada</button>
-                </div>
-                <div id="recipient-suggestions"></div>
-                <div class="form-group" style="margin-top: 1rem;">
-                    <input type="text" id="assunto" class="input-field" placeholder="Assunto">
-                </div>
-                <div id="editor-wrapper"><div id="editor-container"></div></div>
-                <div id="attachment-preview-container" style="display: none;">
-                    <div id="attachment-preview"></div>
-                </div>
-            </div>
-            <div class="popup-footer">
-                <div class="popup-footer-row">
-                    <div class="popup-actions-left">
-                        <div class="message-type-selector">
-                            <div><input type="radio" id="tipo-simples" name="message-type" value="message" checked onchange="toggleChamadoFields()"><label for="tipo-simples">Simples</label></div>
-                            <div><input type="radio" id="tipo-chamado" name="message-type" value="ticket" onchange="toggleChamadoFields()"><label for="tipo-chamado">Chamado</label></div>
-                        </div>
-                        <label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label>
-                    </div>
-                </div>
-                <div id="chamado-fields" style="display:none;" class="popup-footer-row">
-                    <div class="urgency-selector">
-                        <button type="button" class="btn btn-success active" data-priority="normal">Normal</button>
-                        <button type="button" class="btn btn-secondary" data-priority="important">Importante</button>
-                        <button type="button" class="btn btn-secondary" data-priority="urgent">Urgente</button>
-                    </div>
-                    <div><label for="due_date">Prazo:</label><input type="date" id="due_date" class="input-field" style="padding: 0.4rem 0.8rem;"></div>
-                </div>
-                <div class="popup-footer-row" style="margin-top: 1rem; justify-content: flex-end;">
-                    <div class="popup-actions-left">
-                         <button type="button" class="btn btn-icon" onclick="document.getElementById('attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button>
-                         <button type="submit" id="btn-send-message" class="btn btn-danger">Enviar</button>
-                    </div>
-                    <input type="file" id="attachment-input" style="display: none;">
-                </div>
-            </div>
-        </form>
-    </div>
+    <div id="new-message-popup"><div class="popup-header"><h3>Nova Mensagem</h3><button onclick="closeNewMessagePopup()"><span class="material-icons">close</span></button></div><form id="new-message-form"><div class="popup-body"><div class="form-group" id="recipient-group"><div id="recipient-input-wrapper" onclick="document.getElementById('destinatario-input').focus()"><input type="text" id="destinatario-input" placeholder="Para:" autocomplete="off"></div><div id="recipient-suggestions"></div></div><div class="form-group"><input type="text" id="assunto" class="input-field" placeholder="Assunto"></div><div id="editor-wrapper"><div id="editor-container"></div></div></div><div class="popup-footer"><div class="popup-footer-top-row"><div class="urgency-selector"><button type="button" class="btn btn-success active" data-priority="normal">Normal</button><button type="button" class="btn btn-secondary" data-priority="important">Importante</button><button type="button" class="btn btn-secondary" data-priority="urgent">Urgente</button></div><div id="chamado-fields" style="display:none;"><label for="due_date">Prazo:</label><input type="date" id="due_date" class="input-field"><div class="date-presets"><button type="button" class="btn btn-secondary" onclick="setDueDate(1)">+1d</button><button type="button" class="btn btn-secondary" onclick="setDueDate(7)">+7d</button></div></div></div><div class="popup-footer-main"><div class="popup-actions-left"><button type="submit" id="btn-send-message" class="btn btn-danger">Enviar</button><input type="file" id="attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><div id="attachment-preview"></div><div class="message-type-selector"><div><input type="radio" id="tipo-simples" name="message-type" value="message" checked onchange="toggleChamadoFields()"><label for="tipo-simples">Simples</label></div><div><input type="radio" id="tipo-chamado" name="message-type" value="ticket" onchange="toggleChamadoFields()"><label for="tipo-chamado">Chamado</label></div></div></div><label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label></div></div></form></div>
 
-    <!-- MODAL DE BUSCA AVANÇADA -->
-    <div id="recipient-search-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Adicionar Destinatários</h2>
-                <button class="btn-icon" onclick="closeRecipientSearchModal()"><span class="material-icons">close</span></button>
-            </div>
-            <div class="modal-body">
-                <div class="search-modal-layout">
-                    <div class="search-modal-sidebar" id="recipient-search-tabs">
-                        <button class="tab-link active" data-tab="department">Departamento</button>
-                        <button class="tab-link" data-tab="role">Cargo</button>
-                    </div>
-                    <div class="search-modal-main">
-                        <div class="search-input-wrapper"><input type="text" id="advanced-search-input" class="input-field" placeholder="Filtrar resultados..."></div>
-                        <div class="user-list" id="advanced-search-user-list"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeRecipientSearchModal()">Concluído</button>
-            </div>
-        </div>
-    </div>
-    
     <script>
         const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
@@ -414,23 +333,6 @@
                     }
                 });
             }
-
-            document.querySelectorAll('#recipient-search-tabs .tab-link').forEach(tab => {
-                tab.addEventListener('click', (e) => {
-                    const targetId = e.currentTarget.dataset.tab;
-                    document.querySelectorAll('#recipient-search-tabs .tab-link').forEach(t => t.classList.remove('active'));
-                    e.currentTarget.classList.add('active');
-                    populateAdvancedSearchList(targetId);
-                });
-            });
-
-            document.getElementById('advanced-search-input').addEventListener('input', (e) => {
-                const query = e.target.value.toLowerCase();
-                document.querySelectorAll('#advanced-search-user-list .user-list-item').forEach(item => {
-                    const name = item.dataset.name.toLowerCase();
-                    item.style.display = name.includes(query) ? 'flex' : 'none';
-                });
-            });
         }
 
         async function handleLogin(e) { e.preventDefault(); const email = document.getElementById('email').value; const password = document.getElementById('password').value; const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password }); if (error) { showToast('Erro no login: ' + error.message, 'danger'); } else if (data.user) { await fetchUserProfile(data.user); renderAppLayout(); } }
@@ -464,27 +366,13 @@
             appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); 
             const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); 
             if (activeLink) activeLink.classList.add('active');
+            
+            // CORREÇÃO: Esconder o FAB na tela de conversa
             document.getElementById('fab-new-message').classList.toggle('hidden', pageId === 'conversation-view-page');
+
             if(pageId === 'messages-page') loadMessages(); 
         }
-        
-        async function loadAllDynamicData() { 
-            const { data, error } = await supabaseClient.from('profiles').select('id, full_name, email, department, role, score');
-            if(error) {
-                console.error("Erro fatal ao buscar todos os usuários:", error);
-                showToast('Não foi possível carregar os dados dos usuários.', 'danger');
-                allUsers = [];
-            } else {
-                allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : [];
-            }
-            // CORREÇÃO: Garante que as funções que dependem de `allUsers` rodem depois.
-            loadDashboardStats(); 
-            loadMessages(); 
-            loadUserProfileData(); 
-            if (currentUserProfile && currentUserProfile.role === 'Admin') {
-                loadUsersForAdmin(); 
-            }
-        }
+        async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); loadUserProfileData(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
         
         async function loadDashboardStats() {
             if (!currentUserProfile) return;
@@ -499,6 +387,8 @@
             document.getElementById('urgent-tickets-count').textContent = data.urgent_tickets_count || 0;
         }
 
+        async function fetchAllUsersForSearch() { const { data, error } = await supabaseClient.from('profiles').select('id, full_name, score'); if(error) console.error("Erro ao buscar usuários para pesquisa:", error); else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; }
+        
         function loadUserProfileData() {
             const container = document.getElementById('user-profile-content');
             if (container && currentUserProfile) {
@@ -544,45 +434,22 @@
         function openNewMessagePopup() { document.getElementById('new-message-popup').classList.add('visible'); if (!quillEditor) initializeQuillEditor(); }
         function closeNewMessagePopup() { document.getElementById('new-message-popup').classList.remove('visible'); document.getElementById('new-message-form').reset(); selectedRecipients = []; renderRecipientPills(); document.getElementById('recipient-suggestions').style.display = 'none'; if (quillEditor) quillEditor.setContents([]); document.getElementById('tipo-simples').checked = true; toggleChamadoFields(); clearAttachment(); }
         function toggleChamadoFields() { const isChamado = document.getElementById('tipo-chamado').checked; document.getElementById('chamado-fields').style.display = isChamado ? 'flex' : 'none'; }
-        
-        function renderRecipientPills() { 
-            const wrapper = document.getElementById('recipient-input-wrapper'); 
-            const input = document.getElementById('destinatario-input'); 
-            wrapper.querySelectorAll('.recipient-pill').forEach(pill => pill.remove()); 
-            selectedRecipients.forEach(user => { 
-                const pill = document.createElement('span'); 
-                pill.className = 'recipient-pill'; 
-                pill.dataset.userId = user.id; 
-                pill.innerHTML = `${user.full_name} <span class="pill-remove" onclick="removeRecipient('${user.id}')">&times;</span>`; 
-                wrapper.insertBefore(pill, input); 
-            }); 
-            input.placeholder = selectedRecipients.length > 0 ? '' : 'Buscar por nome...'; 
-        }
-        function addRecipient(user) { 
-            if (!selectedRecipients.some(r => r.id === user.id)) { selectedRecipients.push(user); renderRecipientPills(); } 
-            const input = document.getElementById('destinatario-input'); 
-            input.value = ''; input.focus(); document.getElementById('recipient-suggestions').style.display = 'none'; 
-        }
+        function setDueDate(days) { const date = new Date(); date.setDate(date.getDate() + days); document.getElementById('due_date').value = date.toISOString().split('T')[0]; }
+        function renderRecipientPills() { const wrapper = document.getElementById('recipient-input-wrapper'); const input = document.getElementById('destinatario-input'); wrapper.querySelectorAll('.recipient-pill').forEach(pill => pill.remove()); selectedRecipients.forEach(user => { const pill = document.createElement('span'); pill.className = 'recipient-pill'; pill.dataset.userId = user.id; pill.innerHTML = `${user.full_name} <span class="pill-remove" onclick="removeRecipient('${user.id}')">&times;</span>`; wrapper.insertBefore(pill, input); }); input.placeholder = selectedRecipients.length > 0 ? '' : 'Para:'; }
+        function addRecipient(user) { if (!selectedRecipients.some(r => r.id === user.id)) { selectedRecipients.push(user); renderRecipientPills(); } const input = document.getElementById('destinatario-input'); input.value = ''; input.focus(); document.getElementById('recipient-suggestions').style.display = 'none'; }
         window.removeRecipient = (userId) => { selectedRecipients = selectedRecipients.filter(r => r.id !== userId); renderRecipientPills(); }
         function handleRecipientBackspace(e) { const input = e.target; if (e.key === 'Backspace' && input.value === '' && selectedRecipients.length > 0) { removeRecipient(selectedRecipients[selectedRecipients.length - 1].id); } }
-        function handleRecipientSearch(e) { const query = e.target.value.toLowerCase(); const suggestionsContainer = document.getElementById('recipient-suggestions'); if (query.length < 1) { suggestionsContainer.style.display = 'none'; return; } const filteredUsers = allUsers.filter(user => (user.full_name && user.full_name.toLowerCase().includes(query) && !selectedRecipients.some(r => r.id === user.id))); suggestionsContainer.innerHTML = ''; if (filteredUsers.length > 0) { filteredUsers.forEach(user => { const item = document.createElement('div'); item.className = 'suggestion-item'; item.textContent = `${user.full_name} (${user.department})`; item.onclick = () => addRecipient(user); suggestionsContainer.appendChild(item); }); suggestionsContainer.style.display = 'block'; } else { suggestionsContainer.style.display = 'none'; } }
+        function handleRecipientSearch(e) { const query = e.target.value.toLowerCase(); const suggestionsContainer = document.getElementById('recipient-suggestions'); if (query.length < 1) { suggestionsContainer.style.display = 'none'; return; } const filteredUsers = allUsers.filter(user => (user.full_name && user.full_name.toLowerCase().includes(query))); suggestionsContainer.innerHTML = ''; if (filteredUsers.length > 0) { filteredUsers.forEach(user => { const item = document.createElement('div'); item.className = 'suggestion-item'; item.textContent = `${user.full_name}`; item.onclick = () => addRecipient(user); suggestionsContainer.appendChild(item); }); suggestionsContainer.style.display = 'block'; } else { suggestionsContainer.style.display = 'none'; } }
         
         function handleFileSelection(event) {
             const file = event.target.files[0];
             const previewContainer = document.getElementById('attachment-preview');
-            const previewWrapper = document.getElementById('attachment-preview-container');
             if (file) {
                 selectedFile = file;
-                previewContainer.innerHTML = `<span>${file.name}</span> <button type="button" class="btn-icon" onclick="clearAttachment()"><span class="material-icons">close</span></button>`;
-                previewWrapper.style.display = 'block';
+                previewContainer.innerHTML = `<span>${file.name}</span> <span class="material-icons remove-attachment" onclick="clearAttachment()">close</span>`;
             } else { clearAttachment(); }
         }
-        function clearAttachment() { 
-            selectedFile = null; 
-            document.getElementById('attachment-input').value = ''; 
-            document.getElementById('attachment-preview').innerHTML = '';
-            document.getElementById('attachment-preview-container').style.display = 'none';
-        }
+        function clearAttachment() { selectedFile = null; document.getElementById('attachment-input').value = ''; document.getElementById('attachment-preview').innerHTML = ''; }
 
         async function sendMessage(e) {
             e.preventDefault();
@@ -687,8 +554,8 @@
             }
             const nonArchived = data.filter(conv => !conv.is_archived);
             const archived = data.filter(conv => conv.is_archived);
-            const inboxMessages = nonArchived.filter(conv => conv.created_by !== currentUserProfile.id || (conv.created_by === currentUserProfile.id && conv.other_participants_names === null));
-            const sentMessages = nonArchived.filter(conv => conv.created_by === currentUserProfile.id && conv.other_participants_names !== null);
+            const inboxMessages = nonArchived.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.other_participants_names === null));
+            const sentMessages = nonArchived.filter(conv => conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_names !== null);
             renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
             renderMessageTable(sentMessages, 'sent-content', 'sent');
             renderMessageTable(archived, 'archived-content', 'archived');
@@ -802,21 +669,19 @@
                 document.getElementById('reply-form-wrapper').style.display = 'block';
             }
 
-            const { data: creatorProfile } = await supabaseClient.from('profiles').select('full_name').eq('id', convData.created_by).single();
-            const senderName = creatorProfile ? creatorProfile.full_name : 'Desconhecido';
-            
-            let otherRecipientNames = (convData.other_participants_names || '').split(', ').filter(name => name && name !== currentUserProfile.full_name).join(', ');
-            const finalRecipientText = (senderName === currentUserProfile.full_name) ? otherRecipientNames : 'Você' + (otherRecipientNames ? `, ${otherRecipientNames}` : '');
+            const creatorProfile = await supabaseClient.from('profiles').select('full_name').eq('id', convData.created_by).single();
+            const senderName = creatorProfile.data ? creatorProfile.data.full_name : 'Desconhecido';
+            const recipientNames = convData.other_participants_names ? `Você, ${convData.other_participants_names}`.replace(`, ${currentUserProfile.full_name}`, '').replace(`${currentUserProfile.full_name}, `, '') : 'Você';
             
             headerContainer.innerHTML = `
                 <div class="conversation-main-header">
                     <button class="btn btn-secondary" onclick="showPage('messages-page'); loadMessages();"><span class="material-icons">arrow_back</span> Voltar</button>
-                    <div class="page-header-actions">${actionButtonsHTML}</div>
+                    <div class="page-header-actions">${actionButtonsHTML}<button class="btn btn-icon" title="Mais opções"><span class="material-icons">more_vert</span></button></div>
                 </div>
                 <div class="conversation-info-block">
                     <h1>${convData.subject}</h1>
                     <p><strong>De:</strong> ${senderName}</p>
-                    <p><strong>Para:</strong> ${finalRecipientText || '...'}</p>
+                    <p><strong>Para:</strong> ${recipientNames}</p>
                 </div>
                 ${ticketInfoHTML}
             `;
@@ -846,81 +711,31 @@
             };
         }
 
-        function openRecipientSearchModal() {
-            document.getElementById('recipient-search-modal').classList.add('visible');
-            populateAdvancedSearchList('department');
-        }
-
-        function closeRecipientSearchModal() {
-            document.getElementById('recipient-search-modal').classList.remove('visible');
-        }
-
-        function populateAdvancedSearchList(filterType) {
-            const listContainer = document.getElementById('advanced-search-user-list');
-            listContainer.innerHTML = '';
-            const groups = allUsers.reduce((acc, user) => {
-                const key = user[filterType] || 'Outros';
-                if (!acc[key]) acc[key] = [];
-                acc[key].push(user);
-                return acc;
-            }, {});
-
-            Object.keys(groups).sort().forEach(groupName => {
-                const groupHeader = document.createElement('h3');
-                groupHeader.textContent = groupName;
-                groupHeader.style.padding = '0.75rem 1rem';
-                groupHeader.style.background = 'var(--color-background)';
-                listContainer.appendChild(groupHeader);
-
-                groups[groupName].forEach(user => {
-                    const avatarInitial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
-                    const item = document.createElement('div');
-                    item.className = 'user-list-item';
-                    item.dataset.name = user.full_name;
-                    item.innerHTML = `
-                        <div class="user-info-cell">
-                            <div class="user-avatar">${avatarInitial}</div>
-                            <div>
-                                <div class="user-name">${user.full_name}</div>
-                                <div class="user-email">${filterType === 'department' ? user.role : user.department}</div>
-                            </div>
-                        </div>
-                        <button class="btn btn-secondary btn-sm">Adicionar</button>
-                    `;
-                    item.querySelector('button').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        addRecipient(user);
-                        showToast(`${user.full_name} adicionado.`, 'info');
-                    });
-                    listContainer.appendChild(item);
-                });
-            });
-        }
-
         async function loadUsersForAdmin() {
             const tableBody = document.getElementById('user-table-body');
-            if (!tableBody || allUsers.length === 0) return;
-            
-            const { data: usersWithEmail, error } = await supabaseClient.from('users_with_email').select('id, email');
-            if (error) { console.error("Erro ao carregar emails:", error); return; }
-            
-            const usersMap = new Map(usersWithEmail.map(u => [u.id, u.email]));
-            const fullUserList = allUsers.map(u => ({ ...u, email: usersMap.get(u.id) || 'N/A' }));
-
-            tableBody.innerHTML = fullUserList.map(user => {
-                const avatarInitial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
-                const roleTag = user.role === 'Admin' ? `<span class="user-tag role-admin">Admin</span>` : (user.role ? `<span class="user-tag role">${user.role}</span>` : '');
-                const departmentTag = user.department ? `<span class="user-tag department">${user.department}</span>` : '';
-                return `<tr>
-                    <td><div class="user-info-cell"><div class="user-avatar">${avatarInitial}</div><div><div class="user-name">${user.full_name||'N/A'}</div><div class="user-email">${user.email||'N/A'}</div></div></div></td>
-                    <td><div class="user-meta-cell"><div class="user-tags">${departmentTag}${roleTag}</div></div></td>
-                    <td class="score-cell"><span class="material-icons">star</span> ${user.score||100}</td>
-                    <td class="action-buttons">
-                        <button class="btn btn-icon" onclick='openUserModal(${JSON.stringify(user)})' title="Editar"><span class="material-icons">edit</span></button>
-                        <button class="btn btn-icon" onclick="deleteUser('${user.id}')" title="Excluir"><span class="material-icons">delete</span></button>
-                    </td>
-                </tr>`;
-            }).join('');
+            if (!tableBody) return;
+            tableBody.innerHTML = `<tr><td colspan="4">Carregando usuários...</td></tr>`;
+            try {
+                const { data: users, error } = await supabaseClient.from('users_with_email').select('*');
+                if (error) throw error;
+                tableBody.innerHTML = users.map(user => {
+                    const avatarInitial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
+                    const roleTag = user.role === 'Admin' ? `<span class="user-tag role-admin">Admin</span>` : (user.role ? `<span class="user-tag role">${user.role}</span>` : '');
+                    const departmentTag = user.department ? `<span class="user-tag department">${user.department}</span>` : '';
+                    return `<tr>
+                        <td><div class="user-info-cell"><div class="user-avatar">${avatarInitial}</div><div><div class="user-name">${user.full_name||'N/A'}</div><div class="user-email">${user.email||'N/A'}</div></div></div></td>
+                        <td><div class="user-meta-cell"><div class="user-tags">${departmentTag}${roleTag}</div></div></td>
+                        <td class="score-cell"><span class="material-icons">star</span> ${user.score||100}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-icon" onclick='openUserModal(${JSON.stringify(user)})' title="Editar"><span class="material-icons">edit</span></button>
+                            <button class="btn btn-icon" onclick="deleteUser('${user.id}')" title="Excluir"><span class="material-icons">delete</span></button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            } catch(error) { 
+                console.error("Erro ao carregar usuários:", error);
+                tableBody.innerHTML = `<tr><td colspan="4">Erro ao carregar usuários.</td></tr>`;
+            }
         }
 
         function openUserModal(user) { const modal = document.querySelector('#app-container #user-modal'); document.getElementById('user-form').reset(); const userEmailField = document.getElementById('user_email'); const passwordGroup = document.getElementById('password-group'); userEmailField.disabled = !!user; passwordGroup.style.display = user ? 'none' : 'block'; document.getElementById('user_password').required = !user; if (user) { document.getElementById('user-modal-title').textContent = 'Editar Usuário'; document.getElementById('user-id').value = user.id; document.getElementById('full_name').value = user.full_name; userEmailField.value = user.email || ''; document.getElementById('department').value = user.department; document.getElementById('role').value = user.role; } else { document.getElementById('user-modal-title').textContent = 'Novo Usuário'; document.getElementById('user-id').value = ''; } modal.classList.add('visible'); }
@@ -947,7 +762,7 @@
                     const response = await fetch(N8N_CREATE_USER_URL, { method: 'POST', headers: headers, body: JSON.stringify({ email: email, password: password, full_name: fullName, department: department, role: role }) });
                     if (!response.ok) throw new Error('Falha ao criar usuário.'); showToast("Usuário criado com sucesso!", 'success');
                 }
-                closeUserModal(); loadAllDynamicData();
+                closeUserModal(); loadUsersForAdmin();
             } catch (error) {
                 console.error(error); showToast(error.message, 'danger');
             } finally {
@@ -962,7 +777,7 @@
             try {
                 const response = await fetch(N8N_DELETE_USER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ id: userId }) });
                 if (!response.ok) throw new Error('Falha ao excluir usuário.');
-                showToast("Usuário excluído com sucesso!", 'success'); loadAllDynamicData();
+                showToast("Usuário excluído com sucesso!", 'success'); loadUsersForAdmin();
             } catch (error) {
                 console.error(error); showToast(error.message, 'danger');
             }
