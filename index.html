@@ -711,6 +711,14 @@
             }
         }
         
+        // Helper to remove current user from display strings
+        function cleanParticipantList(namesString) {
+            if (!namesString || !currentUserProfile) return '';
+            const names = namesString.split(',').map(n => n.trim());
+            const filtered = names.filter(n => n !== currentUserProfile.full_name);
+            return filtered.join(', ');
+        }
+
         function renderMessageTable(conversations, containerId, type) {
             const container = document.getElementById(containerId);
             if (!conversations || conversations.length === 0) {
@@ -720,9 +728,24 @@
                 const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ') : '';
                 const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
                 
-                let who = 'Você mesmo';
-                if (type === 'inbox' || type === 'archived') { who = conv.created_by === currentUserProfile.id ? `Para: ${conv.other_participants_names}` : (conv.other_participants_names || conv.last_message_sender_name); } 
-                else { who = `Para: ${conv.other_participants_names}`; }
+                // UPDATED LOGIC FOR 'WHO' DISPLAY
+                let who = '';
+                const cleanNames = cleanParticipantList(conv.other_participants_names);
+
+                if (type === 'sent') {
+                    // In Sent folder, always show who I sent TO (exclude myself)
+                    who = cleanNames || 'Destinatário Desconhecido';
+                } else if (type === 'inbox') {
+                    // In Inbox, show who sent it TO ME
+                    who = conv.last_message_sender_name || 'Desconhecido';
+                } else {
+                    // Archived: Context dependent
+                    if (conv.last_message_sender_id === currentUserProfile.id) {
+                         who = `Para: ${cleanNames}`;
+                    } else {
+                         who = conv.last_message_sender_name;
+                    }
+                }
 
                 let priorityTag = '';
                 if (conv.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
@@ -798,7 +821,6 @@
             }
         }
         
-        // REPLACED: Use custom modal instead of confirm()
         async function resolveTicket(conversationId) {
             showConfirmation(
                 "Confirmar Resolução",
@@ -891,7 +913,16 @@
 
             const creatorProfile = await supabaseClient.from('profiles').select('full_name').eq('id', convData.created_by).single();
             const senderName = creatorProfile.data ? creatorProfile.data.full_name : 'Desconhecido';
-            const recipientNames = convData.other_participants_names ? `Você, ${convData.other_participants_names}`.replace(`, ${currentUserProfile.full_name}`, '').replace(`${currentUserProfile.full_name}, `, '') : 'Você';
+            
+            // UPDATED HEADER LOGIC
+            let displayTo = '';
+            if (convData.created_by === currentUserProfile.id) {
+                // I sent this. Show recipients (cleaned)
+                displayTo = cleanParticipantList(convData.other_participants_names);
+            } else {
+                // I received this.
+                displayTo = 'Você';
+            }
             
             headerContainer.innerHTML = `
                 <div class="conversation-main-header">
@@ -901,7 +932,7 @@
                 <div class="conversation-info-block">
                     <h1>${convData.subject}</h1>
                     <p><strong>De:</strong> ${senderName}</p>
-                    <p><strong>Para:</strong> ${recipientNames}</p>
+                    <p><strong>Para:</strong> ${displayTo}</p>
                 </div>
                 ${ticketInfoHTML}
             `;
@@ -990,7 +1021,6 @@
             }
         }
 
-        // REPLACED: Use custom modal instead of confirm()
         async function deleteUser(userId) {
             showConfirmation(
                 "Excluir Usuário",
