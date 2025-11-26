@@ -914,14 +914,22 @@
             const creatorProfile = await supabaseClient.from('profiles').select('full_name').eq('id', convData.created_by).single();
             const senderName = creatorProfile.data ? creatorProfile.data.full_name : 'Desconhecido';
             
-            // UPDATED HEADER LOGIC
+            // UPDATED HEADER LOGIC TO SHOW CO-RECIPIENTS
             let displayTo = '';
             if (convData.created_by === currentUserProfile.id) {
-                // I sent this. Show recipients (cleaned)
-                displayTo = cleanParticipantList(convData.other_participants_names);
+                // If I sent it, show who I sent to (cleaned)
+                displayTo = cleanParticipantList(convData.other_participants_names) || 'Sem destinatários';
             } else {
-                // I received this.
-                displayTo = 'Você';
+                // If I received it, show "Você" + any other recipients (minus sender)
+                let rawNames = convData.other_participants_names ? convData.other_participants_names.split(',') : [];
+                // Remove Sender and My Own Name from list to find co-recipients
+                let coRecipients = rawNames.map(n => n.trim()).filter(n => n !== senderName && n !== currentUserProfile.full_name);
+                
+                if (coRecipients.length > 0) {
+                    displayTo = `Você, ${coRecipients.join(', ')}`;
+                } else {
+                    displayTo = 'Você';
+                }
             }
             
             headerContainer.innerHTML = `
