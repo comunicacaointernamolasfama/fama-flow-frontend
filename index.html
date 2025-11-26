@@ -166,7 +166,7 @@
         #editor-wrapper { flex-grow: 1; display: flex; flex-direction: column; min-height: 0; }
         #editor-wrapper .ql-toolbar { flex-shrink: 0; border-bottom: 1px solid var(--color-border) !important; }
         #editor-wrapper .ql-container.ql-snow { border: none !important; flex-grow: 1; overflow-y: auto; }
-        #recipient-group { position: relative; }
+        #recipient-group { position: relative; margin-bottom: 1.5rem !important;}
         #recipient-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; z-index: 1002; max-height: 200px; overflow-y: auto; display: none; box-shadow: var(--shadow); }
         .suggestion-item { padding: 0.5rem 1rem; cursor: pointer; }
         .suggestion-item:hover { background-color: var(--color-background); }
@@ -236,13 +236,86 @@
         #reply-form { display: flex; gap: 1rem; align-items: center; }
         #reply-input { flex-grow: 1; }
         #reply-attachment-preview { margin-top: 0.5rem; font-size: 0.8rem; }
+        
+        /* New Styles for Recipient Search Layout */
+        .search-row { display: flex; align-items: flex-start; gap: 0.5rem; }
+        #recipient-input-wrapper { flex-grow: 1; }
+        
+        /* New Styles for Recipient Modal */
+        #recipient-modal .modal-content { max-width: 700px; height: 80vh; display: flex; flex-direction: column; }
+        .filter-row { padding: 1rem; border-bottom: 1px solid var(--color-border); display: flex; gap: 0.75rem; background-color: var(--color-background); align-items: center;}
+        .filter-row select, .filter-row input { flex: 1; padding: 0.6rem; border: 1px solid var(--color-border); border-radius: 8px; font-size: 0.9rem; background: var(--color-surface); color: var(--color-text-primary); }
+        .recipient-table-container { flex: 1; overflow-y: auto; padding: 0; }
+        .recipient-table-container thead { position: sticky; top: 0; background: var(--color-surface); z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .recipient-table-container th { padding: 0.75rem 1rem; text-align: left; font-size: 0.85rem; color: var(--color-text-secondary); font-weight: 600; border-bottom: 1px solid var(--color-border); }
+        .selected-row { background-color: var(--color-info-bg); }
+        .check-icon { color: var(--color-border); font-size: 24px; }
+        .selected-row .check-icon { color: var(--color-success); }
     </style>
 </head>
 <body>
     <div id="root"></div>
     <button class="theme-toggle" id="theme-toggle" title="Alterar tema" style="display: none;"><span class="material-icons" id="icon-moon">dark_mode</span><span class="material-icons" id="icon-sun">light_mode</span></button>
     <div id="toast-container"></div>
-    <div id="new-message-popup"><div class="popup-header"><h3>Nova Mensagem</h3><button onclick="closeNewMessagePopup()"><span class="material-icons">close</span></button></div><form id="new-message-form"><div class="popup-body"><div class="form-group" id="recipient-group"><div id="recipient-input-wrapper" onclick="document.getElementById('destinatario-input').focus()"><input type="text" id="destinatario-input" placeholder="Para:" autocomplete="off"></div><div id="recipient-suggestions"></div></div><div class="form-group"><input type="text" id="assunto" class="input-field" placeholder="Assunto"></div><div id="editor-wrapper"><div id="editor-container"></div></div></div><div class="popup-footer"><div class="popup-footer-top-row"><div class="urgency-selector"><button type="button" class="btn btn-success active" data-priority="normal">Normal</button><button type="button" class="btn btn-secondary" data-priority="important">Importante</button><button type="button" class="btn btn-secondary" data-priority="urgent">Urgente</button></div><div id="chamado-fields" style="display:none;"><label for="due_date">Prazo:</label><input type="date" id="due_date" class="input-field"><div class="date-presets"><button type="button" class="btn btn-secondary" onclick="setDueDate(1)">+1d</button><button type="button" class="btn btn-secondary" onclick="setDueDate(7)">+7d</button></div></div></div><div class="popup-footer-main"><div class="popup-actions-left"><button type="submit" id="btn-send-message" class="btn btn-danger">Enviar</button><input type="file" id="attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><div id="attachment-preview"></div><div class="message-type-selector"><div><input type="radio" id="tipo-simples" name="message-type" value="message" checked onchange="toggleChamadoFields()"><label for="tipo-simples">Simples</label></div><div><input type="radio" id="tipo-chamado" name="message-type" value="ticket" onchange="toggleChamadoFields()"><label for="tipo-chamado">Chamado</label></div></div></div><label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label></div></div></form></div>
+    
+    <!-- MAIN MESSAGE POPUP -->
+    <div id="new-message-popup"><div class="popup-header"><h3>Nova Mensagem</h3><button onclick="closeNewMessagePopup()"><span class="material-icons">close</span></button></div><form id="new-message-form"><div class="popup-body">
+        
+        <!-- NEW RECIPIENT LAYOUT -->
+        <div class="form-group" id="recipient-group">
+            <div class="search-row">
+                <div id="recipient-input-wrapper" onclick="document.getElementById('destinatario-input').focus()">
+                    <input type="text" id="destinatario-input" placeholder="Digite ou busque ao lado..." autocomplete="off">
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="openRecipientModal()" title="Abrir Lista Avançada">
+                    <span class="material-icons">list</span>
+                </button>
+            </div>
+            <div id="recipient-suggestions"></div>
+        </div>
+
+        <div class="form-group"><input type="text" id="assunto" class="input-field" placeholder="Assunto"></div><div id="editor-wrapper"><div id="editor-container"></div></div></div><div class="popup-footer"><div class="popup-footer-top-row"><div class="urgency-selector"><button type="button" class="btn btn-success active" data-priority="normal">Normal</button><button type="button" class="btn btn-secondary" data-priority="important">Importante</button><button type="button" class="btn btn-secondary" data-priority="urgent">Urgente</button></div><div id="chamado-fields" style="display:none;"><label for="due_date">Prazo:</label><input type="date" id="due_date" class="input-field"><div class="date-presets"><button type="button" class="btn btn-secondary" onclick="setDueDate(1)">+1d</button><button type="button" class="btn btn-secondary" onclick="setDueDate(7)">+7d</button></div></div></div><div class="popup-footer-main"><div class="popup-actions-left"><button type="submit" id="btn-send-message" class="btn btn-danger">Enviar</button><input type="file" id="attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><div id="attachment-preview"></div><div class="message-type-selector"><div><input type="radio" id="tipo-simples" name="message-type" value="message" checked onchange="toggleChamadoFields()"><label for="tipo-simples">Simples</label></div><div><input type="radio" id="tipo-chamado" name="message-type" value="ticket" onchange="toggleChamadoFields()"><label for="tipo-chamado">Chamado</label></div></div></div><label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label></div></div></form></div>
+
+    <!-- NEW RECIPIENT SELECTION MODAL -->
+    <div id="recipient-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Selecionar Destinatários</h3>
+                <span class="material-icons" style="cursor:pointer;" onclick="closeRecipientModal()">close</span>
+            </div>
+            
+            <div class="filter-row">
+                <select id="filter-dept" onchange="applyRecipientFilters()" autocomplete="off">
+                    <option value="">Todos Departamentos</option>
+                </select>
+                <select id="filter-role" onchange="applyRecipientFilters()" autocomplete="off">
+                    <option value="">Todos Cargos</option>
+                </select>
+                <input type="text" id="filter-text" placeholder="Buscar Nome..." oninput="applyRecipientFilters()" autocomplete="off">
+            </div>
+
+            <div class="modal-body recipient-table-container">
+                <table class="data-table-fino" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">Funcionário</th>
+                            <th style="width: 30%;">Departamento</th>
+                            <th style="width: 20%;">Cargo</th>
+                            <th style="width: 10%; text-align: center;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recipient-table-body">
+                        <!-- Rows injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="modal-footer">
+                <div style="flex-grow: 1; font-size: 0.9rem; color: var(--color-text-secondary);" id="selected-count-display">0 selecionados</div>
+                <button class="btn btn-danger" onclick="closeRecipientModal()">Concluir Seleção</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
@@ -387,7 +460,108 @@
             document.getElementById('urgent-tickets-count').textContent = data.urgent_tickets_count || 0;
         }
 
-        async function fetchAllUsersForSearch() { const { data, error } = await supabaseClient.from('profiles').select('id, full_name, score'); if(error) console.error("Erro ao buscar usuários para pesquisa:", error); else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; }
+        // --- NEW RECIPIENT MODAL LOGIC ---
+        async function fetchAllUsersForSearch() { 
+            // UPDATED: Now fetches department and role too
+            const { data, error } = await supabaseClient.from('profiles').select('id, full_name, score, department, role'); 
+            if(error) console.error("Erro ao buscar usuários para pesquisa:", error); 
+            else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; 
+        }
+
+        function openRecipientModal() {
+            const modal = document.getElementById('recipient-modal');
+            modal.classList.add('visible');
+            populateRecipientFilters();
+            applyRecipientFilters(); // Render initial list
+        }
+
+        function closeRecipientModal() {
+            document.getElementById('recipient-modal').classList.remove('visible');
+            renderRecipientPills(); // Sync pill view on close
+        }
+
+        function populateRecipientFilters() {
+            const depts = [...new Set(allUsers.map(u => u.department).filter(Boolean))].sort();
+            const roles = [...new Set(allUsers.map(u => u.role).filter(Boolean))].sort();
+
+            const deptSelect = document.getElementById('filter-dept');
+            const roleSelect = document.getElementById('filter-role');
+            
+            // Keep first option (All)
+            deptSelect.innerHTML = '<option value="">Todos Departamentos</option>';
+            roleSelect.innerHTML = '<option value="">Todos Cargos</option>';
+
+            depts.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d; opt.textContent = d;
+                deptSelect.appendChild(opt);
+            });
+            roles.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r; opt.textContent = r;
+                roleSelect.appendChild(opt);
+            });
+        }
+
+        function applyRecipientFilters() {
+            const deptFilter = document.getElementById('filter-dept').value;
+            const roleFilter = document.getElementById('filter-role').value;
+            const textFilter = document.getElementById('filter-text').value.toLowerCase();
+
+            const filtered = allUsers.filter(user => {
+                const matchDept = deptFilter === "" || user.department === deptFilter;
+                const matchRole = roleFilter === "" || user.role === roleFilter;
+                const matchText = user.full_name.toLowerCase().includes(textFilter) || 
+                                  (user.role && user.role.toLowerCase().includes(textFilter)) ||
+                                  (user.department && user.department.toLowerCase().includes(textFilter));
+                return matchDept && matchRole && matchText;
+            });
+
+            renderRecipientModalTable(filtered);
+        }
+
+        function renderRecipientModalTable(users) {
+            const tbody = document.getElementById('recipient-table-body');
+            tbody.innerHTML = '';
+
+            users.forEach(user => {
+                const isSelected = selectedRecipients.some(r => r.id === user.id);
+                const tr = document.createElement('tr');
+                tr.onclick = () => toggleRecipientSelection(user);
+                if (isSelected) tr.classList.add('selected-row');
+
+                const avatarInitial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
+
+                tr.innerHTML = `
+                    <td style="padding: 0.75rem 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.8rem;">${avatarInitial}</div>
+                            <strong>${user.full_name}</strong>
+                        </div>
+                    </td>
+                    <td style="padding: 0.75rem 1rem;">
+                        ${user.department ? `<span class="tag-fino" style="background: var(--color-info-bg); color: var(--color-info);">${user.department}</span>` : '-'}
+                    </td>
+                    <td style="padding: 0.75rem 1rem;">${user.role || '-'}</td>
+                    <td style="text-align: center;">
+                        <span class="material-icons check-icon">${isSelected ? 'check_circle' : 'radio_button_unchecked'}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            document.getElementById('selected-count-display').textContent = `${selectedRecipients.length} selecionados`;
+        }
+
+        function toggleRecipientSelection(user) {
+            const exists = selectedRecipients.find(r => r.id === user.id);
+            if (exists) {
+                selectedRecipients = selectedRecipients.filter(r => r.id !== user.id);
+            } else {
+                selectedRecipients.push(user);
+            }
+            applyRecipientFilters(); // Re-render table to show new state
+        }
         
         function loadUserProfileData() {
             const container = document.getElementById('user-profile-content');
@@ -716,6 +890,7 @@
             if (!tableBody) return;
             tableBody.innerHTML = `<tr><td colspan="4">Carregando usuários...</td></tr>`;
             try {
+                // Mantive users_with_email pois você disse que é o código que funciona no seu ambiente
                 const { data: users, error } = await supabaseClient.from('users_with_email').select('*');
                 if (error) throw error;
                 tableBody.innerHTML = users.map(user => {
