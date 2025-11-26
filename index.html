@@ -251,6 +251,12 @@
         .selected-row { background-color: var(--color-info-bg); }
         .check-icon { color: var(--color-border); font-size: 24px; }
         .selected-row .check-icon { color: var(--color-success); }
+
+        /* Custom Confirmation Modal Styles */
+        #confirmation-modal .modal-content { max-width: 400px; text-align: center; }
+        .confirm-icon { font-size: 48px; color: var(--color-warning); margin-bottom: 1rem; }
+        .confirm-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .confirm-message { color: var(--color-text-secondary); margin-bottom: 2rem; }
     </style>
 </head>
 <body>
@@ -313,6 +319,21 @@
             <div class="modal-footer">
                 <div style="flex-grow: 1; font-size: 0.9rem; color: var(--color-text-secondary);" id="selected-count-display">0 selecionados</div>
                 <button class="btn btn-danger" onclick="closeRecipientModal()">Concluir Seleção</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW CONFIRMATION MODAL -->
+    <div id="confirmation-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-body" style="display: flex; flex-direction: column; align-items: center; padding-top: 2rem;">
+                <span class="material-icons confirm-icon">warning</span>
+                <h3 class="confirm-title" id="confirm-title">Tem certeza?</h3>
+                <p class="confirm-message" id="confirm-message">Esta ação é irreversível.</p>
+                <div style="display: flex; gap: 1rem; width: 100%;">
+                    <button class="btn btn-secondary" style="flex: 1;" onclick="closeConfirmationModal()">Cancelar</button>
+                    <button class="btn btn-danger" style="flex: 1;" id="btn-confirm-action">Sim, confirmar</button>
+                </div>
             </div>
         </div>
     </div>
@@ -563,6 +584,29 @@
             applyRecipientFilters(); // Re-render table to show new state
         }
         
+        // --- CUSTOM CONFIRMATION MODAL LOGIC ---
+        function showConfirmation(title, message, onConfirm) {
+            const modal = document.getElementById('confirmation-modal');
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            
+            const btnConfirm = document.getElementById('btn-confirm-action');
+            // Remove old event listeners
+            const newBtn = btnConfirm.cloneNode(true);
+            btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
+            
+            newBtn.onclick = () => {
+                onConfirm();
+                closeConfirmationModal();
+            };
+            
+            modal.classList.add('visible');
+        }
+
+        function closeConfirmationModal() {
+            document.getElementById('confirmation-modal').classList.remove('visible');
+        }
+
         function loadUserProfileData() {
             const container = document.getElementById('user-profile-content');
             if (container && currentUserProfile) {
@@ -754,30 +798,32 @@
             }
         }
         
+        // REPLACED: Use custom modal instead of confirm()
         async function resolveTicket(conversationId) {
-            if (!confirm("Tem certeza que deseja marcar este chamado como resolvido? Esta ação não pode ser desfeita.")) return;
-
-            try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (!session) throw new Error("Sessão expirou.");
-
-                const response = await fetch(N8N_RESOLVE_TICKET_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                    body: JSON.stringify({ conversation_id: conversationId })
-                });
-
-                if (!response.ok) throw new Error("Falha ao resolver o chamado. Você pode não ter permissão.");
-                
-                showToast("Chamado resolvido com sucesso!", 'success');
-                const rowElement = document.querySelector(`tr[data-conversation-id="${conversationId}"]`);
-                if (rowElement) openConversation(rowElement);
-                loadDashboardStats();
-
-            } catch(e) {
-                console.error("Erro ao resolver chamado:", e.message);
-                showToast(e.message, 'danger');
-            }
+            showConfirmation(
+                "Confirmar Resolução",
+                "Tem certeza que deseja marcar este chamado como resolvido? Esta ação não pode ser desfeita.",
+                async () => {
+                    try {
+                        const { data: { session } } = await supabaseClient.auth.getSession();
+                        if (!session) throw new Error("Sessão expirou.");
+                        const response = await fetch(N8N_RESOLVE_TICKET_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                            body: JSON.stringify({ conversation_id: conversationId })
+                        });
+                        if (!response.ok) throw new Error("Falha ao resolver o chamado. Você pode não ter permissão.");
+                        
+                        showToast("Chamado resolvido com sucesso!", 'success');
+                        const rowElement = document.querySelector(`tr[data-conversation-id="${conversationId}"]`);
+                        if (rowElement) openConversation(rowElement);
+                        loadDashboardStats();
+                    } catch(e) {
+                        console.error("Erro ao resolver chamado:", e.message);
+                        showToast(e.message, 'danger');
+                    }
+                }
+            );
         }
 
         async function openConversation(rowElement) {
@@ -890,7 +936,6 @@
             if (!tableBody) return;
             tableBody.innerHTML = `<tr><td colspan="4">Carregando usuários...</td></tr>`;
             try {
-                // Mantive users_with_email pois você disse que é o código que funciona no seu ambiente
                 const { data: users, error } = await supabaseClient.from('users_with_email').select('*');
                 if (error) throw error;
                 tableBody.innerHTML = users.map(user => {
@@ -945,17 +990,23 @@
             }
         }
 
+        // REPLACED: Use custom modal instead of confirm()
         async function deleteUser(userId) {
-            if (!confirm(`Tem certeza que deseja excluir este usuário? Esta ação é irreversível.`)) return;
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) return;
-            try {
-                const response = await fetch(N8N_DELETE_USER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ id: userId }) });
-                if (!response.ok) throw new Error('Falha ao excluir usuário.');
-                showToast("Usuário excluído com sucesso!", 'success'); loadUsersForAdmin();
-            } catch (error) {
-                console.error(error); showToast(error.message, 'danger');
-            }
+            showConfirmation(
+                "Excluir Usuário",
+                "Tem certeza que deseja excluir este usuário? Esta ação é irreversível.",
+                async () => {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (!session) return;
+                    try {
+                        const response = await fetch(N8N_DELETE_USER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ id: userId }) });
+                        if (!response.ok) throw new Error('Falha ao excluir usuário.');
+                        showToast("Usuário excluído com sucesso!", 'success'); loadUsersForAdmin();
+                    } catch (error) {
+                        console.error(error); showToast(error.message, 'danger');
+                    }
+                }
+            );
         }
         
         const body = document.body;
