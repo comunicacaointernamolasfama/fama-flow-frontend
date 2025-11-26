@@ -711,14 +711,6 @@
             }
         }
         
-        // Helper to remove current user from display strings
-        function cleanParticipantList(namesString) {
-            if (!namesString || !currentUserProfile) return '';
-            const names = namesString.split(',').map(n => n.trim());
-            const filtered = names.filter(n => n !== currentUserProfile.full_name);
-            return filtered.join(', ');
-        }
-
         function renderMessageTable(conversations, containerId, type) {
             const container = document.getElementById(containerId);
             if (!conversations || conversations.length === 0) {
@@ -728,24 +720,9 @@
                 const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ') : '';
                 const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
                 
-                // UPDATED LOGIC FOR 'WHO' DISPLAY
-                let who = '';
-                const cleanNames = cleanParticipantList(conv.other_participants_names);
-
-                if (type === 'sent') {
-                    // In Sent folder, always show who I sent TO (exclude myself)
-                    who = cleanNames || 'Destinatário Desconhecido';
-                } else if (type === 'inbox') {
-                    // In Inbox, show who sent it TO ME
-                    who = conv.last_message_sender_name || 'Desconhecido';
-                } else {
-                    // Archived: Context dependent
-                    if (conv.last_message_sender_id === currentUserProfile.id) {
-                         who = `Para: ${cleanNames}`;
-                    } else {
-                         who = conv.last_message_sender_name;
-                    }
-                }
+                let who = 'Você mesmo';
+                if (type === 'inbox' || type === 'archived') { who = conv.created_by === currentUserProfile.id ? `Para: ${conv.other_participants_names}` : (conv.other_participants_names || conv.last_message_sender_name); } 
+                else { who = `Para: ${conv.other_participants_names}`; }
 
                 let priorityTag = '';
                 if (conv.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
@@ -837,9 +814,13 @@
                         if (!response.ok) throw new Error("Falha ao resolver o chamado. Você pode não ter permissão.");
                         
                         showToast("Chamado resolvido com sucesso!", 'success');
-                        const rowElement = document.querySelector(`tr[data-conversation-id="${conversationId}"]`);
-                        if (rowElement) openConversation(rowElement);
-                        loadDashboardStats();
+                        
+                        // 1. CLOSE THE CONVERSATION VIEW (Go back to list)
+                        showPage('messages-page'); 
+                        
+                        // 2. FORCE REFRESH LIST AND DASHBOARD
+                        await Promise.all([loadMessages(), loadDashboardStats()]);
+
                     } catch(e) {
                         console.error("Erro ao resolver chamado:", e.message);
                         showToast(e.message, 'danger');
