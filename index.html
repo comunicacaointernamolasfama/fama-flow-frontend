@@ -773,7 +773,10 @@
             const nonArchived = data.filter(conv => !conv.is_archived);
             const archived = data.filter(conv => conv.is_archived);
             const inboxMessages = nonArchived.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.other_participants_names === null));
-            const sentMessages = nonArchived.filter(conv => conv.last_message_sender_id === currentUserProfile.id && conv.other_participants_names !== null);
+            
+            // --- CORREÇÃO APLICADA AQUI ---
+            const sentMessages = nonArchived.filter(conv => conv.last_message_sender_id === currentUserProfile.id);
+
             renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
             renderMessageTable(sentMessages, 'sent-content', 'sent');
             renderMessageTable(archived, 'archived-content', 'archived');
@@ -894,24 +897,7 @@
 
             const creatorProfile = await supabaseClient.from('profiles').select('full_name').eq('id', convData.created_by).single();
             const senderName = creatorProfile.data ? creatorProfile.data.full_name : 'Desconhecido';
-            
-            // UPDATED HEADER LOGIC TO SHOW CO-RECIPIENTS
-            let displayTo = '';
-            if (convData.created_by === currentUserProfile.id) {
-                // If I sent it, show who I sent to (cleaned)
-                displayTo = cleanParticipantList(convData.other_participants_names) || 'Sem destinatários';
-            } else {
-                // If I received it, show "Você" + any other recipients (minus sender)
-                let rawNames = convData.other_participants_names ? convData.other_participants_names.split(',') : [];
-                // Remove Sender and My Own Name from list to find co-recipients
-                let coRecipients = rawNames.map(n => n.trim()).filter(n => n !== senderName && n !== currentUserProfile.full_name);
-                
-                if (coRecipients.length > 0) {
-                    displayTo = `Você, ${coRecipients.join(', ')}`;
-                } else {
-                    displayTo = 'Você';
-                }
-            }
+            const recipientNames = convData.other_participants_names ? `Você, ${convData.other_participants_names}`.replace(`, ${currentUserProfile.full_name}`, '').replace(`${currentUserProfile.full_name}, `, '') : 'Você';
             
             headerContainer.innerHTML = `
                 <div class="conversation-main-header">
@@ -921,7 +907,7 @@
                 <div class="conversation-info-block">
                     <h1>${convData.subject}</h1>
                     <p><strong>De:</strong> ${senderName}</p>
-                    <p><strong>Para:</strong> ${displayTo}</p>
+                    <p><strong>Para:</strong> ${recipientNames}</p>
                 </div>
                 ${ticketInfoHTML}
             `;
