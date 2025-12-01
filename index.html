@@ -257,6 +257,14 @@
         .confirm-icon { font-size: 48px; color: var(--color-warning); margin-bottom: 1rem; }
         .confirm-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
         .confirm-message { color: var(--color-text-secondary); margin-bottom: 2rem; }
+
+        /* Team Page Styles */
+        .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .team-user-card { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .team-user-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+        .team-user-card .user-avatar { width: 64px; height: 64px; font-size: 2rem; margin-bottom: 1rem; }
+        .team-user-card h3 { margin: 0 0 0.25rem 0; font-size: 1.1rem; }
+        .team-user-card p { margin: 0; color: var(--color-text-secondary); font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -267,7 +275,6 @@
     <!-- MAIN MESSAGE POPUP -->
     <div id="new-message-popup"><div class="popup-header"><h3>Nova Mensagem</h3><button onclick="closeNewMessagePopup()"><span class="material-icons">close</span></button></div><form id="new-message-form"><div class="popup-body">
         
-        <!-- NEW RECIPIENT LAYOUT -->
         <div class="form-group" id="recipient-group">
             <div class="search-row">
                 <div id="recipient-input-wrapper" onclick="document.getElementById('destinatario-input').focus()">
@@ -282,7 +289,7 @@
 
         <div class="form-group"><input type="text" id="assunto" class="input-field" placeholder="Assunto"></div><div id="editor-wrapper"><div id="editor-container"></div></div></div><div class="popup-footer"><div class="popup-footer-top-row"><div class="urgency-selector"><button type="button" class="btn btn-success active" data-priority="normal">Normal</button><button type="button" class="btn btn-secondary" data-priority="important">Importante</button><button type="button" class="btn btn-secondary" data-priority="urgent">Urgente</button></div><div id="chamado-fields" style="display:none;"><label for="due_date">Prazo:</label><input type="date" id="due_date" class="input-field"><div class="date-presets"><button type="button" class="btn btn-secondary" onclick="setDueDate(1)">+1d</button><button type="button" class="btn btn-secondary" onclick="setDueDate(7)">+7d</button></div></div></div><div class="popup-footer-main"><div class="popup-actions-left"><button type="submit" id="btn-send-message" class="btn btn-danger">Enviar</button><input type="file" id="attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><div id="attachment-preview"></div><div class="message-type-selector"><div><input type="radio" id="tipo-simples" name="message-type" value="message" checked onchange="toggleChamadoFields()"><label for="tipo-simples">Simples</label></div><div><input type="radio" id="tipo-chamado" name="message-type" value="ticket" onchange="toggleChamadoFields()"><label for="tipo-chamado">Chamado</label></div></div></div><label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label></div></div></form></div>
 
-    <!-- NEW RECIPIENT SELECTION MODAL -->
+    <!-- RECIPIENT SELECTION MODAL -->
     <div id="recipient-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -311,7 +318,6 @@
                         </tr>
                     </thead>
                     <tbody id="recipient-table-body">
-                        <!-- Rows injected via JS -->
                     </tbody>
                 </table>
             </div>
@@ -323,7 +329,7 @@
         </div>
     </div>
 
-    <!-- NEW CONFIRMATION MODAL -->
+    <!-- CONFIRMATION MODAL -->
     <div id="confirmation-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-body" style="display: flex; flex-direction: column; align-items: center; padding-top: 2rem;">
@@ -361,7 +367,48 @@
         const themeToggleBtn = document.getElementById('theme-toggle');
 
         const authHTML = `<div class="login-wrapper visible" id="auth-wrapper"><div id="auth-container" class="login-container"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo"><p class="login-subtitle">Comunicação interna Molas Fama</p><form id="login-form"><div class="input-group"><input type="email" id="email" class="input-field" placeholder="Email" required></div><div class="input-group"><input type="password" id="password" class="input-field" placeholder="Senha" required></div><button type="submit" class="btn-primary" style="width: 100%;">Entrar</button></form></div></div>`;
-        const appHTML = `<div id="app-container"><aside class="sidebar"><div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li><li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li><li><a href="#" class="nav-link" data-page="contacts-page"><span class="material-icons">people</span> Contatos</a></li></ul><div id="admin-section" style="display: none;"><h3 class="nav-section-title">Administração</h3><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li><li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li></ul></div><div class="sidebar-footer"><ul class="nav-menu"><li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li><li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li></ul></div></aside><main class="content"><div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Abertos</h3><p id="urgent-tickets-count">0</p></div></div></div></div><div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button><button class="tab-link" data-tab="archived-content">Arquivados</button></div><button id="refresh-messages-btn" class="refresh-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div><div id="archived-content" class="tab-content"></div></div></div><div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"></div><div class="card"><div id="conversation-messages">Carregando conversa...</div><div id="reply-form-wrapper"><div id="reply-attachment-preview"></div><form id="reply-form"><input type="file" id="reply-attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('reply-attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div><div id="contacts-page" class="page-content"><div class="page-header"><h1>Contatos</h1></div><div class="card"><div id="contact-list-content" class="grid grid-cols-3">Carregando contatos...</div></div></div><div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div><div id="users-page" class="page-content"><div class="page-header"><div class="page-header-title"><h1>Gerenciamento de Usuários</h1></div><div class="page-header-actions"><button id="refresh-users-btn" class="refresh-btn" title="Atualizar usuários"><span class="material-icons">refresh</span></button><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th>Usuário & Email</th><th>Departamento & Cargo</th><th>Score</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div><div id="profile-page" class="page-content"><div class="page-header"><h1>Meu Perfil</h1></div><div id="user-profile-content"></div></div><button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button></main><div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div></div>`;
+        const appHTML = `<div id="app-container">
+            <aside class="sidebar">
+                <div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div>
+                <ul class="nav-menu">
+                    <li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li>
+                    <li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li>
+                    <li><a href="#" class="nav-link" data-page="channels-page"><span class="material-icons">tag</span> Canais</a></li>
+                    <li><a href="#" class="nav-link" data-page="team-page"><span class="material-icons">people</span> Equipe</a></li>
+                    <li><a href="#" class="nav-link" data-page="rankings-page"><span class="material-icons">leaderboard</span> Performance e Rankings</a></li>
+                    <li><a href="#" class="nav-link" data-page="mural-page"><span class="material-icons">campaign</span> Mural Cultural</a></li>
+                    <li><a href="#" class="nav-link" data-page="kb-page"><span class="material-icons">school</span> Base de Conhecimento</a></li>
+                </ul>
+                <div id="admin-section" style="display: none;">
+                    <h3 class="nav-section-title">Administração</h3>
+                    <ul class="nav-menu">
+                        <li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li>
+                        <li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li>
+                    </ul>
+                </div>
+                <div class="sidebar-footer">
+                    <ul class="nav-menu">
+                        <li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li>
+                        <li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li>
+                    </ul>
+                </div>
+            </aside>
+            <main class="content">
+                <div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Abertos</h3><p id="urgent-tickets-count">0</p></div></div></div></div>
+                <div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button><button class="tab-link" data-tab="archived-content">Arquivados</button></div><button id="refresh-messages-btn" class="refresh-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div><div id="archived-content" class="tab-content"></div></div></div>
+                <div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"></div><div class="card"><div id="conversation-messages">Carregando conversa...</div><div id="reply-form-wrapper"><div id="reply-attachment-preview"></div><form id="reply-form"><input type="file" id="reply-attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('reply-attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div>
+                <div id="team-page" class="page-content"><div class="page-header"><h1>Equipe</h1><p>Veja os perfis e performance dos seus colegas.</p></div><div id="team-list-content">Carregando equipe...</div></div>
+                <div id="channels-page" class="page-content"><div class="page-header"><h1>Canais</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
+                <div id="rankings-page" class="page-content"><div class="page-header"><h1>Performance e Rankings</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
+                <div id="mural-page" class="page-content"><div class="page-header"><h1>Mural Cultural</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
+                <div id="kb-page" class="page-content"><div class="page-header"><h1>Base de Conhecimento</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
+                <div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div>
+                <div id="users-page" class="page-content"><div class="page-header"><div class="page-header-title"><h1>Gerenciamento de Usuários</h1></div><div class="page-header-actions"><button id="refresh-users-btn" class="refresh-btn" title="Atualizar usuários"><span class="material-icons">refresh</span></button><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th>Usuário & Email</th><th>Departamento & Cargo</th><th>Score</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div>
+                <div id="profile-page" class="page-content"><div id="user-profile-content"></div></div>
+                <button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button>
+            </main>
+            <div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div>
+        </div>`;
         
         document.addEventListener('DOMContentLoaded', checkUserSession);
         
@@ -452,7 +499,8 @@
                 document.getElementById('dashboard-title').textContent = `Dashboard de ${currentUserProfile.full_name.split(' ')[0]}`;
             } 
         }
-        function showPage(pageId) { 
+        
+        function showPage(pageId, targetUserId = null) { 
             const appContainer = document.getElementById('app-container'); if (!appContainer) return;
             appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); 
             const targetPage = appContainer.querySelector(`#${pageId}`); 
@@ -462,9 +510,13 @@
             if (activeLink) activeLink.classList.add('active');
             
             document.getElementById('fab-new-message').classList.toggle('hidden', pageId === 'conversation-view-page');
-            if(pageId === 'messages-page') loadMessages(); 
+
+            if (pageId === 'messages-page') loadMessages();
+            if (pageId === 'team-page') loadTeamPage();
+            if (pageId === 'profile-page') loadUserProfileData(targetUserId);
         }
-        async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); loadUserProfileData(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
+
+        async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
         
         async function loadDashboardStats() {
             if (!currentUserProfile) return;
@@ -479,11 +531,31 @@
             document.getElementById('urgent-tickets-count').textContent = data.urgent_tickets_count || 0;
         }
 
-        // --- NEW RECIPIENT MODAL LOGIC ---
         async function fetchAllUsersForSearch() { 
             const { data, error } = await supabaseClient.from('profiles').select('id, full_name, score, department, role'); 
             if(error) console.error("Erro ao buscar usuários para pesquisa:", error); 
             else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; 
+        }
+
+        async function loadTeamPage() {
+            const container = document.getElementById('team-list-content');
+            container.innerHTML = `<div class="empty-state">Carregando equipe...</div>`;
+            const { data, error } = await supabaseClient.from('profiles').select('*').order('full_name');
+            if (error) {
+                container.innerHTML = `<div class="empty-state">Falha ao carregar a equipe.</div>`;
+                console.error("Erro ao carregar equipe:", error);
+                return;
+            }
+            container.innerHTML = `<div class="team-grid">${data.map(user => {
+                const avatarInitial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
+                return `
+                    <div class="team-user-card" onclick="showPage('profile-page', '${user.id}')">
+                        <div class="user-avatar">${avatarInitial}</div>
+                        <h3>${user.full_name}</h3>
+                        <p>${user.role || 'Membro'}</p>
+                    </div>
+                `;
+            }).join('')}</div>`;
         }
 
         function openRecipientModal() {
@@ -601,35 +673,41 @@
             document.getElementById('confirmation-modal').classList.remove('visible');
         }
 
-        function loadUserProfileData() {
+        async function loadUserProfileData(userId) {
             const container = document.getElementById('user-profile-content');
-            if (container && currentUserProfile) {
-                const avatarInitial = currentUserProfile.full_name ? currentUserProfile.full_name.charAt(0).toUpperCase() : '?';
-                const score = currentUserProfile.score || 100;
-                const scorePercentage = Math.min((score / 200) * 100, 100);
-
-                container.innerHTML = `
-                    <div class="profile-header-card">
-                        <div class="profile-avatar-wrapper" onclick="document.getElementById('avatar-upload-input').click()">
-                            <div class="user-avatar" style="width: 80px; height: 80px; font-size: 2.5rem;">${avatarInitial}</div>
-                            <div class="profile-avatar-overlay"><span class="material-icons">photo_camera</span></div>
-                        </div>
-                        <input type="file" id="avatar-upload-input" style="display: none;" accept="image/*" onchange="handleAvatarUpload(event)">
-                        <div class="profile-info"><h3>${currentUserProfile.full_name}</h3><p>${currentUserProfile.role || 'Membro'}</p></div>
-                    </div>
-                    <div class="card"><h3 class="card-title"><span class="material-icons">radar</span> Radar de Engajamento</h3>
-                        <div>
-                            <div class="score-display"><span class="score-label">Meu Score</span><span class="score-value">${score}</span></div>
-                            <div class="progress-bar-container"><div class="progress-bar" style="width: ${scorePercentage}%;"></div></div>
-                        </div>
-                        <div class="profile-metrics">
-                            <div class="profile-metric"><h4>--</h4><p>Taxa de Resposta</p></div>
-                            <div class="profile-metric"><h4>--</h4><p>Tempo Médio</p></div>
-                            <div class="profile-metric"><h4>--</h4><p>Reconhecimentos</p></div>
-                        </div>
-                    </div>
-                    <div class="card"><h3 class="card-title"><span class="material-icons">emoji_events</span> Minhas Conquistas</h3><p style="text-align: center; color: var(--color-text-secondary);">Em breve...</p></div>`;
+            const targetId = userId || currentUserProfile.id;
+            if (!targetId) {
+                container.innerHTML = '<p>Usuário não encontrado.</p>';
+                return;
             }
+
+            const { data: profile, error } = await supabaseClient.from('profiles').select('*').eq('id', targetId).single();
+
+            if (error || !profile) {
+                container.innerHTML = '<p>Erro ao carregar perfil.</p>';
+                console.error(error);
+                return;
+            }
+
+            const avatarInitial = profile.full_name ? profile.full_name.charAt(0).toUpperCase() : '?';
+            const score = profile.score || 100;
+            const scorePercentage = Math.min((score / 200) * 100, 100);
+
+            container.innerHTML = `
+                <div class="page-header" style="margin-bottom: 1rem;">
+                    <h1>Perfil de ${profile.full_name.split(' ')[0]}</h1>
+                </div>
+                <div class="profile-header-card">
+                    <div class="user-avatar" style="width: 80px; height: 80px; font-size: 2.5rem;">${avatarInitial}</div>
+                    <div class="profile-info"><h3>${profile.full_name}</h3><p>${profile.role || 'Membro'}</p></div>
+                </div>
+                <div class="card"><h3 class="card-title"><span class="material-icons">radar</span> Radar de Engajamento</h3>
+                    <div>
+                        <div class="score-display"><span class="score-label">Score Atual</span><span class="score-value">${score}</span></div>
+                        <div class="progress-bar-container"><div class="progress-bar" style="width: ${scorePercentage}%;"></div></div>
+                    </div>
+                </div>
+                <div class="card"><h3 class="card-title"><span class="material-icons">pending_actions</span> Pendências Públicas</h3><div class="empty-state">Em desenvolvimento...</div></div>`;
         }
 
         function handleAvatarUpload(event) {
@@ -696,7 +774,7 @@
                 if (!response.ok) { throw new Error('Falha na comunicação com o servidor n8n.'); }
                 
                 showToast("Mensagem enviada com sucesso!", 'success'); closeNewMessagePopup();
-                await Promise.all([loadUserProfileData(), loadMessages(), loadDashboardStats()]);
+                await Promise.all([loadMessages(), loadDashboardStats()]);
             } catch (error) {
                 console.error("Erro ao enviar mensagem via n8n:", error);
                 showToast("Falha ao enviar mensagem: " + error.message, 'danger');
