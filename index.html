@@ -370,21 +370,23 @@
         const appHTML = `<div id="app-container">
             <aside class="sidebar">
                 <div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div>
-                <ul class="nav-menu">
-                    <li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li>
-                    <li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li>
-                    <li><a href="#" class="nav-link" data-page="channels-page"><span class="material-icons">tag</span> Canais</a></li>
-                    <li><a href="#" class="nav-link" data-page="team-page"><span class="material-icons">people</span> Equipe</a></li>
-                    <li><a href="#" class="nav-link" data-page="rankings-page"><span class="material-icons">leaderboard</span> Performance e Rankings</a></li>
-                    <li><a href="#" class="nav-link" data-page="mural-page"><span class="material-icons">campaign</span> Mural Cultural</a></li>
-                    <li><a href="#" class="nav-link" data-page="kb-page"><span class="material-icons">school</span> Base de Conhecimento</a></li>
-                </ul>
-                <div id="admin-section" style="display: none;">
-                    <h3 class="nav-section-title">Administração</h3>
+                <div class="sidebar-scroll-area">
                     <ul class="nav-menu">
-                        <li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li>
-                        <li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li>
+                        <li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li>
+                        <li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li>
+                        <li><a href="#" class="nav-link" data-page="channels-page"><span class="material-icons">tag</span> Canais</a></li>
+                        <li><a href="#" class="nav-link" data-page="team-page"><span class="material-icons">people</span> Equipe</a></li>
+                        <li><a href="#" class="nav-link" data-page="rankings-page"><span class="material-icons">leaderboard</span> Performance e Rankings</a></li>
+                        <li><a href="#" class="nav-link" data-page="mural-page"><span class="material-icons">campaign</span> Mural Cultural</a></li>
+                        <li><a href="#" class="nav-link" data-page="kb-page"><span class="material-icons">school</span> Base de Conhecimento</a></li>
                     </ul>
+                    <div id="admin-section" style="display: none;">
+                        <h3 class="nav-section-title">Administração</h3>
+                        <ul class="nav-menu">
+                            <li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li>
+                            <li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="sidebar-footer">
                     <ul class="nav-menu">
@@ -680,18 +682,45 @@
                 container.innerHTML = '<p>Usuário não encontrado.</p>';
                 return;
             }
+            
+            container.innerHTML = `<div class="page-header"><h1>Carregando Perfil...</h1></div>`;
 
-            const { data: profile, error } = await supabaseClient.from('profiles').select('*').eq('id', targetId).single();
+            const [profileRes, pendenciesRes] = await Promise.all([
+                supabaseClient.from('profiles').select('*').eq('id', targetId).single(),
+                supabaseClient.rpc('get_user_pendencies', { target_user_id: targetId })
+            ]);
 
-            if (error || !profile) {
+            const { data: profile, error: profileError } = profileRes;
+            const { data: pendencies, error: pendenciesError } = pendenciesRes;
+
+            if (profileError || !profile) {
                 container.innerHTML = '<p>Erro ao carregar perfil.</p>';
-                console.error(error);
+                console.error(profileError);
                 return;
             }
 
             const avatarInitial = profile.full_name ? profile.full_name.charAt(0).toUpperCase() : '?';
             const score = profile.score || 100;
             const scorePercentage = Math.min((score / 200) * 100, 100);
+
+            let pendenciesHTML = `<div class="empty-state">Nenhuma pendência encontrada.</div>`;
+            if (pendenciesError) {
+                 console.error("Erro ao buscar pendências:", pendenciesError);
+                 pendenciesHTML = `<div class="empty-state" style="color: var(--color-danger)">Erro ao carregar pendências.</div>`;
+            } else if (pendencies && pendencies.length > 0) {
+                pendenciesHTML = pendencies.map(p => {
+                    const days_late = p.due_date ? Math.floor((new Date() - new Date(p.due_date)) / (1000 * 60 * 60 * 24)) : 0;
+                    return `
+                        <div class="card" style="padding: 1rem; border-left: 4px solid var(--color-danger);">
+                            <h4 style="margin: 0 0 0.5rem;">${p.subject}</h4>
+                            <div style="font-size: 0.9rem; color: var(--color-text-secondary);">
+                                De: <strong>${p.sender_name}</strong>
+                                ${p.due_date && days_late > 0 ? `<span style="margin-left: 1rem; color: var(--color-danger); font-weight: 600;">Atrasado há ${days_late} dias</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
 
             container.innerHTML = `
                 <div class="page-header" style="margin-bottom: 1rem;">
@@ -707,8 +736,12 @@
                         <div class="progress-bar-container"><div class="progress-bar" style="width: ${scorePercentage}%;"></div></div>
                     </div>
                 </div>
-                <div class="card"><h3 class="card-title"><span class="material-icons">pending_actions</span> Pendências Públicas</h3><div class="empty-state">Em desenvolvimento...</div></div>`;
+                <div class="card">
+                    <h3 class="card-title"><span class="material-icons">pending_actions</span> Pendências Públicas (${pendencies ? pendencies.length : 0})</h3>
+                    <div id="public-pendencies-list">${pendenciesHTML}</div>
+                </div>`;
         }
+
 
         function handleAvatarUpload(event) {
             const file = event.target.files[0]; if (!file) return;
