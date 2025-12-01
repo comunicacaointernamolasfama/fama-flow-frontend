@@ -461,9 +461,7 @@
             const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); 
             if (activeLink) activeLink.classList.add('active');
             
-            // CORREÇÃO: Esconder o FAB na tela de conversa
             document.getElementById('fab-new-message').classList.toggle('hidden', pageId === 'conversation-view-page');
-
             if(pageId === 'messages-page') loadMessages(); 
         }
         async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); loadUserProfileData(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
@@ -483,7 +481,6 @@
 
         // --- NEW RECIPIENT MODAL LOGIC ---
         async function fetchAllUsersForSearch() { 
-            // UPDATED: Now fetches department and role too
             const { data, error } = await supabaseClient.from('profiles').select('id, full_name, score, department, role'); 
             if(error) console.error("Erro ao buscar usuários para pesquisa:", error); 
             else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; 
@@ -493,12 +490,12 @@
             const modal = document.getElementById('recipient-modal');
             modal.classList.add('visible');
             populateRecipientFilters();
-            applyRecipientFilters(); // Render initial list
+            applyRecipientFilters(); 
         }
 
         function closeRecipientModal() {
             document.getElementById('recipient-modal').classList.remove('visible');
-            renderRecipientPills(); // Sync pill view on close
+            renderRecipientPills(); 
         }
 
         function populateRecipientFilters() {
@@ -508,7 +505,6 @@
             const deptSelect = document.getElementById('filter-dept');
             const roleSelect = document.getElementById('filter-role');
             
-            // Keep first option (All)
             deptSelect.innerHTML = '<option value="">Todos Departamentos</option>';
             roleSelect.innerHTML = '<option value="">Todos Cargos</option>';
 
@@ -581,17 +577,15 @@
             } else {
                 selectedRecipients.push(user);
             }
-            applyRecipientFilters(); // Re-render table to show new state
+            applyRecipientFilters(); 
         }
         
-        // --- CUSTOM CONFIRMATION MODAL LOGIC ---
         function showConfirmation(title, message, onConfirm) {
             const modal = document.getElementById('confirmation-modal');
             document.getElementById('confirm-title').textContent = title;
             document.getElementById('confirm-message').textContent = message;
             
             const btnConfirm = document.getElementById('btn-confirm-action');
-            // Remove old event listeners
             const newBtn = btnConfirm.cloneNode(true);
             btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
             
@@ -711,11 +705,9 @@
             }
         }
         
-        // Helper to remove current user from display strings
         function cleanParticipantList(namesString, senderName = null) {
             if (!namesString || !currentUserProfile) return '';
             let names = namesString.split(',').map(n => n.trim());
-            // Filter out the current user's name AND the sender's name if provided
             let filtered = names.filter(n => {
                 let isCurrentUser = n === currentUserProfile.full_name;
                 let isSender = senderName ? n === senderName : false;
@@ -733,17 +725,14 @@
                 const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ') : '';
                 const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
                 
-                // UPDATED LOGIC FOR 'WHO' DISPLAY
                 let who = '';
                 const cleanNames = cleanParticipantList(conv.other_participants_names);
 
                 if (type === 'sent') {
-                    // In Sent folder, always show who I sent TO (exclude myself)
-                    who = cleanNames || 'Destinatário Desconhecido';
+                    who = cleanNames || conv.other_participants_names || 'Destinatário Desconhecido';
                 } else if (type === 'inbox') {
-                    // In Inbox, show who sent it TO ME
                     who = conv.last_message_sender_name || 'Desconhecido';
-                } else { // Archived
+                } else { 
                     if (conv.last_message_sender_id === currentUserProfile.id) {
                          who = `Para: ${cleanNames}`;
                     } else {
@@ -842,11 +831,7 @@
                         if (!response.ok) throw new Error("Falha ao resolver o chamado. Você pode não ter permissão.");
                         
                         showToast("Chamado resolvido com sucesso!", 'success');
-                        
-                        // 1. CLOSE THE CONVERSATION VIEW (Go back to list)
                         showPage('messages-page'); 
-                        
-                        // 2. FORCE REFRESH LIST AND DASHBOARD
                         await Promise.all([loadMessages(), loadDashboardStats()]);
 
                     } catch(e) {
@@ -923,17 +908,13 @@
             const creatorProfile = await supabaseClient.from('profiles').select('full_name').eq('id', convData.created_by).single();
             const senderName = creatorProfile.data ? creatorProfile.data.full_name : 'Desconhecido';
             
-            // UPDATED HEADER LOGIC TO SHOW CO-RECIPIENTS
             let displayTo = '';
             let allRecipientNames = convData.other_participants_names ? convData.other_participants_names.split(',').map(n => n.trim()) : [];
 
             if (convData.created_by === currentUserProfile.id) {
-                // If I sent it, show who I sent to (and remove myself from the list, just in case).
                 displayTo = allRecipientNames.filter(n => n !== currentUserProfile.full_name).join(', ') || 'Sem destinatários';
             } else {
-                // If I received it, show "Você" + any other recipients (minus the sender and myself).
                 let coRecipients = allRecipientNames.filter(n => n !== senderName && n !== currentUserProfile.full_name);
-                
                 if (coRecipients.length > 0) {
                     displayTo = `Você, ${coRecipients.join(', ')}`;
                 } else {
