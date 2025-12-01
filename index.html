@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt--BR">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -265,23 +265,6 @@
         .team-user-card .user-avatar { width: 64px; height: 64px; font-size: 2rem; margin-bottom: 1rem; }
         .team-user-card h3 { margin: 0 0 0.25rem 0; font-size: 1.1rem; }
         .team-user-card p { margin: 0; color: var(--color-text-secondary); font-size: 0.9rem; }
-        
-        /* Sidebar Scroll Fix */
-        .sidebar-scroll-area { flex: 1; overflow-y: auto; padding-bottom: 1rem; }
-        
-        /* Mural Cultural Styles */
-        .mural-post { margin-bottom: 2rem; }
-        .mural-post .post-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-        .mural-post .post-header .user-avatar { width: 48px; height: 48px; font-size: 1.5rem; }
-        .mural-post .post-header .post-meta h3 { margin: 0; }
-        .mural-post .post-header .post-meta p { margin: 0; font-size: 0.9rem; color: var(--color-text-secondary); }
-        .mural-post .post-content-text { font-size: 1.1rem; line-height: 1.7; margin: 1rem 0; }
-        .mural-post .post-media img { max-width: 100%; border-radius: 8px; margin: 1rem 0; }
-        .mural-post .post-media iframe { width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px; margin: 1rem 0;}
-        .post-actions { display: flex; gap: 1.5rem; align-items: center; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); padding: 0.5rem 0; }
-        .post-actions .btn-icon { color: var(--color-text-secondary); font-weight: 500; border-radius: 8px; padding: 0.5rem 0.75rem;}
-        .post-actions .btn-icon:hover { background-color: var(--color-background); color: var(--color-text-primary); }
-        .post-actions .btn-icon .material-icons { margin-right: 0.5rem; }
     </style>
 </head>
 <body>
@@ -541,7 +524,7 @@
             fabPost.classList.add('hidden');
             if (pageId === 'mural-page' && currentUserProfile.role === 'Admin') {
                 fabPost.classList.remove('hidden');
-            } else if (pageId !== 'conversation-view-page') {
+            } else if (pageId !== 'conversation-view-page' && pageId !== 'mural-page') {
                 fabMessage.classList.remove('hidden');
             }
 
@@ -823,10 +806,15 @@
         async function loadMuralPage() {
             const container = document.getElementById('mural-content');
             container.innerHTML = `<div class="empty-state">Carregando mural...</div>`;
-            const { data: posts, error } = await supabaseClient.from('posts').select(`*, author:profiles(full_name, avatar_url), likes:post_likes(count), comments:post_comments(count)`).order('created_at', { ascending: false });
+            
+            // Passo 1: Buscar os posts
+            const { data: posts, error: postsError } = await supabaseClient
+                .from('posts')
+                .select('*, author:profiles(full_name, avatar_url)')
+                .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error("Erro ao carregar mural:", error);
+            if (postsError) {
+                console.error("Erro ao carregar mural:", postsError);
                 container.innerHTML = `<div class="empty-state" style="color: var(--color-danger)">Erro ao carregar o mural.</div>`;
                 return;
             }
@@ -835,8 +823,19 @@
                 container.innerHTML = `<div class="empty-state">Nenhuma publicação no mural ainda.</div>`;
                 return;
             }
+            
+            // Passo 2: Para cada post, buscar contagem de likes e comments
+            const postsWithCounts = await Promise.all(posts.map(async (post) => {
+                const [likesRes, commentsRes] = await Promise.all([
+                    supabaseClient.from('post_likes').select('*', { count: 'exact', head: true }).eq('post_id', post.id),
+                    supabaseClient.from('post_comments').select('*', { count: 'exact', head: true }).eq('post_id', post.id)
+                ]);
+                post.likes_count = likesRes.count || 0;
+                post.comments_count = commentsRes.count || 0;
+                return post;
+            }));
 
-            container.innerHTML = posts.map(post => {
+            container.innerHTML = postsWithCounts.map(post => {
                 const avatarInitial = post.author.full_name ? post.author.full_name.charAt(0).toUpperCase() : '?';
                 let mediaHTML = '';
                 if (post.media_data) {
@@ -860,8 +859,8 @@
                         ${mediaHTML}
                         <div class="post-content-text">${post.content}</div>
                         <div class="post-actions">
-                            <button class="btn btn-icon" onclick="likePost('${post.id}')"><span class="material-icons">thumb_up</span> ${post.likes[0]?.count || 0} Curtidas</button>
-                            <button class="btn btn-icon"><span class="material-icons">comment</span> ${post.comments[0]?.count || 0} Comentários</button>
+                            <button class="btn btn-icon" onclick="likePost('${post.id}')"><span class="material-icons">thumb_up</span> ${post.likes_count} Curtidas</button>
+                            <button class="btn btn-icon"><span class="material-icons">comment</span> ${post.comments_count} Comentários</button>
                         </div>
                     </div>
                 `;
@@ -1086,18 +1085,21 @@
             const conversationId = rowElement.dataset.conversationId;
             if (!conversationId) { showToast('ID da conversa não encontrado.', 'danger'); return; }
 
-            if (rowElement.classList.contains('row-unread')) { rowElement.classList.remove('row-unread'); rowElement.classList.add('row-read'); }
+            if (rowElement.classList.contains('row-unread')) {
+                rowElement.classList.remove('row-unread'); 
+                rowElement.classList.add('row-read');
 
-            try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (session) {
-                    fetch(N8N_MARK_AS_READ_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                        body: JSON.stringify({ conversation_id: conversationId, first_read_at: new Date().toISOString() })
-                    });
-                }
-            } catch (e) { console.warn("Não foi possível marcar a mensagem como lida:", e.message); }
+                try {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (session) {
+                        fetch(N8N_MARK_AS_READ_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                            body: JSON.stringify({ conversation_id: conversationId, first_read_at: new Date().toISOString() })
+                        });
+                    }
+                } catch (e) { console.warn("Não foi possível marcar a mensagem como lida:", e.message); }
+            }
 
             showPage('conversation-view-page');
             document.getElementById('conversation-header').innerHTML = '<div class="empty-state">Carregando...</div>';
