@@ -688,20 +688,22 @@
             
             container.innerHTML = `<div class="page-header"><h1>Carregando Perfil...</h1></div>`;
 
-            const [profileRes, pendenciesRes] = await Promise.all([
+            const [profileRes, pendenciesRes, achievementsRes] = await Promise.all([
                 supabaseClient.from('profiles').select('*').eq('id', targetId).single(),
-                supabaseClient.rpc('get_user_pendencies', { target_user_id: targetId })
+                supabaseClient.rpc('get_user_pendencies', { target_user_id: targetId }),
+                supabaseClient.rpc('get_user_achievements', { target_user_id: targetId })
             ]);
 
             const { data: profile, error: profileError } = profileRes;
-            const { data: pendencies, error: pendenciesError } = pendenciesRes;
-
             if (profileError || !profile) {
                 container.innerHTML = '<p>Erro ao carregar perfil.</p>';
                 console.error(profileError);
                 return;
             }
 
+            const { data: pendencies, error: pendenciesError } = pendenciesRes;
+            const { data: achievements, error: achievementsError } = achievementsRes;
+            
             const avatarInitial = profile.full_name ? profile.full_name.charAt(0).toUpperCase() : '?';
             const score = profile.score || 100;
             const scorePercentage = Math.min((score / 200) * 100, 100);
@@ -712,34 +714,53 @@
                  pendenciesHTML = `<div class="empty-state" style="color: var(--color-danger)">Erro ao carregar pendências.</div>`;
             } else if (pendencies && pendencies.length > 0) {
                 pendenciesHTML = pendencies.map(p => {
-                    const days_late = p.due_date ? Math.max(0, Math.floor((new Date() - new Date(p.due_date)) / (1000 * 60 * 60 * 24))) : 0;
-                    const hours_late = p.due_date ? 0 : Math.max(0, Math.floor((new Date() - new Date(p.created_at)) / (1000 * 60 * 60)));
-                    
-                    let title = p.type === 'ticket' ? 'CHAMADO EM ABERTO' : 'MENSAGEM AGUARDANDO RESPOSTA';
-                    let icon = p.type === 'ticket' ? 'report_problem' : 'help_outline';
-                    let borderColor = p.priority === 'urgent' ? 'var(--color-danger)' : 'var(--color-warning)';
-                    let priorityText = p.priority === 'urgent' ? 'Alta' : (p.priority === 'important' ? 'Média' : 'Normal');
-
                     let delayText = '';
-                    if (days_late > 0) {
-                        delayText = `Atrasado há ${days_late} dia${days_late > 1 ? 's' : ''}`;
-                    } else if (hours_late >= 48) {
-                        delayText = `Atrasado há ${Math.floor(hours_late / 24)} dia${Math.floor(hours_late/24) > 1 ? 's' : ''}`;
+                    if (p.due_date) {
+                        const days_late = Math.floor((new Date() - new Date(p.due_date)) / (1000 * 60 * 60 * 24));
+                        if (days_late > 0) delayText = `Atrasado há ${days_late} dia${days_late > 1 ? 's' : ''}`;
+                    } else {
+                        const hours_late = Math.floor((new Date() - new Date(p.created_at)) / (1000 * 60 * 60));
+                        if (hours_late >= 48) delayText = `Aguardando resposta há ${Math.floor(hours_late / 24)} dias`;
                     }
                     
+                    const title = p.type === 'ticket' ? 'CHAMADO EM ABERTO' : 'MENSAGEM AGUARDANDO RESPOSTA';
+                    const icon = p.type === 'ticket' ? 'report_problem' : 'help_outline';
+                    const borderColor = p.priority === 'urgent' || delayText ? 'var(--color-danger)' : 'var(--color-warning)';
+                    const priorityText = p.priority.charAt(0).toUpperCase() + p.priority.slice(1);
+                    const formattedFirstRead = p.first_read_at ? new Date(p.first_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'}) : 'Ainda não visualizado';
+
                     return `
                         <div class="card" style="padding: 1rem; border-left: 4px solid ${borderColor}; display: flex; flex-direction: column; gap: 0.5rem;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <h4 style="margin: 0; display:flex; align-items:center; gap: 0.5rem;"><span class="material-icons" style="font-size: 20px;">${icon}</span> ${title}</h4>
                                 <span class="tag-fino">${priorityText}</span>
                             </div>
-                            <div style="font-size: 0.9rem; color: var(--color-text-secondary);">
-                                <strong>De:</strong> ${p.sender_name} (${p.sender_department || 'N/A'} / ${p.sender_role || 'N/A'})
-                            </div>
-                             ${p.due_date ? `<div style="font-size: 0.9rem;"><strong>Prazo Final:</strong> ${new Date(p.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : ''}
-                             ${delayText ? `<div style="font-size: 0.9rem; color: var(--color-danger); font-weight: 600;">${delayText}</div>` : ''}
-                        </div>
-                    `;
+                            <div style="font-size: 0.9rem; color: var(--color-text-secondary);"><strong>De:</strong> ${p.sender_name} (${p.sender_department || 'N/A'} / ${p.sender_role || 'N/A'})</div>
+                            ${p.due_date ? `<div style="font-size: 0.9rem;"><strong>Prazo Final:</strong> ${new Date(p.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : ''}
+                            <div style="font-size: 0.9rem;"><strong>Visto pela 1ª vez em:</strong> ${formattedFirstRead}</div>
+                            ${delayText ? `<div style="font-size: 0.9rem; color: var(--color-danger); font-weight: 600;">${delayText}</div>` : ''}
+                        </div>`;
+                }).join('');
+            }
+            
+            let achievementsHTML = `<div class="empty-state">Nenhum reconhecimento recente.</div>`;
+             if (achievementsError) {
+                 console.error("Erro ao buscar reconhecimentos:", achievementsError);
+                 achievementsHTML = `<div class="empty-state" style="color: var(--color-danger)">Erro ao carregar reconhecimentos.</div>`;
+            } else if (achievements && achievements.length > 0) {
+                achievementsHTML = achievements.map(a => {
+                    const onTime = a.due_date ? new Date(a.resolved_at) <= new Date(a.due_date) : true;
+                    const borderColor = onTime ? 'var(--color-success)' : 'var(--color-warning)';
+                    const title = onTime ? 'CHAMADO RESOLVIDO NO PRAZO' : 'CHAMADO RESOLVIDO (COM ATRASO)';
+                    const days_late = a.due_date && !onTime ? Math.ceil((new Date(a.resolved_at) - new Date(a.due_date)) / (1000 * 60 * 60 * 24)) : 0;
+
+                    return `
+                        <div class="card" style="padding: 1rem; border-left: 4px solid ${borderColor}; display: flex; flex-direction: column; gap: 0.5rem;">
+                            <h4 style="margin: 0; display:flex; align-items:center; gap: 0.5rem;"><span class="material-icons" style="font-size: 20px;">check_circle</span> ${title}</h4>
+                            <div style="font-size: 0.9rem; color: var(--color-text-secondary);"><strong>De:</strong> ${a.sender_name} (${a.sender_department || 'N/A'} / ${a.sender_role || 'N/A'})</div>
+                             <div style="font-size: 0.9rem;"><strong>Resolvido em:</strong> ${new Date(a.resolved_at).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>
+                             ${!onTime ? `<div style="font-size: 0.9rem; color: var(--color-warning); font-weight: 600;">${days_late} dia${days_late > 1 ? 's' : ''} de atraso</div>` : ''}
+                        </div>`;
                 }).join('');
             }
 
@@ -760,6 +781,10 @@
                 <div class="card">
                     <h3 class="card-title"><span class="material-icons">pending_actions</span> Pendências Públicas (${pendencies ? pendencies.length : 0})</h3>
                     <div id="public-pendencies-list">${pendenciesHTML}</div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title"><span class="material-icons">military_tech</span> Reconhecimentos Recentes (${achievements ? achievements.length : 0})</h3>
+                    <div id="public-achievements-list">${achievementsHTML}</div>
                 </div>`;
         }
 
