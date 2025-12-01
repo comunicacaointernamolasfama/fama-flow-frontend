@@ -265,9 +265,6 @@
         .team-user-card .user-avatar { width: 64px; height: 64px; font-size: 2rem; margin-bottom: 1rem; }
         .team-user-card h3 { margin: 0 0 0.25rem 0; font-size: 1.1rem; }
         .team-user-card p { margin: 0; color: var(--color-text-secondary); font-size: 0.9rem; }
-
-        /* Sidebar Scroll Fix */
-        .sidebar-scroll-area { flex: 1; overflow-y: auto; padding-bottom: 1rem; }
     </style>
 </head>
 <body>
@@ -736,7 +733,7 @@
                                 <span class="tag-fino">${priorityText}</span>
                             </div>
                             <div style="font-size: 0.9rem; color: var(--color-text-secondary);"><strong>De:</strong> ${p.sender_name} (${p.sender_department || 'N/A'} / ${p.sender_role || 'N/A'})</div>
-                            ${p.due_date ? `<div style="font-size: 0.9rem;"><strong>Prazo Final:</strong> ${new Date(p.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : ''}
+                             ${p.due_date ? `<div style="font-size: 0.9rem;"><strong>Prazo Final:</strong> ${new Date(p.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : ''}
                             <div style="font-size: 0.9rem;"><strong>Visto pela 1ª vez em:</strong> ${formattedFirstRead}</div>
                             ${delayText ? `<div style="font-size: 0.9rem; color: var(--color-danger); font-weight: 600;">${delayText}</div>` : ''}
                         </div>`;
@@ -753,12 +750,14 @@
                     const borderColor = onTime ? 'var(--color-success)' : 'var(--color-warning)';
                     const title = onTime ? 'CHAMADO RESOLVIDO NO PRAZO' : 'CHAMADO RESOLVIDO (COM ATRASO)';
                     const days_late = a.due_date && !onTime ? Math.ceil((new Date(a.resolved_at) - new Date(a.due_date)) / (1000 * 60 * 60 * 24)) : 0;
+                    const formattedFirstRead = a.first_read_at ? new Date(a.first_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'}) : 'Não visualizado';
 
                     return `
                         <div class="card" style="padding: 1rem; border-left: 4px solid ${borderColor}; display: flex; flex-direction: column; gap: 0.5rem;">
                             <h4 style="margin: 0; display:flex; align-items:center; gap: 0.5rem;"><span class="material-icons" style="font-size: 20px;">check_circle</span> ${title}</h4>
                             <div style="font-size: 0.9rem; color: var(--color-text-secondary);"><strong>De:</strong> ${a.sender_name} (${a.sender_department || 'N/A'} / ${a.sender_role || 'N/A'})</div>
-                             <div style="font-size: 0.9rem;"><strong>Resolvido em:</strong> ${new Date(a.resolved_at).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>
+                            <div style="font-size: 0.9rem;"><strong>Visto pela 1ª vez em:</strong> ${formattedFirstRead}</div>
+                            <div style="font-size: 0.9rem;"><strong>Resolvido em:</strong> ${new Date(a.resolved_at).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>
                              ${!onTime ? `<div style="font-size: 0.9rem; color: var(--color-warning); font-weight: 600;">${days_late} dia${days_late > 1 ? 's' : ''} de atraso</div>` : ''}
                         </div>`;
                 }).join('');
@@ -983,7 +982,7 @@
                         const response = await fetch(N8N_RESOLVE_TICKET_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                            body: JSON.stringify({ conversation_id: conversationId })
+                            body: JSON.stringify({ conversation_id: conversationId, resolved_at: new Date().toISOString() })
                         });
                         if (!response.ok) throw new Error("Falha ao resolver o chamado. Você pode não ter permissão.");
                         
@@ -1011,7 +1010,7 @@
                     fetch(N8N_MARK_AS_READ_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                        body: JSON.stringify({ conversation_id: conversationId })
+                        body: JSON.stringify({ conversation_id: conversationId, first_read_at: new Date().toISOString() })
                     });
                 }
             } catch (e) { console.warn("Não foi possível marcar a mensagem como lida:", e.message); }
