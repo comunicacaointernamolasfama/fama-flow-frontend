@@ -265,6 +265,9 @@
         .team-user-card .user-avatar { width: 64px; height: 64px; font-size: 2rem; margin-bottom: 1rem; }
         .team-user-card h3 { margin: 0 0 0.25rem 0; font-size: 1.1rem; }
         .team-user-card p { margin: 0; color: var(--color-text-secondary); font-size: 0.9rem; }
+        
+        /* Sidebar Scroll Fix */
+        .sidebar-scroll-area { flex: 1; overflow-y: auto; padding-bottom: 1rem; }
     </style>
 </head>
 <body>
@@ -807,6 +810,7 @@
             const container = document.getElementById('mural-content');
             container.innerHTML = `<div class="empty-state">Carregando mural...</div>`;
             
+            // Passo 1: Buscar os posts
             const { data: posts, error } = await supabaseClient
                 .from('posts')
                 .select('*, author:profiles!posts_author_id_fkey(full_name, avatar_url)')
@@ -823,6 +827,7 @@
                 return;
             }
             
+            // Passo 2: Para cada post, buscar contagem de likes e comments
             const postsWithCounts = await Promise.all(posts.map(async (post) => {
                 const [likesRes, commentsRes] = await Promise.all([
                     supabaseClient.from('post_likes').select('*', { count: 'exact', head: true }).eq('post_id', post.id),
