@@ -265,6 +265,9 @@
         .team-user-card .user-avatar { width: 64px; height: 64px; font-size: 2rem; margin-bottom: 1rem; }
         .team-user-card h3 { margin: 0 0 0.25rem 0; font-size: 1.1rem; }
         .team-user-card p { margin: 0; color: var(--color-text-secondary); font-size: 0.9rem; }
+
+        /* Sidebar Scroll Fix */
+        .sidebar-scroll-area { flex: 1; overflow-y: auto; padding-bottom: 1rem; }
     </style>
 </head>
 <body>
@@ -709,14 +712,32 @@
                  pendenciesHTML = `<div class="empty-state" style="color: var(--color-danger)">Erro ao carregar pendências.</div>`;
             } else if (pendencies && pendencies.length > 0) {
                 pendenciesHTML = pendencies.map(p => {
-                    const days_late = p.due_date ? Math.floor((new Date() - new Date(p.due_date)) / (1000 * 60 * 60 * 24)) : 0;
+                    const days_late = p.due_date ? Math.max(0, Math.floor((new Date() - new Date(p.due_date)) / (1000 * 60 * 60 * 24))) : 0;
+                    const hours_late = p.due_date ? 0 : Math.max(0, Math.floor((new Date() - new Date(p.created_at)) / (1000 * 60 * 60)));
+                    
+                    let title = p.type === 'ticket' ? 'CHAMADO EM ABERTO' : 'MENSAGEM AGUARDANDO RESPOSTA';
+                    let icon = p.type === 'ticket' ? 'report_problem' : 'help_outline';
+                    let borderColor = p.priority === 'urgent' ? 'var(--color-danger)' : 'var(--color-warning)';
+                    let priorityText = p.priority === 'urgent' ? 'Alta' : (p.priority === 'important' ? 'Média' : 'Normal');
+
+                    let delayText = '';
+                    if (days_late > 0) {
+                        delayText = `Atrasado há ${days_late} dia${days_late > 1 ? 's' : ''}`;
+                    } else if (hours_late >= 48) {
+                        delayText = `Atrasado há ${Math.floor(hours_late / 24)} dia${Math.floor(hours_late/24) > 1 ? 's' : ''}`;
+                    }
+                    
                     return `
-                        <div class="card" style="padding: 1rem; border-left: 4px solid var(--color-danger);">
-                            <h4 style="margin: 0 0 0.5rem;">${p.subject}</h4>
-                            <div style="font-size: 0.9rem; color: var(--color-text-secondary);">
-                                De: <strong>${p.sender_name}</strong>
-                                ${p.due_date && days_late > 0 ? `<span style="margin-left: 1rem; color: var(--color-danger); font-weight: 600;">Atrasado há ${days_late} dias</span>` : ''}
+                        <div class="card" style="padding: 1rem; border-left: 4px solid ${borderColor}; display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4 style="margin: 0; display:flex; align-items:center; gap: 0.5rem;"><span class="material-icons" style="font-size: 20px;">${icon}</span> ${title}</h4>
+                                <span class="tag-fino">${priorityText}</span>
                             </div>
+                            <div style="font-size: 0.9rem; color: var(--color-text-secondary);">
+                                <strong>De:</strong> ${p.sender_name} (${p.sender_department || 'N/A'} / ${p.sender_role || 'N/A'})
+                            </div>
+                             ${p.due_date ? `<div style="font-size: 0.9rem;"><strong>Prazo Final:</strong> ${new Date(p.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : ''}
+                             ${delayText ? `<div style="font-size: 0.9rem; color: var(--color-danger); font-weight: 600;">${delayText}</div>` : ''}
                         </div>
                     `;
                 }).join('');
