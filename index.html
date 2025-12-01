@@ -265,6 +265,48 @@
         .team-user-card .user-avatar { width: 64px; height: 64px; font-size: 2rem; margin-bottom: 1rem; }
         .team-user-card h3 { margin: 0 0 0.25rem 0; font-size: 1.1rem; }
         .team-user-card p { margin: 0; color: var(--color-text-secondary); font-size: 0.9rem; }
+
+        /* --- MURAL CULTURAL STYLES --- */
+        .mural-post-card { margin-bottom: 2rem; overflow: hidden; }
+        .post-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .post-meta h3 { margin: 0; font-size: 1rem; }
+        .post-meta p { margin: 0; font-size: 0.85rem; color: var(--color-text-secondary); }
+        .post-title { margin-top: 0; margin-bottom: 1rem; font-size: 1.4rem; }
+        .post-content-text { margin: 1rem 0; white-space: pre-wrap; color: var(--color-text-primary); }
+        
+        .media-container { width: 100%; border-radius: 8px; overflow: hidden; background-color: #000; margin-bottom: 1rem; display: flex; justify-content: center; align-items: center; max-height: 500px; }
+        .media-container img { max-width: 100%; max-height: 500px; width: auto; display: block; }
+        .media-container iframe { width: 100%; aspect-ratio: 16/9; border: none; }
+        
+        .carousel-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 0.5rem; padding-bottom: 0.5rem; width: 100%; }
+        .carousel-item { scroll-snap-align: center; min-width: 100%; display: flex; justify-content: center; align-items: center; background: #000; border-radius: 8px; overflow: hidden; max-height: 500px; }
+        .carousel-item img { max-width: 100%; max-height: 500px; object-fit: contain; }
+
+        .post-actions { display: flex; gap: 1rem; border-top: 1px solid var(--color-border); padding-top: 0.75rem; margin-top: 1rem; }
+        .post-actions .btn-icon { display: flex; align-items: center; gap: 0.5rem; border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.9rem; width: auto; color: var(--color-text-secondary); }
+        .post-actions .btn-icon:hover { background-color: var(--color-background); color: var(--color-brand-primary); }
+        .post-actions .btn-icon.liked { color: var(--color-brand-primary); font-weight: 600; }
+        
+        .comments-section { display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--color-border); background-color: var(--color-background); margin: 0 -1.5rem -1.5rem -1.5rem; padding: 1.5rem; }
+        .comments-section.visible { display: block; }
+        .comment-item { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
+        .comment-avatar { width: 32px; height: 32px; font-size: 0.8rem; border-radius: 50%; background-color: var(--color-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .comment-box { background-color: var(--color-surface); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--color-border); flex-grow: 1; }
+        .comment-author { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem; display: block; }
+        .comment-text { font-size: 0.9rem; margin: 0; }
+        .comment-input-wrapper { display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem; }
+        .comment-input-wrapper input { flex-grow: 1; }
+
+        /* New Post Modal Specifics */
+        .media-type-options { display: flex; gap: 1rem; margin-bottom: 1rem; }
+        .media-option { flex: 1; border: 1px solid var(--color-border); border-radius: 8px; padding: 0.75rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .media-option:hover, .media-option.selected { background-color: var(--color-info-bg); border-color: var(--color-info); color: var(--color-info); font-weight: 600; }
+        .media-option .material-icons { display: block; margin-bottom: 0.5rem; }
+        #new-post-modal .modal-content { max-width: 600px; height: auto; max-height: 90vh; overflow-y: auto; }
+        #preview-area { margin-top: 1rem; padding: 1rem; background: var(--color-background); border-radius: 8px; text-align: center; display: none; }
+        #preview-area img { max-width: 100%; max-height: 200px; border-radius: 4px; }
+        #preview-area p { margin: 0; font-size: 0.8rem; color: var(--color-text-secondary); }
+
     </style>
 </head>
 <body>
@@ -329,6 +371,58 @@
         </div>
     </div>
 
+    <!-- NEW POST MODAL (MURAL) -->
+    <div id="new-post-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nova Publicação no Mural</h3>
+                <span class="material-icons" style="cursor:pointer;" onclick="closeNewPostModal()">close</span>
+            </div>
+            <div class="modal-body">
+                <form id="new-post-form">
+                    <div class="form-group">
+                        <label for="post-title">Título</label>
+                        <input type="text" id="post-title" class="input-field" placeholder="Ex: Festa de Fim de Ano" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tipo de Mídia</label>
+                        <div class="media-type-options">
+                            <div class="media-option selected" onclick="selectMediaType('text')" id="opt-text">
+                                <span class="material-icons">notes</span> Texto
+                            </div>
+                            <div class="media-option" onclick="selectMediaType('image')" id="opt-image">
+                                <span class="material-icons">image</span> Imagem
+                            </div>
+                            <div class="media-option" onclick="selectMediaType('carousel')" id="opt-carousel">
+                                <span class="material-icons">view_carousel</span> Carrossel
+                            </div>
+                            <div class="media-option" onclick="selectMediaType('video')" id="opt-video">
+                                <span class="material-icons">smart_display</span> Vídeo
+                            </div>
+                        </div>
+                        <input type="hidden" id="post-media-type" value="text">
+                    </div>
+
+                    <div class="form-group" id="media-input-group" style="display: none;">
+                        <label id="media-input-label">Arquivo de Mídia</label>
+                        <input type="file" id="post-media-file" class="input-field" accept="image/*">
+                        <div id="preview-area"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="post-content">Conteúdo</label>
+                        <textarea id="post-content" class="input-field" rows="6" placeholder="Escreva a mensagem aqui..." style="resize: vertical;"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeNewPostModal()">Cancelar</button>
+                <button class="btn btn-danger" id="btn-publish-post" onclick="submitPost()">Publicar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- CONFIRMATION MODAL -->
     <div id="confirmation-modal" class="modal-overlay">
         <div class="modal-content">
@@ -356,10 +450,11 @@
         const N8N_MARK_AS_READ_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/mark-as-read';
         const N8N_TOGGLE_ARCHIVE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/toggle-archive';
         const N8N_RESOLVE_TICKET_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/resolve-ticket';
-        // --- NOVAS URLs PARA O MURAL CULTURAL ---
-        const N8N_CREATE_POST_URL = 'COLE_SUA_URL_DO_N8N_AQUI';
-        const N8N_LIKE_POST_URL = 'COLE_SUA_URL_DO_N8N_AQUI';
-        const N8N_COMMENT_POST_URL = 'COLE_SUA_URL_DO_N8N_AQUI';
+        
+        // --- NOVAS URLs PARA O MURAL CULTURAL (Coloque suas URLs aqui) ---
+        const N8N_CREATE_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-post';
+        const N8N_LIKE_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/like-post';
+        const N8N_COMMENT_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/comment-post';
 
 
         let currentUserProfile = null;
@@ -407,7 +502,7 @@
                 <div id="team-page" class="page-content"><div class="page-header"><h1>Equipe</h1><p>Veja os perfis e performance dos seus colegas.</p></div><div id="team-list-content">Carregando equipe...</div></div>
                 <div id="channels-page" class="page-content"><div class="page-header"><h1>Canais</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
                 <div id="rankings-page" class="page-content"><div class="page-header"><h1>Performance e Rankings</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
-                <div id="mural-page" class="page-content"><div class="page-header"><h1>Mural Cultural</h1><p>Mensagem cultural da semana</p></div><div id="mural-content">Carregando...</div><button class="fab" id="fab-new-post" title="Nova Postagem" style="display: none;"><span class="material-icons">add</span></button></div>
+                <div id="mural-page" class="page-content"><div class="page-header"><h1>Mural Cultural</h1><p>Acompanhe os eventos e novidades da Fama.</p></div><div id="mural-content">Carregando...</div><button class="fab hidden" id="fab-new-post" title="Nova Postagem"><span class="material-icons">add</span></button></div>
                 <div id="kb-page" class="page-content"><div class="page-header"><h1>Base de Conhecimento</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
                 <div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div>
                 <div id="users-page" class="page-content"><div class="page-header"><div class="page-header-title"><h1>Gerenciamento de Usuários</h1></div><div class="page-header-actions"><button id="refresh-users-btn" class="refresh-btn" title="Atualizar usuários"><span class="material-icons">refresh</span></button><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th>Usuário & Email</th><th>Departamento & Cargo</th><th>Score</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div>
@@ -441,7 +536,12 @@
             document.getElementById('new-message-form').addEventListener('submit', sendMessage);
             document.getElementById('btn-new-user')?.addEventListener('click', () => openUserModal(null));
             document.getElementById('fab-new-message').addEventListener('click', openNewMessagePopup);
+            document.getElementById('fab-new-post').addEventListener('click', openNewPostModal); // Listener do Mural
             document.getElementById('attachment-input').addEventListener('change', handleFileSelection);
+            
+            // Listener para upload de mídia do Mural
+            document.getElementById('post-media-file').addEventListener('change', handlePostMediaPreview);
+
             document.querySelectorAll('.nav-link[data-page]').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); showPage(e.currentTarget.dataset.page); }); });
             document.querySelectorAll('.urgency-selector .btn').forEach(button => { button.addEventListener('click', (e) => { e.preventDefault(); document.querySelectorAll('.urgency-selector .btn').forEach(btn => { btn.classList.remove('btn-success', 'btn-warning', 'btn-danger', 'active'); btn.classList.add('btn-secondary'); }); const clickedButton = e.currentTarget; clickedButton.classList.remove('btn-secondary'); clickedButton.classList.add('active'); const priority = clickedButton.dataset.priority; if (priority === 'normal') clickedButton.classList.add('btn-success'); else if (priority === 'important') clickedButton.classList.add('btn-warning'); else if (priority === 'urgent') clickedButton.classList.add('btn-danger'); }); });
             const recipientInput = document.getElementById('destinatario-input');
@@ -453,15 +553,9 @@
                 refreshMessagesBtn.addEventListener('click', async () => {
                     refreshMessagesBtn.disabled = true;
                     refreshMessagesBtn.classList.add('loading');
-                    try {
-                        await loadMessages();
-                        showToast("Caixa de entrada atualizada!", "info");
-                    } catch (e) {
-                        showToast("Falha ao atualizar.", "danger");
-                    } finally {
-                        refreshMessagesBtn.classList.remove('loading');
-                        refreshMessagesBtn.disabled = false;
-                    }
+                    try { await loadMessages(); showToast("Caixa de entrada atualizada!", "info"); } 
+                    catch (e) { showToast("Falha ao atualizar.", "danger"); } 
+                    finally { refreshMessagesBtn.classList.remove('loading'); refreshMessagesBtn.disabled = false; }
                 });
             }
 
@@ -470,15 +564,9 @@
                 refreshUsersBtn.addEventListener('click', async () => {
                     refreshUsersBtn.disabled = true;
                     refreshUsersBtn.classList.add('loading');
-                    try {
-                        await loadUsersForAdmin();
-                        showToast("Lista de usuários atualizada!", "info");
-                    } catch (e) {
-                        showToast("Falha ao atualizar usuários.", "danger");
-                    } finally {
-                        refreshUsersBtn.classList.remove('loading');
-                        refreshUsersBtn.disabled = false;
-                    }
+                    try { await loadUsersForAdmin(); showToast("Lista de usuários atualizada!", "info"); } 
+                    catch (e) { showToast("Falha ao atualizar usuários.", "danger"); } 
+                    finally { refreshUsersBtn.classList.remove('loading'); refreshUsersBtn.disabled = false; }
                 });
             }
         }
@@ -488,12 +576,8 @@
         
         async function fetchUserProfile(user) {
             const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
-            if (data) {
-                currentUserProfile = { ...data, email: user.email };
-            } else {
-                console.error("Perfil não encontrado:", error);
-                currentUserProfile = { id: user.id, email: user.email, full_name: 'Usuário' };
-            }
+            if (data) { currentUserProfile = { ...data, email: user.email }; } 
+            else { console.error("Perfil não encontrado:", error); currentUserProfile = { id: user.id, email: user.email, full_name: 'Usuário' }; }
         }
 
         function showApp() { 
@@ -502,7 +586,6 @@
                 appContainer.classList.add('visible'); 
                 const isAdmin = currentUserProfile.role === 'Admin';
                 document.getElementById('admin-section').style.display = isAdmin ? 'block' : 'none'; 
-                document.getElementById('fab-new-post').style.display = isAdmin ? 'flex' : 'none';
                 showPage('dashboard-page'); 
                 loadAllDynamicData();
                 document.getElementById('dashboard-title').textContent = `Dashboard de ${currentUserProfile.full_name.split(' ')[0]}`;
@@ -520,8 +603,11 @@
             
             const fabMessage = document.getElementById('fab-new-message');
             const fabPost = document.getElementById('fab-new-post');
+            
             fabMessage.classList.add('hidden');
             fabPost.classList.add('hidden');
+            
+            // Lógica dos FABs
             if (pageId === 'mural-page' && currentUserProfile.role === 'Admin') {
                 fabPost.classList.remove('hidden');
             } else if (pageId !== 'conversation-view-page' && pageId !== 'mural-page') {
@@ -541,8 +627,8 @@
             const { data, error } = await supabaseClient.rpc('get_dashboard_stats').single();
             if (error) { 
                 console.error('Error fetching dashboard stats:', error); 
-                document.getElementById('pending-messages-count').textContent = 'X';
-                document.getElementById('urgent-tickets-count').textContent = 'X';
+                document.getElementById('pending-messages-count').textContent = '-';
+                document.getElementById('urgent-tickets-count').textContent = '-';
                 return;
             }
             document.getElementById('pending-messages-count').textContent = data.pending_messages_count || 0;
@@ -554,6 +640,337 @@
             if(error) console.error("Erro ao buscar usuários para pesquisa:", error); 
             else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; 
         }
+
+        // --- MURAL CULTURAL LOGIC ---
+        
+        function openNewPostModal() {
+            document.getElementById('new-post-modal').classList.add('visible');
+            selectMediaType('text'); // Reset para texto
+            document.getElementById('post-title').value = '';
+            document.getElementById('post-content').value = '';
+            document.getElementById('post-media-file').value = '';
+            document.getElementById('preview-area').innerHTML = '';
+            document.getElementById('preview-area').style.display = 'none';
+        }
+
+        function closeNewPostModal() {
+            document.getElementById('new-post-modal').classList.remove('visible');
+        }
+
+        function selectMediaType(type) {
+            document.querySelectorAll('.media-option').forEach(el => el.classList.remove('selected'));
+            document.getElementById(`opt-${type}`).classList.add('selected');
+            document.getElementById('post-media-type').value = type;
+
+            const mediaGroup = document.getElementById('media-input-group');
+            const fileInput = document.getElementById('post-media-file');
+            const label = document.getElementById('media-input-label');
+            const preview = document.getElementById('preview-area');
+
+            preview.innerHTML = '';
+            preview.style.display = 'none';
+            fileInput.value = '';
+
+            if (type === 'text') {
+                mediaGroup.style.display = 'none';
+            } else {
+                mediaGroup.style.display = 'block';
+                if (type === 'image') {
+                    label.textContent = "Selecione a Imagem";
+                    fileInput.accept = "image/*";
+                    fileInput.removeAttribute('multiple');
+                } else if (type === 'carousel') {
+                    label.textContent = "Selecione as Imagens (Múltiplas)";
+                    fileInput.accept = "image/*";
+                    fileInput.setAttribute('multiple', 'multiple');
+                } else if (type === 'video') {
+                    label.textContent = "Selecione o Vídeo";
+                    fileInput.accept = "video/*";
+                    fileInput.removeAttribute('multiple');
+                }
+            }
+        }
+
+        function handlePostMediaPreview(event) {
+            const files = event.target.files;
+            const preview = document.getElementById('preview-area');
+            const type = document.getElementById('post-media-type').value;
+
+            if (files.length > 0) {
+                preview.style.display = 'block';
+                if (type === 'video') {
+                     preview.innerHTML = `<p><span class="material-icons">movie</span> ${files[0].name} selecionado para upload.</p>`;
+                } else {
+                    // Preview de imagens simples
+                    let html = `<p>${files.length} arquivo(s) selecionado(s)</p><div style="display:flex; gap:5px; overflow-x:auto; margin-top:5px;">`;
+                    // Limitando preview visual para não travar se forem muitas fotos
+                    const limit = Math.min(files.length, 5); 
+                    for(let i=0; i<limit; i++) {
+                        const src = URL.createObjectURL(files[i]);
+                        html += `<img src="${src}" style="height:60px; width:auto;">`;
+                    }
+                    if(files.length > 5) html += `<span>...</span>`;
+                    html += `</div>`;
+                    preview.innerHTML = html;
+                }
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        async function submitPost() {
+            const btn = document.getElementById('btn-publish-post');
+            const title = document.getElementById('post-title').value;
+            const content = document.getElementById('post-content').value;
+            const mediaType = document.getElementById('post-media-type').value;
+            const fileInput = document.getElementById('post-media-file');
+
+            if (!title) { showToast('O título é obrigatório.', 'warning'); return; }
+            if (mediaType !== 'text' && fileInput.files.length === 0) { showToast('Selecione o arquivo de mídia.', 'warning'); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = 'Publicando...';
+
+            try {
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('content', content);
+                formData.append('author_id', currentUserProfile.id);
+                formData.append('media_type', mediaType);
+
+                if (mediaType !== 'text') {
+                    for (let i = 0; i < fileInput.files.length; i++) {
+                        formData.append('file', fileInput.files[i]);
+                    }
+                }
+
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) throw new Error("Sessão expirou.");
+
+                const response = await fetch(N8N_CREATE_POST_URL, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${session.access_token}` },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Erro ao comunicar com n8n.');
+
+                showToast('Publicação enviada com sucesso!', 'success');
+                closeNewPostModal();
+                loadMuralPage(); // Recarrega o feed
+
+            } catch (error) {
+                console.error(error);
+                showToast('Erro ao publicar: ' + error.message, 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Publicar';
+            }
+        }
+
+        async function loadMuralPage() {
+            const container = document.getElementById('mural-content');
+            container.innerHTML = `<div class="empty-state">Carregando mural...</div>`;
+            
+            // 1. Buscar posts
+            const { data: posts, error: postsError } = await supabaseClient
+                .from('posts')
+                .select('*, author:profiles(full_name, avatar_url)')
+                .order('created_at', { ascending: false });
+
+            if (postsError) {
+                container.innerHTML = `<div class="empty-state" style="color: var(--color-danger)">Erro ao carregar o mural.</div>`;
+                return;
+            }
+
+            if (!posts || posts.length === 0) {
+                container.innerHTML = `<div class="empty-state">Nenhuma publicação no mural ainda.</div>`;
+                return;
+            }
+
+            // 2. Buscar contagens e se o usuário atual curtiu (Manualmente por enquanto, idealmente seria uma View SQL)
+            // Para performance em produção, recomenda-se criar uma VIEW 'posts_view' no Supabase que já traga os counts e is_liked
+            const postsHTML = await Promise.all(posts.map(async (post) => {
+                const [likesRes, commentsRes, myLikeRes] = await Promise.all([
+                    supabaseClient.from('post_likes').select('id', { count: 'exact', head: true }).eq('post_id', post.id),
+                    supabaseClient.from('post_comments').select('id', { count: 'exact', head: true }).eq('post_id', post.id),
+                    supabaseClient.from('post_likes').select('id').eq('post_id', post.id).eq('user_id', currentUserProfile.id)
+                ]);
+
+                const likesCount = likesRes.count || 0;
+                const commentsCount = commentsRes.count || 0;
+                const isLiked = myLikeRes.data && myLikeRes.data.length > 0;
+                const avatarInitial = post.author.full_name ? post.author.full_name.charAt(0).toUpperCase() : '?';
+                
+                // Lógica de Renderização de Mídia
+                let mediaHTML = '';
+                if (post.media_data) {
+                    const md = post.media_data;
+                    if (md.type === 'image' && md.id) {
+                        mediaHTML = `<div class="media-container"><img src="https://lh3.googleusercontent.com/d/${md.id}" loading="lazy"></div>`;
+                    } else if (md.type === 'video') {
+                        // Se for YouTube ID
+                        if(md.source === 'youtube' && md.id) {
+                             mediaHTML = `<div class="media-container"><iframe src="https://www.youtube.com/embed/${md.id}" allowfullscreen></iframe></div>`;
+                        } else if (md.embed_url) {
+                             mediaHTML = `<div class="media-container"><iframe src="${md.embed_url}" allowfullscreen></iframe></div>`;
+                        }
+                    } else if (md.type === 'carousel' && md.files && md.files.length > 0) {
+                        const items = md.files.map(f => `<div class="carousel-item"><img src="https://lh3.googleusercontent.com/d/${f.id}" loading="lazy"></div>`).join('');
+                        mediaHTML = `<div class="carousel-container">${items}</div>`;
+                    }
+                }
+
+                const likeBtnClass = isLiked ? 'btn-icon liked' : 'btn-icon';
+                const likeIcon = isLiked ? 'thumb_up' : 'thumb_up_off_alt';
+
+                return `
+                    <div class="card mural-post-card" id="post-${post.id}">
+                        <div class="post-header">
+                            <div class="user-avatar">${avatarInitial}</div>
+                            <div class="post-meta">
+                                <h3>${post.author.full_name}</h3>
+                                <p>${new Date(post.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', hour: '2-digit', minute:'2-digit' })}</p>
+                            </div>
+                        </div>
+                        <h2 class="post-title">${post.title}</h2>
+                        ${mediaHTML}
+                        <div class="post-content-text">${post.content || ''}</div>
+                        
+                        <div class="post-actions">
+                            <button class="${likeBtnClass}" onclick="likePost('${post.id}')" id="like-btn-${post.id}">
+                                <span class="material-icons">${likeIcon}</span> <span id="likes-count-${post.id}">${likesCount}</span>
+                            </button>
+                            <button class="btn-icon" onclick="toggleComments('${post.id}')">
+                                <span class="material-icons">comment</span> ${commentsCount} Comentários
+                            </button>
+                        </div>
+                        
+                        <div class="comments-section" id="comments-${post.id}">
+                            <div id="comments-list-${post.id}">Carregando comentários...</div>
+                            <div class="comment-input-wrapper">
+                                <div class="user-avatar" style="width:32px; height:32px; font-size:0.8rem;">${currentUserProfile.full_name.charAt(0)}</div>
+                                <input type="text" class="input-field" id="comment-input-${post.id}" placeholder="Escreva um comentário...">
+                                <button class="btn btn-icon" onclick="submitComment('${post.id}')"><span class="material-icons">send</span></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }));
+
+            container.innerHTML = postsHTML.join('');
+        }
+
+        async function likePost(postId) {
+            // Optimistic UI Update
+            const btn = document.getElementById(`like-btn-${postId}`);
+            const countSpan = document.getElementById(`likes-count-${postId}`);
+            const icon = btn.querySelector('.material-icons');
+            
+            let currentCount = parseInt(countSpan.textContent);
+            const isLiked = btn.classList.contains('liked');
+
+            if (isLiked) {
+                btn.classList.remove('liked');
+                icon.textContent = 'thumb_up_off_alt';
+                countSpan.textContent = Math.max(0, currentCount - 1);
+            } else {
+                btn.classList.add('liked');
+                icon.textContent = 'thumb_up';
+                countSpan.textContent = currentCount + 1;
+            }
+
+            // Server Call
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                fetch(N8N_LIKE_POST_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                    body: JSON.stringify({ post_id: postId, user_id: currentUserProfile.id })
+                });
+            } catch (e) {
+                console.error("Falha ao curtir:", e);
+                showToast("Erro ao processar curtida", "danger");
+                // Revert UI on error (opcional)
+            }
+        }
+
+        async function toggleComments(postId) {
+            const section = document.getElementById(`comments-${postId}`);
+            const isVisible = section.classList.contains('visible');
+            
+            if (isVisible) {
+                section.classList.remove('visible');
+            } else {
+                section.classList.add('visible');
+                loadComments(postId);
+            }
+        }
+
+        async function loadComments(postId) {
+            const list = document.getElementById(`comments-list-${postId}`);
+            const { data: comments, error } = await supabaseClient
+                .from('post_comments')
+                .select('*, author:profiles(full_name)')
+                .eq('post_id', postId)
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                list.innerHTML = '<p class="text-error">Erro ao carregar.</p>';
+                return;
+            }
+
+            if (comments.length === 0) {
+                list.innerHTML = '<p style="color:var(--color-text-secondary); font-size:0.9rem;">Seja o primeiro a comentar!</p>';
+                return;
+            }
+
+            list.innerHTML = comments.map(c => `
+                <div class="comment-item">
+                    <div class="comment-avatar">${c.author.full_name.charAt(0)}</div>
+                    <div class="comment-box">
+                        <span class="comment-author">${c.author.full_name}</span>
+                        <p class="comment-text">${c.content}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function submitComment(postId) {
+            const input = document.getElementById(`comment-input-${postId}`);
+            const content = input.value.trim();
+            if (!content) return;
+
+            input.value = ''; // Clear immediately
+            
+            // Optimistic Append (Simulado)
+            const list = document.getElementById(`comments-list-${postId}`);
+            if(list.querySelector('p')?.textContent === 'Seja o primeiro a comentar!') list.innerHTML = '';
+            
+            const tempHTML = `
+                <div class="comment-item" style="opacity: 0.7;">
+                    <div class="comment-avatar">${currentUserProfile.full_name.charAt(0)}</div>
+                    <div class="comment-box"><span class="comment-author">${currentUserProfile.full_name}</span><p class="comment-text">${content} <small>(enviando...)</small></p></div>
+                </div>`;
+            list.insertAdjacentHTML('beforeend', tempHTML);
+
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                const res = await fetch(N8N_COMMENT_POST_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                    body: JSON.stringify({ post_id: postId, user_id: currentUserProfile.id, content: content })
+                });
+                
+                if(res.ok) {
+                    setTimeout(() => loadComments(postId), 1000); // Reload real data after delay
+                }
+            } catch (e) {
+                showToast("Erro ao enviar comentário", "danger");
+            }
+        }
+        
+        // --- EXISTING UTILS ---
 
         async function loadTeamPage() {
             const container = document.getElementById('team-list-content');
@@ -801,74 +1218,6 @@
                     <h3 class="card-title"><span class="material-icons">military_tech</span> Reconhecimentos Recentes (${achievements ? achievements.length : 0})</h3>
                     <div id="public-achievements-list">${achievementsHTML}</div>
                 </div>`;
-        }
-
-        async function loadMuralPage() {
-            const container = document.getElementById('mural-content');
-            container.innerHTML = `<div class="empty-state">Carregando mural...</div>`;
-            
-            // Passo 1: Buscar os posts
-            const { data: posts, error: postsError } = await supabaseClient
-                .from('posts')
-                .select('*, author:profiles(full_name, avatar_url)')
-                .order('created_at', { ascending: false });
-
-            if (postsError) {
-                console.error("Erro ao carregar mural:", postsError);
-                container.innerHTML = `<div class="empty-state" style="color: var(--color-danger)">Erro ao carregar o mural.</div>`;
-                return;
-            }
-
-            if (posts.length === 0) {
-                container.innerHTML = `<div class="empty-state">Nenhuma publicação no mural ainda.</div>`;
-                return;
-            }
-            
-            // Passo 2: Para cada post, buscar contagem de likes e comments
-            const postsWithCounts = await Promise.all(posts.map(async (post) => {
-                const [likesRes, commentsRes] = await Promise.all([
-                    supabaseClient.from('post_likes').select('*', { count: 'exact', head: true }).eq('post_id', post.id),
-                    supabaseClient.from('post_comments').select('*', { count: 'exact', head: true }).eq('post_id', post.id)
-                ]);
-                post.likes_count = likesRes.count || 0;
-                post.comments_count = commentsRes.count || 0;
-                return post;
-            }));
-
-            container.innerHTML = postsWithCounts.map(post => {
-                const avatarInitial = post.author.full_name ? post.author.full_name.charAt(0).toUpperCase() : '?';
-                let mediaHTML = '';
-                if (post.media_data) {
-                    if (post.media_data.type === 'image') {
-                        mediaHTML = `<div class="post-media"><img src="https://lh3.googleusercontent.com/d/${post.media_data.id}" alt="Post image"></div>`;
-                    } else if (post.media_data.type === 'video') {
-                        mediaHTML = `<div class="post-media"><iframe src="https://www.youtube.com/embed/${post.media_data.id}" frameborder="0" allowfullscreen></iframe></div>`;
-                    }
-                }
-
-                return `
-                    <div class="card mural-post">
-                        <div class="post-header">
-                            <div class="user-avatar">${avatarInitial}</div>
-                            <div class="post-meta">
-                                <h3>${post.author.full_name}</h3>
-                                <p>${new Date(post.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}</p>
-                            </div>
-                        </div>
-                        <h2 class="post-title">${post.title}</h2>
-                        ${mediaHTML}
-                        <div class="post-content-text">${post.content}</div>
-                        <div class="post-actions">
-                            <button class="btn btn-icon" onclick="likePost('${post.id}')"><span class="material-icons">thumb_up</span> ${post.likes_count} Curtidas</button>
-                            <button class="btn btn-icon"><span class="material-icons">comment</span> ${post.comments_count} Comentários</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        async function likePost(postId) {
-             showToast('Funcionalidade "Curtir" em desenvolvimento. Webhook n8n necessário.', 'info');
         }
 
         function handleAvatarUpload(event) {
