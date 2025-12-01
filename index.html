@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt--BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -265,6 +265,23 @@
         .team-user-card .user-avatar { width: 64px; height: 64px; font-size: 2rem; margin-bottom: 1rem; }
         .team-user-card h3 { margin: 0 0 0.25rem 0; font-size: 1.1rem; }
         .team-user-card p { margin: 0; color: var(--color-text-secondary); font-size: 0.9rem; }
+        
+        /* Sidebar Scroll Fix */
+        .sidebar-scroll-area { flex: 1; overflow-y: auto; padding-bottom: 1rem; }
+        
+        /* Mural Cultural Styles */
+        .mural-post { margin-bottom: 2rem; }
+        .mural-post .post-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .mural-post .post-header .user-avatar { width: 48px; height: 48px; font-size: 1.5rem; }
+        .mural-post .post-header .post-meta h3 { margin: 0; }
+        .mural-post .post-header .post-meta p { margin: 0; font-size: 0.9rem; color: var(--color-text-secondary); }
+        .mural-post .post-content-text { font-size: 1.1rem; line-height: 1.7; margin: 1rem 0; }
+        .mural-post .post-media img { max-width: 100%; border-radius: 8px; margin: 1rem 0; }
+        .mural-post .post-media iframe { width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px; margin: 1rem 0;}
+        .post-actions { display: flex; gap: 1.5rem; align-items: center; border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); padding: 0.5rem 0; }
+        .post-actions .btn-icon { color: var(--color-text-secondary); font-weight: 500; border-radius: 8px; padding: 0.5rem 0.75rem;}
+        .post-actions .btn-icon:hover { background-color: var(--color-background); color: var(--color-text-primary); }
+        .post-actions .btn-icon .material-icons { margin-right: 0.5rem; }
     </style>
 </head>
 <body>
@@ -356,6 +373,11 @@
         const N8N_MARK_AS_READ_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/mark-as-read';
         const N8N_TOGGLE_ARCHIVE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/toggle-archive';
         const N8N_RESOLVE_TICKET_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/resolve-ticket';
+        // --- NOVAS URLs PARA O MURAL CULTURAL ---
+        const N8N_CREATE_POST_URL = 'COLE_SUA_URL_DO_N8N_AQUI';
+        const N8N_LIKE_POST_URL = 'COLE_SUA_URL_DO_N8N_AQUI';
+        const N8N_COMMENT_POST_URL = 'COLE_SUA_URL_DO_N8N_AQUI';
+
 
         let currentUserProfile = null;
         let quillEditor = null;
@@ -402,7 +424,7 @@
                 <div id="team-page" class="page-content"><div class="page-header"><h1>Equipe</h1><p>Veja os perfis e performance dos seus colegas.</p></div><div id="team-list-content">Carregando equipe...</div></div>
                 <div id="channels-page" class="page-content"><div class="page-header"><h1>Canais</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
                 <div id="rankings-page" class="page-content"><div class="page-header"><h1>Performance e Rankings</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
-                <div id="mural-page" class="page-content"><div class="page-header"><h1>Mural Cultural</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
+                <div id="mural-page" class="page-content"><div class="page-header"><h1>Mural Cultural</h1><p>Mensagem cultural da semana</p></div><div id="mural-content">Carregando...</div><button class="fab" id="fab-new-post" title="Nova Postagem" style="display: none;"><span class="material-icons">add</span></button></div>
                 <div id="kb-page" class="page-content"><div class="page-header"><h1>Base de Conhecimento</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
                 <div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div>
                 <div id="users-page" class="page-content"><div class="page-header"><div class="page-header-title"><h1>Gerenciamento de Usuários</h1></div><div class="page-header-actions"><button id="refresh-users-btn" class="refresh-btn" title="Atualizar usuários"><span class="material-icons">refresh</span></button><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th>Usuário & Email</th><th>Departamento & Cargo</th><th>Score</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div>
@@ -495,7 +517,9 @@
             const appContainer = document.getElementById('app-container'); 
             if(appContainer && currentUserProfile) { 
                 appContainer.classList.add('visible'); 
-                document.getElementById('admin-section').style.display = (currentUserProfile.role === 'Admin') ? 'block' : 'none'; 
+                const isAdmin = currentUserProfile.role === 'Admin';
+                document.getElementById('admin-section').style.display = isAdmin ? 'block' : 'none'; 
+                document.getElementById('fab-new-post').style.display = isAdmin ? 'flex' : 'none';
                 showPage('dashboard-page'); 
                 loadAllDynamicData();
                 document.getElementById('dashboard-title').textContent = `Dashboard de ${currentUserProfile.full_name.split(' ')[0]}`;
@@ -511,11 +535,20 @@
             const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); 
             if (activeLink) activeLink.classList.add('active');
             
-            document.getElementById('fab-new-message').classList.toggle('hidden', pageId === 'conversation-view-page');
+            const fabMessage = document.getElementById('fab-new-message');
+            const fabPost = document.getElementById('fab-new-post');
+            fabMessage.classList.add('hidden');
+            fabPost.classList.add('hidden');
+            if (pageId === 'mural-page' && currentUserProfile.role === 'Admin') {
+                fabPost.classList.remove('hidden');
+            } else if (pageId !== 'conversation-view-page') {
+                fabMessage.classList.remove('hidden');
+            }
 
             if (pageId === 'messages-page') loadMessages();
             if (pageId === 'team-page') loadTeamPage();
             if (pageId === 'profile-page') loadUserProfileData(targetUserId);
+            if (pageId === 'mural-page') loadMuralPage();
         }
 
         async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
@@ -787,6 +820,57 @@
                 </div>`;
         }
 
+        async function loadMuralPage() {
+            const container = document.getElementById('mural-content');
+            container.innerHTML = `<div class="empty-state">Carregando mural...</div>`;
+            const { data: posts, error } = await supabaseClient.from('posts').select(`*, author:profiles(full_name, avatar_url), likes:post_likes(count), comments:post_comments(count)`).order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Erro ao carregar mural:", error);
+                container.innerHTML = `<div class="empty-state" style="color: var(--color-danger)">Erro ao carregar o mural.</div>`;
+                return;
+            }
+
+            if (posts.length === 0) {
+                container.innerHTML = `<div class="empty-state">Nenhuma publicação no mural ainda.</div>`;
+                return;
+            }
+
+            container.innerHTML = posts.map(post => {
+                const avatarInitial = post.author.full_name ? post.author.full_name.charAt(0).toUpperCase() : '?';
+                let mediaHTML = '';
+                if (post.media_data) {
+                    if (post.media_data.type === 'image') {
+                        mediaHTML = `<div class="post-media"><img src="https://lh3.googleusercontent.com/d/${post.media_data.id}" alt="Post image"></div>`;
+                    } else if (post.media_data.type === 'video') {
+                        mediaHTML = `<div class="post-media"><iframe src="https://www.youtube.com/embed/${post.media_data.id}" frameborder="0" allowfullscreen></iframe></div>`;
+                    }
+                }
+
+                return `
+                    <div class="card mural-post">
+                        <div class="post-header">
+                            <div class="user-avatar">${avatarInitial}</div>
+                            <div class="post-meta">
+                                <h3>${post.author.full_name}</h3>
+                                <p>${new Date(post.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })}</p>
+                            </div>
+                        </div>
+                        <h2 class="post-title">${post.title}</h2>
+                        ${mediaHTML}
+                        <div class="post-content-text">${post.content}</div>
+                        <div class="post-actions">
+                            <button class="btn btn-icon" onclick="likePost('${post.id}')"><span class="material-icons">thumb_up</span> ${post.likes[0]?.count || 0} Curtidas</button>
+                            <button class="btn btn-icon"><span class="material-icons">comment</span> ${post.comments[0]?.count || 0} Comentários</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function likePost(postId) {
+             showToast('Funcionalidade "Curtir" em desenvolvimento. Webhook n8n necessário.', 'info');
+        }
 
         function handleAvatarUpload(event) {
             const file = event.target.files[0]; if (!file) return;
