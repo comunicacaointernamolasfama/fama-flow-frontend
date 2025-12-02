@@ -96,40 +96,6 @@
         .data-table-fino .col-actions { width: 5%; text-align: center; }
         .data-table-fino .col-actions button { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
         .data-table-fino .col-actions button:hover { background-color: var(--color-background); color: var(--color-text-primary); }
-        .tag-fino { font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 12px; margin-left: 0.5rem; display: inline-block; line-height: 1.2; vertical-align: middle; }
-        .tag-fino.tag-urgent { background-color: var(--color-danger-bg); color: var(--color-danger); }
-        .tag-fino.tag-important { background-color: var(--color-warning-bg); color: var(--color-warning); }
-        .tag-icon { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; color: var(--color-text-secondary); }
-        .tag-icon .material-icons { font-size: 18px; }
-        .due-date-tag { font-weight: 500; color: var(--color-text-primary); }
-        .read-receipt { display: inline-flex; vertical-align: middle; margin-right: 8px; }
-        .read-receipt .material-icons { font-size: 18px; }
-        .read-receipt.read .material-icons { color: var(--color-info); }
-        .read-receipt.delivered .material-icons { color: var(--color-text-secondary); opacity: 0.6; }
-        .refresh-btn { background: none; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; line-height: 1; }
-        .refresh-btn:hover { background-color: var(--color-background); }
-        .refresh-btn .material-icons { color: var(--color-text-secondary); transition: transform 0.3s; }
-        .refresh-btn:hover .material-icons { color: var(--color-text-primary); }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .refresh-btn.loading .material-icons { animation: spin 1s linear infinite; }
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--color-border); }
-        .data-table thead th { background-color: var(--color-background); font-weight: 600; color: var(--color-text-secondary); font-size: 0.9rem; }
-        .user-info-cell { display: flex; align-items: center; gap: 1rem; }
-        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--color-info-bg); color: var(--color-info); display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; }
-        .user-info-cell .user-name { font-weight: 600; }
-        .user-info-cell .user-email { font-size: 0.9rem; color: var(--color-text-secondary); }
-        .user-meta-cell { display: flex; flex-direction: column; gap: 0.25rem; }
-        .user-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .user-tag { font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.25rem; }
-        .user-tag.department { background-color: var(--color-info-bg); color: var(--color-info); }
-        .user-tag.role-admin { background-color: var(--color-danger-bg); color: var(--color-danger); }
-        .user-tag.role { background-color: var(--color-background); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
-        .score-cell { font-weight: 600; display: flex; align-items: center; gap: 0.25rem; text-align: left !important; }
-        .score-cell .material-icons { color: var(--color-warning); font-size: 18px; }
-        .action-buttons { text-align: right; }
-        .action-buttons .btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
-        .action-buttons .btn:hover { background-color: var(--color-background); color: var(--color-text-primary); }
         
         /* --- PROFILE PAGE REFACTOR --- */
         #profile-page .page-header { margin-bottom: 1rem; }
@@ -151,6 +117,7 @@
         .pendency-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
         .pendency-title { margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; font-weight: 600; line-height: 1.2; }
         .pendency-meta { font-size: 0.85rem; color: var(--color-text-secondary); }
+        .pendency-meta div { margin-bottom: 2px; }
         .pendency-alert { font-size: 0.85rem; font-weight: 600; color: var(--color-danger); margin-top: auto; }
         
         .achievements-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem; text-align: center; }
@@ -457,7 +424,7 @@
         const N8N_TOGGLE_ARCHIVE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/toggle-archive';
         const N8N_RESOLVE_TICKET_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/resolve-ticket';
         
-        // --- URL DO MURAL CULTURAL (ATUALIZADA) ---
+        // --- URL DO MURAL CULTURAL ---
         const N8N_CREATE_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-post';
         const N8N_LIKE_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/like-post';
         const N8N_COMMENT_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/comment-post';
@@ -1164,6 +1131,10 @@
                     const priorityText = p.priority === 'urgent' ? 'Urgente' : (p.priority === 'important' ? 'Importante' : 'Normal');
                     const priorityClass = p.priority === 'urgent' ? 'tag-urgent' : (p.priority === 'important' ? 'tag-important' : '');
                     
+                    const readStatus = p.first_read_at
+                        ? `<span style="color:var(--color-text-secondary);">Visto em: ${new Date(p.first_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'})}</span>`
+                        : `<span style="font-weight: 600; color: var(--color-text-primary);">⚠️ Ainda não visualizado</span>`;
+
                     return `
                         <div class="pendency-card" style="border-left-color: ${borderColor}">
                             <div class="pendency-header">
@@ -1173,6 +1144,7 @@
                             <div class="pendency-meta">
                                 <div>De: ${p.sender_name.split(' ')[0]} (${p.sender_department || '-'})</div>
                                 ${p.due_date ? `<div>Prazo: ${new Date(p.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : ''}
+                                <div style="margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 4px;">${readStatus}</div>
                             </div>
                             ${delayText ? `<div class="pendency-alert">${delayText}</div>` : ''}
                         </div>`;
