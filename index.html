@@ -170,6 +170,24 @@
         .achievement-badge .badge-icon { font-size: 48px; color: var(--color-warning); }
         .achievement-badge p { font-weight: 500; margin: 0.5rem 0 0; font-size: 0.9rem; }
         
+        /* --- TEAM PAGE STYLES (REFACTORED) --- */
+        .team-section-title { grid-column: 1 / -1; margin: 2rem 0 1rem 0; font-size: 1.1rem; color: var(--color-text-primary); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .team-section-title .material-icons { color: var(--color-text-secondary); }
+        
+        .team-user-card { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
+        .team-user-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--color-info); }
+        
+        .team-avatar-img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 2px solid var(--color-border); }
+        .team-user-card .user-avatar { width: 64px; height: 64px; font-size: 1.5rem; margin-bottom: 1rem; } /* Fallback */
+        
+        .team-user-card h3 { margin: 0 0 0.25rem 0; font-size: 1.1rem; font-weight: 600; }
+        .team-user-card p { margin: 0; color: var(--color-text-secondary); font-size: 0.85rem; }
+        
+        .score-pill { display: inline-flex; align-items: center; gap: 0.25rem; background-color: var(--color-background); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-top: 0.75rem; border: 1px solid var(--color-border); }
+        .score-pill.good { color: var(--color-success); border-color: var(--color-success-bg); background-color: var(--color-success-bg); }
+        .score-pill.med { color: var(--color-warning); border-color: var(--color-warning-bg); background-color: var(--color-warning-bg); }
+        .score-pill.bad { color: var(--color-danger); border-color: var(--color-danger-bg); background-color: var(--color-danger-bg); }
+        
         #new-message-popup { position: fixed; bottom: 0; right: 3rem; width: 600px; max-width: 90vw; background-color: var(--color-surface); border: 1px solid var(--color-border); border-top-left-radius: 12px; border-top-right-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); z-index: 1001; display: none; flex-direction: column; transition: transform 0.3s ease-out; transform: translateY(100%); }
         #new-message-popup.visible { display: flex; transform: translateY(0); }
         .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background-color: var(--color-background); border-bottom: 1px solid var(--color-border); cursor: move; }
@@ -993,22 +1011,74 @@
         async function loadTeamPage() {
             const container = document.getElementById('team-list-content');
             container.innerHTML = `<div class="empty-state">Carregando equipe...</div>`;
-            const { data, error } = await supabaseClient.from('profiles').select('*').order('full_name');
+            
+            // BUSCA DADOS DE TODOS OS PERFIS
+            const { data: users, error } = await supabaseClient.from('profiles').select('*').order('full_name');
             if (error) {
                 container.innerHTML = `<div class="empty-state">Falha ao carregar a equipe.</div>`;
                 console.error("Erro ao carregar equipe:", error);
                 return;
             }
-            container.innerHTML = `<div class="team-grid">${data.map(user => {
-                const avatarInitial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
+
+            // FILTRA POR SETOR
+            const myDept = currentUserProfile.department;
+            const myTeam = users.filter(u => u.department === myDept && u.id !== currentUserProfile.id);
+            const others = users.filter(u => u.department !== myDept && u.id !== currentUserProfile.id);
+
+            // FUNÇÃO AUXILIAR PARA GERAR HTML DOS CARDS
+            const generateCardHTML = (user) => {
+                // Lógica de Avatar: Foto > Inicial
+                let avatarHTML = '';
+                if (user.avatar_url) {
+                    // Assume que se tiver 'http' é link direto, senão é ID do drive
+                    const src = user.avatar_url.includes('http') ? user.avatar_url : `https://lh3.googleusercontent.com/d/${user.avatar_url}`;
+                    avatarHTML = `<img src="${src}" class="team-avatar-img" alt="${user.full_name}">`;
+                } else {
+                    const initial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
+                    avatarHTML = `<div class="user-avatar">${initial}</div>`;
+                }
+
+                // Lógica de Score
+                const score = user.score || 100;
+                let scoreClass = 'good';
+                if (score < 50) scoreClass = 'bad';
+                else if (score < 80) scoreClass = 'med';
+
                 return `
                     <div class="team-user-card" onclick="showPage('profile-page', '${user.id}')">
-                        <div class="user-avatar">${avatarInitial}</div>
+                        ${avatarHTML}
                         <h3>${user.full_name}</h3>
-                        <p>${user.role || 'Membro'}</p>
+                        <p>${user.role || 'Colaborador'} • ${user.department || 'Geral'}</p>
+                        <div class="score-pill ${scoreClass}">
+                            <span class="material-icons" style="font-size:12px;">star</span> ${score}
+                        </div>
                     </div>
                 `;
-            }).join('')}</div>`;
+            };
+
+            let html = '';
+
+            // Renderiza "Meu Setor" (se tiver gente e se o usuário tiver setor)
+            if (myDept && myTeam.length > 0) {
+                html += `<div class="team-section-title"><span class="material-icons">groups</span> MEU SETOR (${myDept.toUpperCase()})</div>`;
+                html += `<div class="team-grid">`;
+                html += myTeam.map(generateCardHTML).join('');
+                html += `</div>`;
+            }
+
+            // Renderiza "Outros Colaboradores"
+            if (others.length > 0) {
+                html += `<div class="team-section-title" style="margin-top: 2rem;"><span class="material-icons">public</span> OUTROS COLABORADORES</div>`;
+                html += `<div class="team-grid">`;
+                html += others.map(generateCardHTML).join('');
+                html += `</div>`;
+            }
+
+            if (html === '') {
+                html = `<div class="empty-state">Nenhum outro membro encontrado.</div>`;
+            }
+
+            container.innerHTML = html;
         }
 
         function openRecipientModal() {
