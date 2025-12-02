@@ -96,13 +96,57 @@
         .data-table-fino .col-actions { width: 5%; text-align: center; }
         .data-table-fino .col-actions button { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
         .data-table-fino .col-actions button:hover { background-color: var(--color-background); color: var(--color-text-primary); }
+        .tag-fino { font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 12px; margin-left: 0.5rem; display: inline-block; line-height: 1.2; vertical-align: middle; }
+        .tag-fino.tag-urgent { background-color: var(--color-danger-bg); color: var(--color-danger); }
+        .tag-fino.tag-important { background-color: var(--color-warning-bg); color: var(--color-warning); }
+        .tag-icon { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; color: var(--color-text-secondary); }
+        .tag-icon .material-icons { font-size: 18px; }
+        .due-date-tag { font-weight: 500; color: var(--color-text-primary); }
+        .read-receipt { display: inline-flex; vertical-align: middle; margin-right: 8px; }
+        .read-receipt .material-icons { font-size: 18px; }
+        .read-receipt.read .material-icons { color: var(--color-info); }
+        .read-receipt.delivered .material-icons { color: var(--color-text-secondary); opacity: 0.6; }
+        .refresh-btn { background: none; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; line-height: 1; }
+        .refresh-btn:hover { background-color: var(--color-background); }
+        .refresh-btn .material-icons { color: var(--color-text-secondary); transition: transform 0.3s; }
+        .refresh-btn:hover .material-icons { color: var(--color-text-primary); }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .refresh-btn.loading .material-icons { animation: spin 1s linear infinite; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--color-border); }
+        .data-table thead th { background-color: var(--color-background); font-weight: 600; color: var(--color-text-secondary); font-size: 0.9rem; }
+        .user-info-cell { display: flex; align-items: center; gap: 1rem; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--color-info-bg); color: var(--color-info); display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; }
+        .user-info-cell .user-name { font-weight: 600; }
+        .user-info-cell .user-email { font-size: 0.9rem; color: var(--color-text-secondary); }
+        .user-meta-cell { display: flex; flex-direction: column; gap: 0.25rem; }
+        .user-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .user-tag { font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.25rem; }
+        .user-tag.department { background-color: var(--color-info-bg); color: var(--color-info); }
+        .user-tag.role-admin { background-color: var(--color-danger-bg); color: var(--color-danger); }
+        .user-tag.role { background-color: var(--color-background); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
+        .score-cell { font-weight: 600; display: flex; align-items: center; gap: 0.25rem; text-align: left !important; }
+        .score-cell .material-icons { color: var(--color-warning); font-size: 18px; }
+        .action-buttons { text-align: right; }
+        .action-buttons .btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
+        .action-buttons .btn:hover { background-color: var(--color-background); color: var(--color-text-primary); }
         
         /* --- PROFILE PAGE REFACTOR --- */
         #profile-page .page-header { margin-bottom: 1rem; }
         .profile-header-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-bottom: 2rem; }
-        .profile-header-card .user-avatar { width: 80px; height: 80px; font-size: 2.5rem; margin-bottom: 1rem; }
+        .profile-header-card .user-avatar { width: 80px; height: 80px; font-size: 2.5rem; margin-bottom: 1rem; transition: border-color 0.3s; border: 4px solid transparent; }
         .profile-info h3 { margin: 0; font-size: 1.5rem; }
         .profile-info p { margin: 0.25rem 0 0; color: var(--color-text-secondary); }
+        
+        /* Zonas de Risco */
+        .status-badge { display: inline-block; margin-top: 0.5rem; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
+        .zone-green .user-avatar { border-color: var(--color-success); }
+        .zone-green .status-badge { background-color: var(--color-success-bg); color: var(--color-success); }
+        .zone-yellow .user-avatar { border-color: var(--color-warning); }
+        .zone-yellow .status-badge { background-color: var(--color-warning-bg); color: var(--color-warning); }
+        .zone-red .user-avatar { border-color: var(--color-danger); }
+        .zone-red .status-badge { background-color: var(--color-danger-bg); color: var(--color-danger); }
+
         .card-title { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; }
         .card-title .material-icons { color: var(--color-brand-primary); }
         .progress-bar-container { width: 100%; background-color: var(--color-background); border-radius: 8px; overflow: hidden; height: 12px; }
@@ -1112,6 +1156,33 @@
             const score = profile.score || 100;
             const scorePercentage = Math.min((score / 200) * 100, 100);
 
+            // --- Lógica das Faixas de Risco (Gameficação) ---
+            let riskZone = 'green';
+            let riskText = 'Em Dia';
+            
+            if (pendencies && pendencies.length > 0) {
+                const totalPendencies = pendencies.length;
+                let maxDelayDays = 0;
+                const now = new Date();
+
+                pendencies.forEach(p => {
+                    const dateRef = p.due_date ? new Date(p.due_date) : new Date(p.created_at);
+                    const diffTime = Math.abs(now - dateRef);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    if (diffDays > maxDelayDays) maxDelayDays = diffDays;
+                });
+
+                if (totalPendencies > 10 || maxDelayDays > 10) {
+                    riskZone = 'yellow';
+                    riskText = 'Atenção';
+                }
+                // Regra crítica (sobrescreve amarela)
+                if (maxDelayDays > 20) {
+                    riskZone = 'red';
+                    riskText = 'Crítico';
+                }
+            }
+
             // -- NEW PENDENCY CARD LOGIC (GRID) --
             let pendenciesHTML = `<div class="empty-state" style="grid-column: 1/-1;">Nenhuma pendência encontrada.</div>`;
             if (pendencies && pendencies.length > 0) {
@@ -1155,11 +1226,12 @@
             const roleAndDept = [profile.role, profile.department].filter(Boolean).join(' • ');
 
             container.innerHTML = `
-                <div class="profile-header-card">
+                <div class="profile-header-card zone-${riskZone}">
                     <div class="user-avatar">${avatarInitial}</div>
                     <div class="profile-info">
                         <h3>${profile.full_name}</h3>
                         <p>${roleAndDept || 'Colaborador Fama'}</p>
+                        <span class="status-badge">${riskText}</span>
                     </div>
                 </div>
                 
@@ -1485,10 +1557,22 @@
                 }
             }
             
+            // --- BOTÃO VER PERFIL (NOVIDADE) ---
+            // Se o remetente não for eu mesmo, mostra botão para ver o perfil dele
+            let profileButton = '';
+            if (convData.created_by !== currentUserProfile.id) {
+                const firstName = senderName.split(' ')[0];
+                profileButton = `<button class="btn btn-secondary" onclick="showPage('profile-page', '${convData.created_by}')" title="Ver pendências de ${firstName}"><span class="material-icons">person</span> Ver Perfil</button>`;
+            }
+
             headerContainer.innerHTML = `
                 <div class="conversation-main-header">
                     <button class="btn btn-secondary" onclick="showPage('messages-page'); loadMessages();"><span class="material-icons">arrow_back</span> Voltar</button>
-                    <div class="page-header-actions">${actionButtonsHTML}<button class="btn btn-icon" title="Mais opções"><span class="material-icons">more_vert</span></button></div>
+                    <div class="page-header-actions">
+                        ${profileButton}
+                        ${actionButtonsHTML}
+                        <button class="btn btn-icon" title="Mais opções"><span class="material-icons">more_vert</span></button>
+                    </div>
                 </div>
                 <div class="conversation-info-block">
                     <h1>${convData.subject}</h1>
