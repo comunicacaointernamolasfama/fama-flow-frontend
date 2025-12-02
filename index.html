@@ -1400,6 +1400,195 @@
             container.innerHTML = `<table class="data-table-fino"><tbody>${tableRows}</tbody></table>`;
         }
 
+        async function loadMessages() {
+            if (!currentUserProfile) return;
+            const containers = ['inbox-content', 'sent-content', 'archived-content'];
+            containers.forEach(id => document.getElementById(id).innerHTML = '<div class="empty-state">Carregando...</div>');
+            
+            const { data, error } = await supabaseClient.from('user_conversations_view').select('*').order('last_message_created_at', { ascending: false, nulls: 'last' });
+
+            if (error) {
+                console.error('Erro ao buscar mensagens:', error);
+                const errorMsg = `<div class="empty-state" style="color: var(--color-danger);">Erro ao carregar mensagens.</div>`;
+                containers.forEach(id => document.getElementById(id).innerHTML = errorMsg); return;
+            }
+            const nonArchived = data.filter(conv => !conv.is_archived);
+            const archived = data.filter(conv => conv.is_archived);
+            const inboxMessages = nonArchived.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.other_participants_names === null));
+            const sentMessages = nonArchived.filter(conv => conv.last_message_sender_id === currentUserProfile.id);
+
+            renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
+            renderMessageTable(sentMessages, 'sent-content', 'sent');
+            renderMessageTable(archived, 'archived-content', 'archived');
+        }
+
+        async function toggleArchive(buttonElement, conversationId) {
+            const row = buttonElement.closest('tr');
+            if (row) { row.style.transition = 'opacity 0.3s ease-out'; row.style.opacity = '0'; setTimeout(() => row.remove(), 300); }
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) throw new Error("Sessão expirou.");
+                const response = await fetch(N8N_TOGGLE_ARCHIVE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                    body: JSON.stringify({ conversation_id: conversationId })
+                });
+                if (!response.ok) throw new Error("Falha ao comunicar com o servidor.");
+                showToast("Status da conversa alterado.", 'success');
+            } catch (e) {
+                console.error("Erro ao arquivar:", e.message); showToast("Falha ao arquivar conversa.", 'danger');
+                if (row) row.style.opacity = '1';
+            }
+        }
+        
+        async function resolveTicket(conversationId) {
+            showConfirmation(
+                "Confirmar Resolução",
+                "Tem certeza que deseja marcar este chamado como resolvido? Esta ação não pode ser desfeita.",
+                async () => {
+                    try {
+                        const { data: { session } } = await supabaseClient.auth.getSession();
+                        if (!session) throw new Error("Sessão expirou.");
+                        const response = await fetch(N8N_RESOLVE_TICKET_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                            body: JSON.stringify({ conversation_id: conversationId, resolved_at: new Date().toISOString() })
+                        });
+                        if (!response.ok) throw new Error("Falha ao resolver o chamado. Você pode não ter permissão.");
+                        
+                        showToast("Chamado resolvido com sucesso!", 'success');
+                        showPage('messages-page'); 
+                        await Promise.all([loadMessages(), loadDashboardStats()]);
+
+                    } catch(e) {
+                        console.error("Erro ao resolver chamado:", e.message);
+                        showToast(e.message, 'danger');
+                    }
+                }
+            );
+        }
+
+        async function openConversation(rowElement) {
+            const conversationId = rowElement.dataset.conversationId;
+            if (!conversationId) { showToast('ID da conversa não encontrado.', 'danger'); return; }
+
+            if (rowElement.classList.contains('row-unread')) {
+                rowElement.classList.remove('row-unread'); 
+                rowElement.classList.add('row-read');
+
+                try {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (session) {
+                        fetch(N8N_MARK_AS_READ_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                            body: JSON.stringify({ conversation_id: conversationId, first_read_at: new Date().toISOString() })
+                        });
+                    }
+                } catch (e) { console.warn("Não foi possível marcar a mensagem como lida:", e.message); }
+            }
+
+            showPage('conversation-view-page');
+            document.getElementById('conversation-header').innerHTML = '<div class="empty-state">Carregando...</div>';
+            document.getElementById('conversation-messages').innerHTML = '<div class="empty-state">Carregando mensagens...</div>';
+
+            const [messagesRes, attachmentsRes, convDataRes] = await Promise.all([
+                supabaseClient.from('conversation_messages_view').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true }),
+                supabaseClient.from('message_attachments_view').select('*'),
+                supabaseClient.from('user_conversations_view').select('*').eq('id', conversationId).single()
+            ]);
+
+            if (messagesRes.error || attachmentsRes.error || convDataRes.error) {
+                showToast('Erro ao carregar detalhes da conversa.', 'danger');
+                console.error(messagesRes.error || attachmentsRes.error || convDataRes.error);
+                document.getElementById('conversation-header').innerHTML = ''; document.getElementById('conversation-messages').innerHTML = '<div class="empty-state">Falha ao carregar.</div>'; return;
+            }
+
+            const { data: messages } = messagesRes;
+            const { data: allAttachments } = attachmentsRes;
+            const { data: convData } = convDataRes;
+            
+            const headerContainer = document.getElementById('conversation-header');
+            let ticketInfoHTML = '';
+            let actionButtonsHTML = '';
+            
+            if (convData.type === 'ticket') {
+                let priorityTag = '';
+                if (convData.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
+                else if (convData.priority === 'important') priorityTag = `<span class="tag-fino tag-important">Importante</span>`;
+                
+                const dueDateHTML = convData.due_date ? `<div><span class="material-icons">event</span><strong>Prazo:</strong> ${new Date(convData.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : '';
+                
+                if (convData.status === 'resolved') {
+                    ticketInfoHTML = `<div class="conversation-ticket-info" style="justify-content:center;"><div><span class="material-icons" style="color: var(--color-success);">check_circle</span><strong>Chamado Resolvido</strong></div></div>`;
+                    document.getElementById('reply-form-wrapper').style.display = 'none';
+                } else {
+                    ticketInfoHTML = `<div class="conversation-ticket-info"><div><span class="material-icons">support_agent</span> <strong>Chamado Aberto</strong></div> <div>${priorityTag}</div> ${dueDateHTML}</div>`;
+                    document.getElementById('reply-form-wrapper').style.display = 'block';
+                }
+
+                if (convData.created_by === currentUserProfile.id && convData.status === 'open') {
+                    actionButtonsHTML = `<button class="btn btn-success" onclick="resolveTicket('${convData.id}')"><span class="material-icons">check_circle</span> Resolver Chamado</button>`;
+                }
+            } else {
+                document.getElementById('reply-form-wrapper').style.display = 'block';
+            }
+
+            const creatorProfile = await supabaseClient.from('profiles').select('full_name').eq('id', convData.created_by).single();
+            const senderName = creatorProfile.data ? creatorProfile.data.full_name : 'Desconhecido';
+            
+            let displayTo = '';
+            let allRecipientNames = convData.other_participants_names ? convData.other_participants_names.split(',').map(n => n.trim()) : [];
+
+            if (convData.created_by === currentUserProfile.id) {
+                displayTo = allRecipientNames.filter(n => n !== currentUserProfile.full_name).join(', ') || 'Sem destinatários';
+            } else {
+                let coRecipients = allRecipientNames.filter(n => n !== senderName && n !== currentUserProfile.full_name);
+                if (coRecipients.length > 0) {
+                    displayTo = `Você, ${coRecipients.join(', ')}`;
+                } else {
+                    displayTo = 'Você';
+                }
+            }
+            
+            headerContainer.innerHTML = `
+                <div class="conversation-main-header">
+                    <button class="btn btn-secondary" onclick="showPage('messages-page'); loadMessages();"><span class="material-icons">arrow_back</span> Voltar</button>
+                    <div class="page-header-actions">${actionButtonsHTML}<button class="btn btn-icon" title="Mais opções"><span class="material-icons">more_vert</span></button></div>
+                </div>
+                <div class="conversation-info-block">
+                    <h1>${convData.subject}</h1>
+                    <p><strong>De:</strong> ${senderName}</p>
+                    <p><strong>Para:</strong> ${displayTo}</p>
+                </div>
+                ${ticketInfoHTML}
+            `;
+
+            const messagesContainer = document.getElementById('conversation-messages');
+            messagesContainer.innerHTML = messages.map(msg => {
+                const isSent = msg.sender_id === currentUserProfile.id;
+                const timestamp = new Date(msg.created_at).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                const msgAttachments = allAttachments.filter(att => att.message_id === msg.id);
+                const attachmentsHTML = msgAttachments.map(att => `
+                    <div class="message-attachment">
+                        <a href="https://drive.google.com/file/d/${att.google_drive_file_id}/view" target="_blank" class="message-attachment-link">
+                            <span class="material-icons">attach_file</span>${att.file_name}
+                        </a>
+                    </div>`).join('');
+                return `<div class="message-bubble-wrapper ${isSent ? 'sent' : 'received'}">
+                            <div class="message-bubble ${isSent ? 'sent' : 'received'}">${msg.content}${attachmentsHTML}</div>
+                            <div class="message-metadata">${isSent ? 'Você' : msg.sender_name} • ${timestamp}</div>
+                        </div>`;
+            }).join('');
+            
+            messagesContainer.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
+
+            document.getElementById('reply-form').onsubmit = (e) => {
+                e.preventDefault();
+                showToast('Respostas ainda não implementadas nesta tela.', 'info');
+            };
+        }
+
         async function loadUsersForAdmin() {
             const tableBody = document.getElementById('user-table-body');
             if (!tableBody) return;
