@@ -1500,12 +1500,19 @@
             
             container.innerHTML = `<div class="page-header"><h1>Carregando Perfil...</h1></div>`;
 
-            const [profileRes, pendenciesRes, achievementsRes] = await Promise.all([
+            const isMyProfile = targetId === currentUserProfile.id;
+
+            const promises = [
                 supabaseClient.from('profiles').select('*').eq('id', targetId).single(),
                 supabaseClient.rpc('get_user_pendencies', { target_user_id: targetId }),
-                supabaseClient.rpc('get_user_achievements', { target_user_id: targetId }),
                 supabaseClient.rpc('calculate_user_score', { target_user_id: targetId })
-            ]);
+            ];
+            
+            if (isMyProfile) {
+                promises.push(supabaseClient.rpc('get_created_pendencies', { creator_user_id: targetId }));
+            }
+
+            const [profileRes, pendenciesRes, scoreRes, createdPendenciesRes] = await Promise.all(promises);
 
             const { data: profile, error: profileError } = profileRes;
             if (profileError || !profile) {
@@ -1515,25 +1522,18 @@
             }
 
             const { data: pendencies, error: pendenciesError } = pendenciesRes;
-            const { data: achievements, error: achievementsError } = achievementsRes;
+            const { data: createdPendencies, error: createdPendenciesError } = createdPendenciesRes || { data: null };
             
-            const { data: newScore } = await supabaseClient.from('profiles').select('score').eq('id', targetId).single();
-            const score = newScore ? newScore.score : 100;
+            const score = Math.min(profile.score || 100, 100);
             
-            const scorePercentage = score; 
-
             let riskZone = 'green';
             let riskText = 'Em Dia';
             let barColor = 'var(--color-success)'; 
             
             if (score < 50) {
-                riskZone = 'red';
-                riskText = 'Crítico';
-                barColor = 'var(--color-danger)';
+                riskZone = 'red'; riskText = 'Crítico'; barColor = 'var(--color-danger)';
             } else if (score < 80) {
-                riskZone = 'yellow';
-                riskText = 'Atenção';
-                barColor = 'var(--color-warning)';
+                riskZone = 'yellow'; riskText = 'Atenção'; barColor = 'var(--color-warning)';
             }
 
             const avatarInitial = profile.full_name ? profile.full_name.charAt(0).toUpperCase() : '?';
@@ -1542,39 +1542,44 @@
             let pendenciesHTML = `<div class="empty-state" style="grid-column: 1/-1;">Nenhuma pendência encontrada.</div>`;
             if (pendencies && pendencies.length > 0) {
                 pendenciesHTML = pendencies.map(p => {
-                    let delayText = '';
-                    if (p.due_date) {
-                        const days_late = Math.floor((new Date() - new Date(p.due_date)) / (1000 * 60 * 60 * 24));
-                        if (days_late > 0) delayText = `Atrasado há ${days_late} dia${days_late > 1 ? 's' : ''}`;
-                    } else {
-                        const hours_late = Math.floor((new Date() - new Date(p.created_at)) / (1000 * 60 * 60));
-                        if (hours_late >= 48) delayText = `Aguardando há ${Math.floor(hours_late / 24)} dias`;
-                    }
-                    
-                    const title = p.type === 'ticket' ? 'Chamado Aberto' : 'Mensagem Pendente';
-                    const icon = p.type === 'ticket' ? 'report_problem' : 'help_outline';
-                    const borderColor = p.priority === 'urgent' || delayText ? 'var(--color-danger)' : 'var(--color-warning)';
-                    const priorityText = p.priority === 'urgent' ? 'Urgente' : (p.priority === 'important' ? 'Importante' : 'Normal');
-                    const priorityClass = p.priority === 'urgent' ? 'tag-urgent' : (p.priority === 'important' ? 'tag-important' : '');
-                    
                     const readStatus = p.first_read_at
-                        ? `<span style="color:var(--color-text-secondary);">Visto em: ${new Date(p.first_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'})}</span>`
-                        : `<span style="font-weight: 600; color: var(--color-text-primary);">⚠️ Ainda não visualizado</span>`;
-
-                    return `
-                        <div class="pendency-card" style="border-left-color: ${borderColor}">
-                            <div class="pendency-header">
-                                <h4 class="pendency-title"><span class="material-icons" style="font-size: 18px;">${icon}</span> ${title}</h4>
-                                ${priorityText !== 'Normal' ? `<span class="tag-fino ${priorityClass}">${priorityText}</span>` : ''}
-                            </div>
-                            <div class="pendency-meta">
-                                <div>De: ${p.sender_name.split(' ')[0]} (${p.sender_department || '-'})</div>
-                                ${p.due_date ? `<div>Prazo: ${new Date(p.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : ''}
-                                <div style="margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 4px;">${readStatus}</div>
-                            </div>
-                            ${delayText ? `<div class="pendency-alert">${delayText}</div>` : ''}
-                        </div>`;
+                        ? `<div style="color:var(--color-text-secondary); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 4px;">Visto em: ${new Date(p.first_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'})}</div>`
+                        : `<div class="pendency-alert">⚠️ Ainda não visualizado</div>`;
+                    return `<div class="pendency-card" style="border-left-color: ${p.priority === 'urgent' ? 'var(--color-danger)' : 'var(--color-warning)'}">
+                                <div class="pendency-header">
+                                    <h4 class="pendency-title"><span class="material-icons" style="font-size: 18px;">${p.type === 'ticket' ? 'support_agent' : 'mail'}</span> Chamado Aberto</h4>
+                                    ${p.priority === 'urgent' ? `<span class="tag-fino tag-urgent">Urgente</span>` : ''}
+                                </div>
+                                <div class="pendency-meta">
+                                    <div>De: ${p.sender_name.split(' ')[0]} (${p.sender_department || '-'})</div>
+                                    ${p.due_date ? `<div>Prazo: ${new Date(p.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : ''}
+                                </div>
+                                ${readStatus}
+                            </div>`;
                 }).join('');
+            }
+
+            let createdPendenciesHTML = '';
+            if (isMyProfile && createdPendencies && createdPendencies.length > 0) {
+                 createdPendenciesHTML = `
+                    <div class="card">
+                        <h3 class="card-title"><span class="material-icons">outbox</span> Chamados que eu abri (${createdPendencies.length})</h3>
+                        <div class="pendencies-grid">
+                            ${createdPendencies.map(p => `
+                                <div class="pendency-card" style="border-left-color: var(--color-info)">
+                                    <div class="pendency-header">
+                                        <h4 class="pendency-title"><span class="material-icons" style="font-size: 18px;">${p.type === 'ticket' ? 'support_agent' : 'mail'}</span> Chamado Aberto</h4>
+                                        ${p.priority === 'urgent' ? `<span class="tag-fino tag-urgent">Urgente</span>` : ''}
+                                    </div>
+                                    <div class="pendency-meta">
+                                        <div>Para: ${p.recipients_names || 'N/A'}</div>
+                                        ${p.due_date ? `<div>Prazo: ${new Date(p.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : ''}
+                                    </div>
+                                    ${p.first_read_at ? `<div style="color:var(--color-text-secondary); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 4px;">Visto pelo menos uma vez</div>` : `<div class="pendency-alert">Aguardando visualização</div>`}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>`;
             }
 
             container.innerHTML = `
@@ -1591,30 +1596,18 @@
                     <div>
                         <div class="score-display"><span class="score-label">Score Atual</span><span class="score-value">${score}</span></div>
                         <div class="progress-bar-container">
-                            <div class="progress-bar" style="width: ${scorePercentage}%; background-color: ${barColor};"></div>
+                            <div class="progress-bar" style="width: ${score}%; background-color: ${barColor};"></div>
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h3 class="card-title"><span class="material-icons">pending_actions</span> Pendências Públicas (${pendencies ? pendencies.length : 0})</h3>
+                    <h3 class="card-title"><span class="material-icons">pending_actions</span> ${isMyProfile ? 'Minhas Pendências' : `Pendências com ${profile.full_name.split(' ')[0]}`} (${pendencies ? pendencies.length : 0})</h3>
                     <div class="pendencies-grid">${pendenciesHTML}</div>
                 </div>
                 
-                <div class="card">
-                    <h3 class="card-title"><span class="material-icons">military_tech</span> Reconhecimentos Recentes (${achievements ? achievements.length : 0})</h3>
-                    <div id="public-achievements-list"></div>
-                </div>`;
-                
-            if (achievements && achievements.length > 0) {
-                 const achHTML = achievements.map(a => {
-                    const onTime = a.due_date ? new Date(a.resolved_at) <= new Date(a.due_date) : true;
-                    return `<div class="card" style="padding:1rem; border-left:4px solid ${onTime?'var(--color-success)':'var(--color-warning)'}"><b>${onTime?'Resolvido no Prazo':'Resolvido com Atraso'}</b><br><small>De: ${a.sender_name}</small></div>`;
-                 }).join('');
-                 document.getElementById('public-achievements-list').innerHTML = `<div class="pendencies-grid">${achHTML}</div>`;
-            } else {
-                 document.getElementById('public-achievements-list').innerHTML = `<div class="empty-state">Nenhum reconhecimento recente.</div>`;
-            }
+                ${createdPendenciesHTML}
+            `;
         }
 
         function handleAvatarUpload(event) {
