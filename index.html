@@ -40,7 +40,7 @@
         .nav-link:hover { background-color: var(--color-background); color: var(--color-text-primary); }
         .nav-link.active { background-color: var(--color-brand-primary); color: white; }
         .nav-section-title { font-size: 0.8rem; color: var(--color-text-secondary); text-transform: uppercase; margin: 2rem 0 1rem 1rem; font-weight: 600; }
-        .sidebar-scroll-area { flex-grow: 1; overflow-y: auto; padding-right: 5px; margin-right: -5px; } /* Correção da Barra de Rolagem */
+        .sidebar-scroll-area { flex-grow: 1; overflow-y: auto; padding-right: 5px; margin-right: -5px; }
         .sidebar-footer { margin-top: auto; }
         main.content { flex: 1; margin-left: 260px; padding: 2rem 3rem; overflow-y: auto; background-color: var(--color-background); position: relative; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
@@ -302,27 +302,24 @@
         .team-user-card h3 { margin: 0 0 0.25rem 0; font-size: 1.1rem; }
         .team-user-card p { margin: 0; color: var(--color-text-secondary); font-size: 0.9rem; }
 
-        /* --- MURAL CULTURAL STYLES --- */
+        /* --- MURAL CULTURAL STYLES (REFACTORED) --- */
         .mural-post-card { margin-bottom: 2rem; overflow: hidden; }
         .post-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
         .post-meta h3 { margin: 0; font-size: 1rem; }
         .post-meta p { margin: 0; font-size: 0.85rem; color: var(--color-text-secondary); }
         .post-title { margin-top: 0; margin-bottom: 1rem; font-size: 1.4rem; }
-        .post-content-text { margin: 1rem 0; white-space: pre-wrap; color: var(--color-text-primary); }
-        
-        .media-container { width: 100%; border-radius: 8px; overflow: hidden; background-color: #000; margin-bottom: 1rem; display: flex; justify-content: center; align-items: center; max-height: 500px; }
-        .media-container img { max-width: 100%; max-height: 500px; width: auto; display: block; }
+        .post-body.grid-layout { display: grid; grid-template-columns: 40% 1fr; gap: 1.5rem; align-items: start; }
+        .media-container { width: 100%; border-radius: 8px; overflow: hidden; background-color: #000; margin-bottom: 1rem; display: flex; justify-content: center; align-items: center; max-height: 450px; }
+        .media-container img { max-width: 100%; width: 100%; height: 100%; object-fit: cover; }
         .media-container iframe { width: 100%; aspect-ratio: 16/9; border: none; }
-        
         .carousel-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 0.5rem; padding-bottom: 0.5rem; width: 100%; }
-        .carousel-item { scroll-snap-align: center; min-width: 100%; display: flex; justify-content: center; align-items: center; background: #000; border-radius: 8px; overflow: hidden; max-height: 500px; }
-        .carousel-item img { max-width: 100%; max-height: 500px; object-fit: contain; }
-
+        .carousel-item { scroll-snap-align: center; min-width: 100%; display: flex; justify-content: center; align-items: center; background: #000; border-radius: 8px; overflow: hidden; max-height: 450px; }
+        .carousel-item img { max-width: 100%; max-height: 450px; object-fit: contain; }
+        .post-content-text { margin: 0 0 1rem 0; white-space: pre-wrap; color: var(--color-text-primary); }
         .post-actions { display: flex; gap: 1rem; border-top: 1px solid var(--color-border); padding-top: 0.75rem; margin-top: 1rem; }
         .post-actions .btn-icon { display: flex; align-items: center; gap: 0.5rem; border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.9rem; width: auto; color: var(--color-text-secondary); }
         .post-actions .btn-icon:hover { background-color: var(--color-background); color: var(--color-brand-primary); }
         .post-actions .btn-icon.liked { color: var(--color-brand-primary); font-weight: 600; }
-        
         .comments-section { display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--color-border); background-color: var(--color-background); margin: 0 -1.5rem -1.5rem -1.5rem; padding: 1.5rem; }
         .comments-section.visible { display: block; }
         .comment-item { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
@@ -332,13 +329,11 @@
         .comment-text { font-size: 0.9rem; margin: 0; }
         .comment-input-wrapper { display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem; }
         .comment-input-wrapper input { flex-grow: 1; }
-
-        /* New Post Modal Specifics */
+        #new-post-modal .modal-content { max-width: 600px; height: auto; max-height: 90vh; overflow-y: auto; }
         .media-type-options { display: flex; gap: 1rem; margin-bottom: 1rem; }
         .media-option { flex: 1; border: 1px solid var(--color-border); border-radius: 8px; padding: 0.75rem; text-align: center; cursor: pointer; transition: all 0.2s; }
         .media-option:hover, .media-option.selected { background-color: var(--color-info-bg); border-color: var(--color-info); color: var(--color-info); font-weight: 600; }
         .media-option .material-icons { display: block; margin-bottom: 0.5rem; }
-        #new-post-modal .modal-content { max-width: 600px; height: auto; max-height: 90vh; overflow-y: auto; }
         #preview-area { margin-top: 1rem; padding: 1rem; background: var(--color-background); border-radius: 8px; text-align: center; display: none; }
         #preview-area img { max-width: 100%; max-height: 200px; border-radius: 4px; }
         #preview-area p { margin: 0; font-size: 0.8rem; color: var(--color-text-secondary); }
@@ -680,7 +675,7 @@
             fabMessage.classList.add('hidden');
             fabPost.classList.add('hidden');
             
-            if (pageId === 'mural-page' && currentUserProfile.role === 'Admin') {
+            if (pageId === 'mural-page' && (currentUserProfile.role === 'Admin' || currentUserProfile.role === 'RH')) {
                 fabPost.classList.remove('hidden');
             } else if (!['conversation-view-page', 'mural-page', 'requests-page'].includes(pageId)) {
                 fabMessage.classList.remove('hidden');
@@ -714,7 +709,7 @@
             else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; 
         }
 
-        // --- REQUESTS MODULE LOGIC (NEW) ---
+        // --- REQUESTS MODULE LOGIC ---
 
         async function loadRequests() {
             const tableBody = document.getElementById('request-table-body');
@@ -965,7 +960,7 @@
         
         function openNewPostModal() {
             document.getElementById('new-post-modal').classList.add('visible');
-            selectMediaType('text'); // Reset para texto
+            selectMediaType('text');
             document.getElementById('post-title').value = '';
             document.getElementById('post-content').value = '';
             document.getElementById('post-media-file').value = '';
@@ -1119,7 +1114,9 @@
                 const avatarInitial = post.author.full_name ? post.author.full_name.charAt(0).toUpperCase() : '?';
                 
                 let mediaHTML = '';
-                if (post.media_data) {
+                const hasMedia = post.media_data && post.media_data.type !== 'text';
+                
+                if (hasMedia) {
                     const md = post.media_data;
                     if (md.type === 'image' && md.id) {
                         mediaHTML = `<div class="media-container"><img src="https://lh3.googleusercontent.com/d/${md.id}" loading="lazy"></div>`;
@@ -1135,11 +1132,24 @@
                     }
                 }
 
+                const postBodyHTML = hasMedia ? `
+                    <div class="post-body grid-layout">
+                        ${mediaHTML}
+                        <div class="post-content-wrapper">
+                            <div class="post-content-text">${post.content || ''}</div>
+                        </div>
+                    </div>
+                ` : `
+                    <div class="post-body">
+                        <div class="post-content-text">${post.content || ''}</div>
+                    </div>
+                `;
+
                 const likeBtnClass = isLiked ? 'btn-icon liked' : 'btn-icon';
-                const likeIcon = isLiked ? 'thumb_up' : 'thumb_up_off_alt';
+                const likeIcon = isLiked ? 'thumb_up' : 'thumb_up'; // Always filled icon for better UX
 
                 return `
-                    <div class="card mural-post-card" id="post-${post.id}">
+                    <div class="card mural-post-card">
                         <div class="post-header">
                             <div class="user-avatar">${avatarInitial}</div>
                             <div class="post-meta">
@@ -1148,8 +1158,7 @@
                             </div>
                         </div>
                         <h2 class="post-title">${post.title}</h2>
-                        ${mediaHTML}
-                        <div class="post-content-text">${post.content || ''}</div>
+                        ${postBodyHTML}
                         
                         <div class="post-actions">
                             <button class="${likeBtnClass}" onclick="likePost('${post.id}')" id="like-btn-${post.id}">
@@ -1178,18 +1187,15 @@
         async function likePost(postId) {
             const btn = document.getElementById(`like-btn-${postId}`);
             const countSpan = document.getElementById(`likes-count-${postId}`);
-            const icon = btn.querySelector('.material-icons');
             
             let currentCount = parseInt(countSpan.textContent);
             const isLiked = btn.classList.contains('liked');
 
             if (isLiked) {
                 btn.classList.remove('liked');
-                icon.textContent = 'thumb_up_off_alt';
                 countSpan.textContent = Math.max(0, currentCount - 1);
             } else {
                 btn.classList.add('liked');
-                icon.textContent = 'thumb_up';
                 countSpan.textContent = currentCount + 1;
             }
 
