@@ -42,7 +42,7 @@
         .nav-section-title { font-size: 0.8rem; color: var(--color-text-secondary); text-transform: uppercase; margin: 2rem 0 1rem 1rem; font-weight: 600; }
         .sidebar-scroll-area { flex-grow: 1; overflow-y: auto; padding-right: 5px; margin-right: -5px; }
         
-        /* SIDEBAR FOOTER & SHORTCUT STYLES (TASK 2) */
+        /* SIDEBAR FOOTER & SHORTCUT STYLES */
         .sidebar-footer { margin-top: auto; border-top: 1px solid var(--color-border); padding-top: 1rem; }
         .profile-shortcut { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; border-radius: 8px; margin-bottom: 1rem; cursor: pointer; transition: background-color 0.2s; }
         .profile-shortcut:hover, .profile-shortcut.active { background-color: var(--color-background); }
@@ -179,6 +179,17 @@
         .achievement-badge .badge-icon { font-size: 48px; color: var(--color-warning); }
         .achievement-badge p { font-weight: 500; margin: 0.5rem 0 0; font-size: 0.9rem; }
         
+        /* --- History Section Styles --- */
+        .history-card { margin-top: 1.5rem; }
+        .history-summary { font-size: 1.1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+        .history-summary .material-icons { transition: transform 0.2s; }
+        .history-details[open] .history-summary .material-icons { transform: rotate(90deg); }
+        .history-list { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+        .history-item { display: flex; align-items: center; gap: 1rem; }
+        .history-item .icon-wrapper { color: var(--color-success); }
+        .history-item .info-wrapper .action-text { font-weight: 500; }
+        .history-item .info-wrapper .timestamp { font-size: 0.85rem; color: var(--color-text-secondary); }
+
         /* --- TEAM PAGE STYLES (REFACTORED) --- */
         .team-section-title { grid-column: 1 / -1; margin: 2rem 0 1rem 0; font-size: 1.1rem; color: var(--color-text-primary); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
         .team-section-title .material-icons { color: var(--color-text-secondary); }
@@ -601,7 +612,10 @@
                 <div id="kb-page" class="page-content"><div class="page-header"><h1>Base de Conhecimento</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
                 <div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div>
                 <div id="users-page" class="page-content"><div class="page-header"><div class="page-header-title"><h1>Gerenciamento de Usuários</h1></div><div class="page-header-actions"><button id="refresh-users-btn" class="refresh-btn" title="Atualizar usuários"><span class="material-icons">refresh</span></button><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th>Usuário & Email</th><th>Departamento & Cargo</th><th>Score</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div>
-                <div id="profile-page" class="page-content"><div id="user-profile-content"></div></div>
+                <div id="profile-page" class="page-content">
+                    <div id="user-profile-content"></div>
+                    <div id="user-history-content"></div>
+                </div>
                 <button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button>
             </main>
             <div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div>
@@ -1594,14 +1608,15 @@
             const promises = [
                 supabaseClient.from('profiles').select('*').eq('id', targetId).single(),
                 supabaseClient.rpc('get_user_pendencies', { target_user_id: targetId }),
-                supabaseClient.rpc('calculate_user_score', { target_user_id: targetId })
+                supabaseClient.rpc('calculate_user_score', { target_user_id: targetId }),
+                supabaseClient.rpc('get_resolved_tickets', { target_user_id: targetId })
             ];
             
             if (isMyProfile) {
                 promises.push(supabaseClient.rpc('get_created_pendencies', { creator_user_id: targetId }));
             }
 
-            const [profileRes, pendenciesRes, scoreRes, createdPendenciesRes] = await Promise.all(promises);
+            const [profileRes, pendenciesRes, scoreRes, resolvedTicketsRes, createdPendenciesRes] = await Promise.all(promises);
 
             const { data: profile, error: profileError } = profileRes;
             if (profileError || !profile) {
@@ -1611,6 +1626,7 @@
             }
 
             const { data: pendencies, error: pendenciesError } = pendenciesRes;
+            const { data: resolvedTickets, error: resolvedTicketsError } = resolvedTicketsRes || { data: null };
             const { data: createdPendencies, error: createdPendenciesError } = createdPendenciesRes || { data: null };
             
             const score = Math.min(profile.score || 100, 100);
@@ -1703,6 +1719,33 @@
                 
                 ${createdPendenciesHTML}
             `;
+
+            const historyContainer = document.getElementById('user-history-content');
+            let historyHTML = '';
+            if (resolvedTickets && resolvedTickets.length > 0) {
+                historyHTML = `
+                    <div class="card history-card">
+                        <details class="history-details">
+                            <summary class="history-summary">
+                                <span class="material-icons">chevron_right</span>
+                                Histórico de Atividades (${resolvedTickets.length})
+                            </summary>
+                            <div class="history-list">
+                                ${resolvedTickets.map(ticket => `
+                                    <div class="history-item">
+                                        <div class="icon-wrapper"><span class="material-icons">check_circle</span></div>
+                                        <div class="info-wrapper">
+                                            <div class="action-text">Chamado "${ticket.subject || 'Sem assunto'}" resolvido</div>
+                                            <div class="timestamp">Em ${new Date(ticket.resolved_at).toLocaleDateString('pt-BR')} • Criado por: ${ticket.creator_name}</div>
+                                        </div>
+                                    </div>
+                                `).join('<hr style="border: none; border-top: 1px solid var(--color-border); margin: 0;">')}
+                            </div>
+                        </details>
+                    </div>
+                `;
+            }
+            historyContainer.innerHTML = historyHTML;
         }
 
         function handleAvatarUpload(event) {
