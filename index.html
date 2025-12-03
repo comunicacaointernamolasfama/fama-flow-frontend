@@ -40,6 +40,7 @@
         .nav-link:hover { background-color: var(--color-background); color: var(--color-text-primary); }
         .nav-link.active { background-color: var(--color-brand-primary); color: white; }
         .nav-section-title { font-size: 0.8rem; color: var(--color-text-secondary); text-transform: uppercase; margin: 2rem 0 1rem 1rem; font-weight: 600; }
+        .sidebar-scroll-area { flex-grow: 1; overflow-y: auto; padding-right: 5px; margin-right: -5px; } /* Correção da Barra de Rolagem */
         .sidebar-footer { margin-top: auto; }
         main.content { flex: 1; margin-left: 260px; padding: 2rem 3rem; overflow-y: auto; background-color: var(--color-background); position: relative; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
@@ -342,6 +343,24 @@
         #preview-area img { max-width: 100%; max-height: 200px; border-radius: 4px; }
         #preview-area p { margin: 0; font-size: 0.8rem; color: var(--color-text-secondary); }
 
+        /* --- REQUESTS MODULE STYLES --- */
+        .status-tag { padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 600; font-size: 0.8rem; text-transform: capitalize; }
+        .status-pending { background-color: var(--color-warning-bg); color: var(--color-warning); }
+        .status-approved { background-color: var(--color-success-bg); color: var(--color-success); }
+        .status-rejected { background-color: var(--color-danger-bg); color: var(--color-danger); }
+
+        #request-modal .modal-content { max-width: 700px; }
+        #request-modal .modal-body { max-height: 70vh; overflow-y: auto; }
+        .request-type-selection { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .type-card { border: 1px solid var(--color-border); border-radius: 8px; padding: 1.5rem 1rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .type-card:hover { background-color: var(--color-info-bg); border-color: var(--color-info); color: var(--color-info); }
+        .type-card .material-icons { font-size: 36px; margin-bottom: 0.75rem; }
+        .type-card h3 { margin: 0; font-size: 1rem; }
+        .form-section-title { font-weight: 600; margin: 1.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); }
+        .radio-group label { display: inline-flex; align-items: center; margin-right: 1.5rem; font-weight: normal; }
+        .radio-group input { margin-right: 0.5rem; }
+        textarea.input-field { resize: vertical; min-height: 100px; }
+
     </style>
 </head>
 <body>
@@ -458,6 +477,22 @@
         </div>
     </div>
 
+    <!-- REQUESTS MODAL (NEW) -->
+    <div id="request-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="request-modal-title">Nova Requisição</h3>
+                <span class="material-icons" style="cursor:pointer;" onclick="closeRequestModal()">close</span>
+            </div>
+            <div class="modal-body" id="request-modal-body">
+                <!-- Dynamic Content will be injected here -->
+            </div>
+            <div class="modal-footer" id="request-modal-footer">
+                <!-- Dynamic Buttons will be injected here -->
+            </div>
+        </div>
+    </div>
+
     <!-- CONFIRMATION MODAL -->
     <div id="confirmation-modal" class="modal-overlay">
         <div class="modal-content">
@@ -478,6 +513,7 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
+        // --- N8N WEBHOOK URLs ---
         const N8N_CREATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-user';
         const N8N_UPDATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/update-user';
         const N8N_DELETE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/delete-user';
@@ -485,11 +521,12 @@
         const N8N_MARK_AS_READ_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/mark-as-read';
         const N8N_TOGGLE_ARCHIVE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/toggle-archive';
         const N8N_RESOLVE_TICKET_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/resolve-ticket';
-        
-        // --- URL DO MURAL CULTURAL ---
         const N8N_CREATE_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-post';
         const N8N_LIKE_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/like-post';
         const N8N_COMMENT_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/comment-post';
+        
+        // ! AÇÃO NECESSÁRIA: Substitua '...' pela URL do seu webhook do n8n para criar requisições.
+        const N8N_CREATE_REQUEST_URL = '...';
 
 
         let currentUserProfile = null;
@@ -497,6 +534,7 @@
         let allUsers = [];
         let selectedRecipients = [];
         let selectedFile = null;
+        let currentRequestType = null; // Used for the new requests module
 
         const root = document.getElementById('root');
         const themeToggleBtn = document.getElementById('theme-toggle');
@@ -509,6 +547,7 @@
                     <ul class="nav-menu">
                         <li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li>
                         <li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li>
+                        <li><a href="#" class="nav-link" data-page="requests-page"><span class="material-icons">description</span> Requisições</a></li>
                         <li><a href="#" class="nav-link" data-page="channels-page"><span class="material-icons">tag</span> Canais</a></li>
                         <li><a href="#" class="nav-link" data-page="team-page"><span class="material-icons">people</span> Equipe</a></li>
                         <li><a href="#" class="nav-link" data-page="rankings-page"><span class="material-icons">leaderboard</span> Performance e Rankings</a></li>
@@ -533,6 +572,7 @@
             <main class="content">
                 <div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Abertos</h3><p id="urgent-tickets-count">0</p></div></div></div></div>
                 <div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button><button class="tab-link" data-tab="archived-content">Arquivados</button></div><button id="refresh-messages-btn" class="refresh-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div><div id="archived-content" class="tab-content"></div></div></div>
+                <div id="requests-page" class="page-content"><div class="page-header"><div><h1>Requisições</h1><p>Gerencie solicitações de RH e administrativas.</p></div><div class="page-header-actions"><button id="btn-new-request" class="btn btn-danger"><span class="material-icons">add</span> Nova Requisição</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th style="width: 25%;">Tipo</th><th style="width: 25%;">Solicitante</th><th style="width: 20%;">Data</th><th style="width: 15%;">Status</th><th style="width: 15%;">Ações</th></tr></thead><tbody id="request-table-body"></tbody></table></div></div>
                 <div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"></div><div class="card"><div id="conversation-messages">Carregando conversa...</div><div id="reply-form-wrapper"><div id="reply-attachment-preview"></div><form id="reply-form"><input type="file" id="reply-attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('reply-attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div>
                 <div id="team-page" class="page-content"><div class="page-header"><h1>Equipe</h1><p>Veja os perfis e performance dos seus colegas.</p></div><div id="team-list-content">Carregando equipe...</div></div>
                 <div id="channels-page" class="page-content"><div class="page-header"><h1>Canais</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
@@ -571,10 +611,10 @@
             document.getElementById('new-message-form').addEventListener('submit', sendMessage);
             document.getElementById('btn-new-user')?.addEventListener('click', () => openUserModal(null));
             document.getElementById('fab-new-message').addEventListener('click', openNewMessagePopup);
-            document.getElementById('fab-new-post').addEventListener('click', openNewPostModal); // Listener do Mural
+            document.getElementById('fab-new-post').addEventListener('click', openNewPostModal); 
+            document.getElementById('btn-new-request').addEventListener('click', openRequestModal);
             document.getElementById('attachment-input').addEventListener('change', handleFileSelection);
             
-            // Listener para upload de mídia do Mural
             document.getElementById('post-media-file').addEventListener('change', handlePostMediaPreview);
 
             document.querySelectorAll('.nav-link[data-page]').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); showPage(e.currentTarget.dataset.page); }); });
@@ -616,15 +656,13 @@
         }
 
         function showApp() { 
-            const appContainer = document.getElementById('app-container'); 
-            if(appContainer && currentUserProfile) { 
-                appContainer.classList.add('visible'); 
-                const isAdmin = currentUserProfile.role === 'Admin';
-                document.getElementById('admin-section').style.display = isAdmin ? 'block' : 'none'; 
-                showPage('dashboard-page'); 
-                loadAllDynamicData();
-                document.getElementById('dashboard-title').textContent = `Dashboard de ${currentUserProfile.full_name.split(' ')[0]}`;
-            } 
+            const appContainer = document.getElementById('app-container'); if (!appContainer) return;
+            appContainer.classList.add('visible'); 
+            const isAdmin = currentUserProfile && (currentUserProfile.role === 'Admin' || currentUserProfile.role === 'RH');
+            document.getElementById('admin-section').style.display = (currentUserProfile && currentUserProfile.role === 'Admin') ? 'block' : 'none'; 
+            showPage('dashboard-page'); 
+            loadAllDynamicData();
+            document.getElementById('dashboard-title').textContent = `Dashboard de ${currentUserProfile.full_name.split(' ')[0]}`;
         }
         
         function showPage(pageId, targetUserId = null) { 
@@ -642,14 +680,14 @@
             fabMessage.classList.add('hidden');
             fabPost.classList.add('hidden');
             
-            // Lógica dos FABs
             if (pageId === 'mural-page' && currentUserProfile.role === 'Admin') {
                 fabPost.classList.remove('hidden');
-            } else if (pageId !== 'conversation-view-page' && pageId !== 'mural-page') {
+            } else if (!['conversation-view-page', 'mural-page', 'requests-page'].includes(pageId)) {
                 fabMessage.classList.remove('hidden');
             }
 
             if (pageId === 'messages-page') loadMessages();
+            if (pageId === 'requests-page') loadRequests();
             if (pageId === 'team-page') loadTeamPage();
             if (pageId === 'profile-page') loadUserProfileData(targetUserId);
             if (pageId === 'mural-page') loadMuralPage();
@@ -676,6 +714,253 @@
             else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; 
         }
 
+        // --- REQUESTS MODULE LOGIC (NEW) ---
+
+        async function loadRequests() {
+            const tableBody = document.getElementById('request-table-body');
+            tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Carregando requisições...</td></tr>`;
+
+            const { data, error } = await supabaseClient.rpc('get_all_requests_for_viewing');
+            
+            if (error) {
+                console.error("Erro ao buscar requisições:", error);
+                tableBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color: var(--color-danger)">Falha ao carregar requisições.</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhuma requisição encontrada.</td></tr>`;
+                return;
+            }
+
+            const requestTypeLabels = {
+                'new_hire': 'Contratação',
+                'termination': 'Desligamento',
+                'promotion': 'Promoção Interna',
+                'overtime': 'Horas Extras',
+                'training': 'Treinamento'
+            };
+
+            const userNames = {};
+            const userIds = [...new Set(data.map(r => r.requester_id))];
+            const { data: profiles, error: profileError } = await supabaseClient.from('profiles').select('id, full_name').in('id', userIds);
+            if (!profileError) {
+                profiles.forEach(p => { userNames[p.id] = p.full_name; });
+            }
+
+            tableBody.innerHTML = data.map(req => {
+                const typeLabel = requestTypeLabels[req.type] || req.type;
+                const requesterName = userNames[req.requester_id] || 'Desconhecido';
+                const date = new Date(req.created_at).toLocaleDateString('pt-BR');
+                const statusLabel = req.status === 'pending' ? 'Pendente' : (req.status === 'approved' ? 'Aprovada' : 'Recusada');
+
+                return `
+                    <tr>
+                        <td><strong>${typeLabel}</strong></td>
+                        <td>${requesterName}</td>
+                        <td>${date}</td>
+                        <td><span class="status-tag status-${req.status}">${statusLabel}</span></td>
+                        <td><button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;">Ver Detalhes</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openRequestModal() {
+            const modal = document.getElementById('request-modal');
+            const modalBody = document.getElementById('request-modal-body');
+            const modalFooter = document.getElementById('request-modal-footer');
+            
+            document.getElementById('request-modal-title').textContent = 'Nova Requisição';
+
+            modalBody.innerHTML = `
+                <h3>Selecione o tipo de solicitação</h3>
+                <div class="request-type-selection">
+                    <div class="type-card" data-type="new_hire">
+                        <span class="material-icons">person_add</span>
+                        <h3>Contratação de Pessoal</h3>
+                    </div>
+                    <div class="type-card" data-type="termination">
+                        <span class="material-icons">person_remove</span>
+                        <h3>Solicitar Desligamento</h3>
+                    </div>
+                    <div class="type-card" data-type="promotion">
+                        <span class="material-icons">trending_up</span>
+                        <h3>Promoção Interna</h3>
+                    </div>
+                    <div class="type-card" data-type="overtime">
+                        <span class="material-icons">schedule</span>
+                        <h3>Solicitar Horas Extras</h3>
+                    </div>
+                     <div class="type-card" data-type="training">
+                        <span class="material-icons">school</span>
+                        <h3>Solicitar Treinamento</h3>
+                    </div>
+                </div>
+            `;
+
+            modalFooter.innerHTML = `<button class="btn btn-secondary" onclick="closeRequestModal()">Cancelar</button>`;
+
+            modal.querySelectorAll('.type-card').forEach(card => {
+                card.addEventListener('click', () => renderRequestForm(card.dataset.type));
+            });
+            
+            modal.classList.add('visible');
+        }
+
+        function closeRequestModal() {
+            document.getElementById('request-modal').classList.remove('visible');
+            currentRequestType = null;
+        }
+
+        function renderRequestForm(type) {
+            currentRequestType = type;
+            const modalBody = document.getElementById('request-modal-body');
+            const modalFooter = document.getElementById('request-modal-footer');
+            const modalTitle = document.getElementById('request-modal-title');
+
+            let formHTML = '';
+            let title = 'Nova Requisição';
+
+            const backButtonHTML = `<button class="btn btn-icon" onclick="openRequestModal()" style="position: absolute; left: 1.5rem; top: 1rem;"><span class="material-icons">arrow_back</span></button>`;
+            
+            const formTemplates = {
+                'new_hire': {
+                    title: 'Requisição de Contratação',
+                    html: `
+                        <h3 class="form-section-title">Informações da Vaga</h3>
+                        <div class="form-group"><label for="req-funcao">Função*</label><input type="text" id="req-funcao" name="funcao" class="input-field" required></div>
+                        <div class="form-group"><label for="req-quantidade">Quantidade de Vagas*</label><input type="number" id="req-quantidade" name="quantidade" class="input-field" value="1" required></div>
+                        <div class="form-group">
+                            <label>Motivo da Contratação*</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="motivo_contratacao" value="aumento_quadro" checked> Aumento de Quadro</label>
+                                <label><input type="radio" name="motivo_contratacao" value="substituicao"> Substituição</label>
+                                <label><input type="radio" name="motivo_contratacao" value="outro"> Outro</label>
+                            </div>
+                        </div>
+                        <h3 class="form-section-title">Requisitos e Perfil</h3>
+                        <div class="form-group"><label for="req-escolaridade">Escolaridade Mínima</label><input type="text" id="req-escolaridade" name="escolaridade" class="input-field"></div>
+                        <div class="form-group"><label for="req-competencias">Competências Desejadas (Ex: proatividade, trabalho em equipe)</label><textarea id="req-competencias" name="competencias" class="input-field"></textarea></div>
+                    `
+                },
+                'termination': {
+                    title: 'Solicitação de Desligamento',
+                    html: `
+                        <h3 class="form-section-title">Dados do Colaborador</h3>
+                        <div class="form-group"><label for="req-nome-colaborador">Nome Completo do Colaborador*</label><input type="text" id="req-nome-colaborador" name="nome_colaborador" class="input-field" required></div>
+                        <div class="form-group"><label for="req-cargo-colaborador">Cargo</label><input type="text" id="req-cargo-colaborador" name="cargo_colaborador" class="input-field"></div>
+                        <h3 class="form-section-title">Motivo do Desligamento (Iniciativa da Empresa)</h3>
+                        <div class="form-group"><label for="req-motivo-desligamento">Descreva o motivo*</label><textarea id="req-motivo-desligamento" name="motivo_desligamento" class="input-field" required></textarea></div>
+                    `
+                },
+                'promotion': {
+                    title: 'Solicitação de Promoção Interna',
+                     html: `
+                        <h3 class="form-section-title">Detalhes da Promoção</h3>
+                        <div class="form-group"><label for="req-nome-funcionario">Nome do Funcionário*</label><input type="text" id="req-nome-funcionario" name="nome_funcionario" class="input-field" required></div>
+                        <div class="form-group"><label for="req-cargo-atual">Cargo/Salário Atual*</label><input type="text" id="req-cargo-atual" name="cargo_atual" class="input-field" required></div>
+                        <div class="form-group"><label for="req-cargo-pretendido">Cargo/Salário Pretendido*</label><input type="text" id="req-cargo-pretendido" name="cargo_pretendido" class="input-field" required></div>
+                        <div class="form-group"><label for="req-justificativa-promocao">Justificativa (motivações, resultados, conquistas)*</label><textarea id="req-justificativa-promocao" name="justificativa" class="input-field" required></textarea></div>
+                    `
+                },
+                 'overtime': {
+                    title: 'Requisição de Horas Extras',
+                    html: `
+                        <h3 class="form-section-title">Informações das Horas Extras</h3>
+                        <div class="form-group"><label for="req-data-he">Data a ser realizada*</label><input type="date" id="req-data-he" name="data_he" class="input-field" required></div>
+                        <div class="form-group"><label for="req-horario-adicional">Horário Adicional (Ex: Das 08h às 16h - 8 horas)*</label><input type="text" id="req-horario-adicional" name="horario_adicional" class="input-field" required></div>
+                        <div class="form-group"><label for="req-qtd-funcionarios">Quantidade de Funcionários*</label><input type="number" id="req-qtd-funcionarios" name="qtd_funcionarios" class="input-field" value="1" required></div>
+                        <div class="form-group"><label for="req-setor-he">Setor a realizar as Horas Extras*</label><input type="text" id="req-setor-he" name="setor_he" class="input-field" required></div>
+                    `
+                },
+                'training': {
+                    title: 'Requisição de Treinamento / Evento',
+                    html: `
+                        <h3 class="form-section-title">Informações do Treinamento ou Evento</h3>
+                        <div class="form-group"><label for="req-titulo-treinamento">Título (Nome do curso, treinamento ou evento)*</label><input type="text" id="req-titulo-treinamento" name="titulo" class="input-field" required></div>
+                        <div class="form-group"><label for="req-instituicao">Instituição/Fornecedor</label><input type="text" id="req-instituicao" name="instituicao" class="input-field"></div>
+                        <div class="form-group"><label for="req-objetivo-treinamento">Objetivo da Participação*</label><textarea id="req-objetivo-treinamento" name="objetivo" class="input-field" required></textarea></div>
+                         <div class="form-group"><label for="req-nomes-participantes">Nome(s) dos participantes (Listar nomes)</label><textarea id="req-nomes-participantes" name="nomes_participantes" class="input-field"></textarea></div>
+                    `
+                }
+            };
+            
+            if (formTemplates[type]) {
+                title = formTemplates[type].title;
+                formHTML = formTemplates[type].html;
+            }
+
+            modalTitle.textContent = title;
+            modalBody.innerHTML = backButtonHTML + `<form id="dynamic-request-form">${formHTML}</form>`;
+            modalFooter.innerHTML = `
+                <button class="btn btn-secondary" onclick="closeRequestModal()">Cancelar</button>
+                <button class="btn btn-danger" id="btn-submit-request">Enviar Requisição</button>
+            `;
+            document.getElementById('btn-submit-request').addEventListener('click', submitRequest);
+        }
+
+        async function submitRequest(event) {
+            event.preventDefault();
+            const btn = event.target;
+            const form = document.getElementById('dynamic-request-form');
+            if (!form.checkValidity()) {
+                showToast("Por favor, preencha todos os campos obrigatórios (*).", 'warning');
+                return;
+            }
+
+            if (!currentRequestType) {
+                showToast("Tipo de requisição inválido.", "danger");
+                return;
+            }
+            
+            if (N8N_CREATE_REQUEST_URL === '...') {
+                showToast("A URL do webhook de requisições não foi configurada.", "danger");
+                console.error("ERRO: N8N_CREATE_REQUEST_URL não está configurada.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = 'Enviando...';
+
+            const formData = new FormData(form);
+            const dataObject = {};
+            formData.forEach((value, key) => { dataObject[key] = value; });
+
+            try {
+                const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+                if (sessionError || !session) throw new Error("Sessão inválida. Faça login novamente.");
+                
+                const response = await fetch(N8N_CREATE_REQUEST_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        type: currentRequestType,
+                        data: dataObject
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Falha ao enviar requisição.');
+                }
+
+                showToast("Requisição enviada com sucesso!", "success");
+                closeRequestModal();
+                loadRequests();
+
+            } catch (error) {
+                console.error("Erro ao enviar requisição:", error);
+                showToast(error.message, "danger");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Enviar Requisição';
+            }
+        }
+        
         // --- MURAL CULTURAL LOGIC ---
         
         function openNewPostModal() {
@@ -736,9 +1021,7 @@
                 if (type === 'video') {
                      preview.innerHTML = `<p><span class="material-icons">movie</span> ${files[0].name} selecionado para upload.</p>`;
                 } else {
-                    // Preview de imagens simples
                     let html = `<p>${files.length} arquivo(s) selecionado(s)</p><div style="display:flex; gap:5px; overflow-x:auto; margin-top:5px;">`;
-                    // Limitando preview visual para não travar se forem muitas fotos
                     const limit = Math.min(files.length, 5); 
                     for(let i=0; i<limit; i++) {
                         const src = URL.createObjectURL(files[i]);
@@ -792,7 +1075,7 @@
 
                 showToast('Publicação enviada com sucesso!', 'success');
                 closeNewPostModal();
-                loadMuralPage(); // Recarrega o feed
+                loadMuralPage(); 
 
             } catch (error) {
                 console.error(error);
@@ -807,7 +1090,6 @@
             const container = document.getElementById('mural-content');
             container.innerHTML = `<div class="empty-state">Carregando mural...</div>`;
             
-            // 1. Buscar posts
             const { data: posts, error: postsError } = await supabaseClient
                 .from('posts')
                 .select('*, author:profiles(full_name, avatar_url)')
@@ -824,8 +1106,6 @@
                 return;
             }
 
-            // 2. Buscar contagens e se o usuário atual curtiu (Manualmente por enquanto, idealmente seria uma View SQL)
-            // Para performance em produção, recomenda-se criar uma VIEW 'posts_view' no Supabase que já traga os counts e is_liked
             const postsHTML = await Promise.all(posts.map(async (post) => {
                 const [likesRes, commentsRes, myLikeRes] = await Promise.all([
                     supabaseClient.from('post_likes').select('id', { count: 'exact', head: true }).eq('post_id', post.id),
@@ -838,14 +1118,12 @@
                 const isLiked = myLikeRes.data && myLikeRes.data.length > 0;
                 const avatarInitial = post.author.full_name ? post.author.full_name.charAt(0).toUpperCase() : '?';
                 
-                // Lógica de Renderização de Mídia
                 let mediaHTML = '';
                 if (post.media_data) {
                     const md = post.media_data;
                     if (md.type === 'image' && md.id) {
                         mediaHTML = `<div class="media-container"><img src="https://lh3.googleusercontent.com/d/${md.id}" loading="lazy"></div>`;
                     } else if (md.type === 'video') {
-                        // Se for YouTube ID
                         if(md.source === 'youtube' && md.id) {
                              mediaHTML = `<div class="media-container"><iframe src="https://www.youtube.com/embed/${md.id}" allowfullscreen></iframe></div>`;
                         } else if (md.embed_url) {
@@ -898,7 +1176,6 @@
         }
 
         async function likePost(postId) {
-            // Optimistic UI Update
             const btn = document.getElementById(`like-btn-${postId}`);
             const countSpan = document.getElementById(`likes-count-${postId}`);
             const icon = btn.querySelector('.material-icons');
@@ -916,7 +1193,6 @@
                 countSpan.textContent = currentCount + 1;
             }
 
-            // Server Call
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 fetch(N8N_LIKE_POST_URL, {
@@ -927,7 +1203,6 @@
             } catch (e) {
                 console.error("Falha ao curtir:", e);
                 showToast("Erro ao processar curtida", "danger");
-                // Revert UI on error (opcional)
             }
         }
 
@@ -977,9 +1252,8 @@
             const content = input.value.trim();
             if (!content) return;
 
-            input.value = ''; // Clear immediately
+            input.value = ''; 
             
-            // Optimistic Append (Simulado)
             const list = document.getElementById(`comments-list-${postId}`);
             if(list.querySelector('p')?.textContent === 'Seja o primeiro a comentar!') list.innerHTML = '';
             
@@ -999,7 +1273,7 @@
                 });
                 
                 if(res.ok) {
-                    setTimeout(() => loadComments(postId), 1000); // Reload real data after delay
+                    setTimeout(() => loadComments(postId), 1000); 
                 }
             } catch (e) {
                 showToast("Erro ao enviar comentário", "danger");
@@ -1012,7 +1286,6 @@
             const container = document.getElementById('team-list-content');
             container.innerHTML = `<div class="empty-state">Carregando equipe...</div>`;
             
-            // BUSCA DADOS DE TODOS OS PERFIS
             const { data: users, error } = await supabaseClient.from('profiles').select('*').order('full_name');
             if (error) {
                 container.innerHTML = `<div class="empty-state">Falha ao carregar a equipe.</div>`;
@@ -1020,17 +1293,13 @@
                 return;
             }
 
-            // FILTRA POR SETOR
             const myDept = currentUserProfile.department;
             const myTeam = users.filter(u => u.department === myDept && u.id !== currentUserProfile.id);
             const others = users.filter(u => u.department !== myDept && u.id !== currentUserProfile.id);
 
-            // FUNÇÃO AUXILIAR PARA GERAR HTML DOS CARDS
             const generateCardHTML = (user) => {
-                // Lógica de Avatar: Foto > Inicial
                 let avatarHTML = '';
                 if (user.avatar_url) {
-                    // Assume que se tiver 'http' é link direto, senão é ID do drive
                     const src = user.avatar_url.includes('http') ? user.avatar_url : `https://lh3.googleusercontent.com/d/${user.avatar_url}`;
                     avatarHTML = `<img src="${src}" class="team-avatar-img" alt="${user.full_name}">`;
                 } else {
@@ -1038,7 +1307,6 @@
                     avatarHTML = `<div class="user-avatar">${initial}</div>`;
                 }
 
-                // Lógica de Score
                 const score = user.score || 100;
                 let scoreClass = 'good';
                 if (score < 50) scoreClass = 'bad';
@@ -1058,7 +1326,6 @@
 
             let html = '';
 
-            // Renderiza "Meu Setor" (se tiver gente e se o usuário tiver setor)
             if (myDept && myTeam.length > 0) {
                 html += `<div class="team-section-title"><span class="material-icons">groups</span> MEU SETOR (${myDept.toUpperCase()})</div>`;
                 html += `<div class="team-grid">`;
@@ -1066,7 +1333,6 @@
                 html += `</div>`;
             }
 
-            // Renderiza "Outros Colaboradores"
             if (others.length > 0) {
                 html += `<div class="team-section-title" style="margin-top: 2rem;"><span class="material-icons">public</span> OUTROS COLABORADORES</div>`;
                 html += `<div class="team-grid">`;
@@ -1223,32 +1489,28 @@
             const { data: pendencies, error: pendenciesError } = pendenciesRes;
             const { data: achievements, error: achievementsError } = achievementsRes;
             
-            // --- CORREÇÃO DA LÓGICA DO SCORE ---
             const { data: newScore } = await supabaseClient.from('profiles').select('score').eq('id', targetId).single();
             const score = newScore ? newScore.score : 100;
             
-            // AQUI ESTAVA O ERRO: Agora a base é 100, então a porcentagem é igual ao score.
             const scorePercentage = score; 
 
-            // --- Lógica das Cores (Gameficação Visual) ---
             let riskZone = 'green';
             let riskText = 'Em Dia';
-            let barColor = 'var(--color-success)'; // Verde por padrão
+            let barColor = 'var(--color-success)'; 
             
             if (score < 50) {
                 riskZone = 'red';
                 riskText = 'Crítico';
-                barColor = 'var(--color-danger)'; // Barra Vermelha
+                barColor = 'var(--color-danger)';
             } else if (score < 80) {
                 riskZone = 'yellow';
                 riskText = 'Atenção';
-                barColor = 'var(--color-warning)'; // Barra Amarela
+                barColor = 'var(--color-warning)';
             }
 
             const avatarInitial = profile.full_name ? profile.full_name.charAt(0).toUpperCase() : '?';
             const roleAndDept = [profile.role, profile.department].filter(Boolean).join(' • ');
 
-            // -- Lógica de Pendências (Mantida) --
             let pendenciesHTML = `<div class="empty-state" style="grid-column: 1/-1;">Nenhuma pendência encontrada.</div>`;
             if (pendencies && pendencies.length > 0) {
                 pendenciesHTML = pendencies.map(p => {
@@ -1313,10 +1575,9 @@
                 
                 <div class="card">
                     <h3 class="card-title"><span class="material-icons">military_tech</span> Reconhecimentos Recentes (${achievements ? achievements.length : 0})</h3>
-                    <div id="public-achievements-list">${/* Mantido lógica anterior para achievements */ ''}</div>
+                    <div id="public-achievements-list"></div>
                 </div>`;
                 
-            // Re-render achievements using old logic
             if (achievements && achievements.length > 0) {
                  const achHTML = achievements.map(a => {
                     const onTime = a.due_date ? new Date(a.resolved_at) <= new Date(a.due_date) : true;
