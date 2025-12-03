@@ -41,7 +41,15 @@
         .nav-link.active { background-color: var(--color-brand-primary); color: white; }
         .nav-section-title { font-size: 0.8rem; color: var(--color-text-secondary); text-transform: uppercase; margin: 2rem 0 1rem 1rem; font-weight: 600; }
         .sidebar-scroll-area { flex-grow: 1; overflow-y: auto; padding-right: 5px; margin-right: -5px; }
-        .sidebar-footer { margin-top: auto; }
+        
+        /* SIDEBAR FOOTER & SHORTCUT STYLES (TASK 2) */
+        .sidebar-footer { margin-top: auto; border-top: 1px solid var(--color-border); padding-top: 1rem; }
+        .profile-shortcut { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; border-radius: 8px; margin-bottom: 1rem; cursor: pointer; transition: background-color 0.2s; }
+        .profile-shortcut:hover, .profile-shortcut.active { background-color: var(--color-background); }
+        .profile-shortcut .user-avatar { width: 36px; height: 36px; font-size: 1rem; }
+        .profile-shortcut .user-name { font-weight: 600; font-size: 0.9rem; }
+        .profile-shortcut .user-role { font-size: 0.8rem; color: var(--color-text-secondary); }
+
         main.content { flex: 1; margin-left: 260px; padding: 2rem 3rem; overflow-y: auto; background-color: var(--color-background); position: relative; }
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         .page-header h1 { margin: 0; font-size: 1.8rem; display: flex; align-items: center; gap: 1rem;} .page-header p { margin: 5px 0 0 0; color: var(--color-text-secondary); }
@@ -301,6 +309,8 @@
         .team-user-card .user-avatar { width: 64px; height: 64px; font-size: 2rem; margin-bottom: 1rem; }
         .team-user-card h3 { margin: 0 0 0.25rem 0; font-size: 1.1rem; }
         .team-user-card p { margin: 0; color: var(--color-text-secondary); font-size: 0.9rem; }
+        /* TASK 3: TEAM FILTERS STYLE */
+        .team-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
 
         /* --- MURAL CULTURAL STYLES (REFACTORED) --- */
         .mural-post-card { margin-bottom: 2rem; overflow: hidden; padding: 1.5rem; }
@@ -567,8 +577,8 @@
                     </div>
                 </div>
                 <div class="sidebar-footer">
+                    <div id="profile-shortcut" class="profile-shortcut"></div>
                     <ul class="nav-menu">
-                        <li><a href="#" class="nav-link" data-page="profile-page"><span class="material-icons">account_circle</span> Meu Perfil</a></li>
                         <li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li>
                     </ul>
                 </div>
@@ -578,7 +588,13 @@
                 <div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button><button class="tab-link" data-tab="archived-content">Arquivados</button></div><button id="refresh-messages-btn" class="refresh-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div><div id="archived-content" class="tab-content"></div></div></div>
                 <div id="requests-page" class="page-content"><div class="page-header"><div><h1>Requisições</h1><p>Gerencie solicitações de RH e administrativas.</p></div><div class="page-header-actions"><button id="btn-new-request" class="btn btn-danger"><span class="material-icons">add</span> Nova Requisição</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th style="width: 25%;">Tipo</th><th style="width: 25%;">Solicitante</th><th style="width: 20%;">Data</th><th style="width: 15%;">Status</th><th style="width: 15%;">Ações</th></tr></thead><tbody id="request-table-body"></tbody></table></div></div>
                 <div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"></div><div class="card"><div id="conversation-messages">Carregando conversa...</div><div id="reply-form-wrapper"><div id="reply-attachment-preview"></div><form id="reply-form"><input type="file" id="reply-attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('reply-attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div>
-                <div id="team-page" class="page-content"><div class="page-header"><h1>Equipe</h1><p>Veja os perfis e performance dos seus colegas.</p></div><div id="team-list-content">Carregando equipe...</div></div>
+                <div id="team-page" class="page-content"><div class="page-header"><h1>Equipe</h1><p>Veja os perfis e performance dos seus colegas.</p></div>
+                    <div class="card team-filters">
+                        <div class="form-group" style="margin:0;"><label for="team-search-name">Buscar por Nome</label><input type="text" id="team-search-name" class="input-field" placeholder="Digite um nome..."></div>
+                        <div class="form-group" style="margin:0;"><label for="team-filter-dept">Filtrar por Setor</label><select id="team-filter-dept" class="input-field"></select></div>
+                        <div class="form-group" style="margin:0;"><label for="team-filter-role">Filtrar por Cargo</label><select id="team-filter-role" class="input-field"></select></div>
+                    </div>
+                <div id="team-list-content">Carregando equipe...</div></div>
                 <div id="channels-page" class="page-content"><div class="page-header"><h1>Canais</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
                 <div id="rankings-page" class="page-content"><div class="page-header"><h1>Performance e Rankings</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
                 <div id="mural-page" class="page-content"><div class="page-header"><h1>Mural Cultural</h1><p>Acompanhe os eventos e novidades da Fama.</p></div><div id="mural-content">Carregando...</div><button class="fab hidden" id="fab-new-post" title="Nova Postagem"><span class="material-icons">add</span></button></div>
@@ -627,6 +643,10 @@
             if (recipientInput) { recipientInput.addEventListener('input', handleRecipientSearch); recipientInput.addEventListener('keydown', handleRecipientBackspace); }
             document.querySelectorAll('#messages-page .tab-link').forEach(tab => { tab.addEventListener('click', (e) => { const targetId = e.currentTarget.dataset.tab; document.querySelectorAll('#messages-page .tab-link').forEach(t => t.classList.remove('active')); document.querySelectorAll('#messages-page .tab-content').forEach(c => c.classList.remove('active')); e.currentTarget.classList.add('active'); document.getElementById(targetId).classList.add('active'); }); });
             
+            document.getElementById('team-search-name').addEventListener('input', loadTeamPage);
+            document.getElementById('team-filter-dept').addEventListener('change', loadTeamPage);
+            document.getElementById('team-filter-role').addEventListener('change', loadTeamPage);
+
             const refreshMessagesBtn = document.getElementById('refresh-messages-btn');
             if(refreshMessagesBtn) {
                 refreshMessagesBtn.addEventListener('click', async () => {
@@ -664,6 +684,18 @@
             appContainer.classList.add('visible'); 
             const isAdmin = currentUserProfile && (currentUserProfile.role === 'Admin' || currentUserProfile.role === 'RH');
             document.getElementById('admin-section').style.display = (currentUserProfile && currentUserProfile.role === 'Admin') ? 'block' : 'none'; 
+            
+            const profileShortcut = document.getElementById('profile-shortcut');
+            const avatarInitial = currentUserProfile.full_name ? currentUserProfile.full_name.charAt(0).toUpperCase() : '?';
+            profileShortcut.innerHTML = `
+                <div class="user-avatar">${avatarInitial}</div>
+                <div>
+                    <div class="user-name">${currentUserProfile.full_name}</div>
+                    <div class="user-role">${currentUserProfile.role || 'Colaborador'}</div>
+                </div>
+            `;
+            profileShortcut.onclick = () => showPage('profile-page');
+
             showPage('dashboard-page'); 
             loadAllDynamicData();
             document.getElementById('dashboard-title').textContent = `Dashboard de ${currentUserProfile.full_name.split(' ')[0]}`;
@@ -675,8 +707,18 @@
             const targetPage = appContainer.querySelector(`#${pageId}`); 
             if (targetPage) targetPage.classList.add('active'); 
             appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); 
-            const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); 
-            if (activeLink) activeLink.classList.add('active');
+
+            const profileShortcut = document.getElementById('profile-shortcut');
+            profileShortcut.classList.remove('active');
+
+            if (pageId === 'profile-page' && (!targetUserId || targetUserId === currentUserProfile.id)) {
+                 profileShortcut.classList.add('active');
+                 // Garante que nenhum outro link de navegação principal esteja ativo
+                 appContainer.querySelector('.nav-link.active')?.classList.remove('active');
+            } else {
+                const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); 
+                if (activeLink) activeLink.classList.add('active');
+            }
             
             const fabMessage = document.getElementById('fab-new-message');
             const fabPost = document.getElementById('fab-new-post');
@@ -692,7 +734,12 @@
 
             if (pageId === 'messages-page') loadMessages();
             if (pageId === 'requests-page') loadRequests();
-            if (pageId === 'team-page') loadTeamPage();
+            if (pageId === 'team-page') {
+                document.getElementById('team-search-name').value = '';
+                document.getElementById('team-filter-dept').value = '';
+                document.getElementById('team-filter-role').value = '';
+                loadTeamPage();
+            }
             if (pageId === 'profile-page') loadUserProfileData(targetUserId);
             if (pageId === 'mural-page') loadMuralPage();
         }
@@ -715,7 +762,7 @@
         async function fetchAllUsersForSearch() { 
             const { data, error } = await supabaseClient.from('profiles').select('id, full_name, score, department, role'); 
             if(error) console.error("Erro ao buscar usuários para pesquisa:", error); 
-            else allUsers = data ? data.filter(u => u.id !== currentUserProfile.id) : []; 
+            else allUsers = data; 
         }
 
         // --- REQUESTS MODULE LOGIC ---
@@ -1321,9 +1368,22 @@
                 return;
             }
 
+            populateTeamFilters(users);
+
+            const nameFilter = document.getElementById('team-search-name').value.toLowerCase();
+            const deptFilter = document.getElementById('team-filter-dept').value;
+            const roleFilter = document.getElementById('team-filter-role').value;
+
+            const filteredUsers = users.filter(user => {
+                const nameMatch = user.full_name && user.full_name.toLowerCase().includes(nameFilter);
+                const deptMatch = !deptFilter || user.department === deptFilter;
+                const roleMatch = !roleFilter || user.role === roleFilter;
+                return nameMatch && deptMatch && roleMatch;
+            });
+
             const myDept = currentUserProfile.department;
-            const myTeam = users.filter(u => u.department === myDept && u.id !== currentUserProfile.id);
-            const others = users.filter(u => u.department !== myDept && u.id !== currentUserProfile.id);
+            const myTeam = filteredUsers.filter(u => u.department === myDept && u.id !== currentUserProfile.id);
+            const others = filteredUsers.filter(u => u.department !== myDept && u.id !== currentUserProfile.id);
 
             const generateCardHTML = (user) => {
                 let avatarHTML = '';
@@ -1375,6 +1435,32 @@
             container.innerHTML = html;
         }
 
+        function populateTeamFilters(users) {
+            const deptSelect = document.getElementById('team-filter-dept');
+            const roleSelect = document.getElementById('team-filter-role');
+            
+            const depts = [...new Set(users.map(u => u.department).filter(Boolean))].sort();
+            const roles = [...new Set(users.map(u => u.role).filter(Boolean))].sort();
+            
+            // Evita repopular os dropdowns a cada filtro
+            if(deptSelect.options.length <= 1) {
+                deptSelect.innerHTML = '<option value="">Todos os Setores</option>';
+                depts.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d; opt.textContent = d;
+                    deptSelect.appendChild(opt);
+                });
+            }
+            if(roleSelect.options.length <= 1) {
+                roleSelect.innerHTML = '<option value="">Todos os Cargos</option>';
+                roles.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r; opt.textContent = r;
+                    roleSelect.appendChild(opt);
+                });
+            }
+        }
+
         function openRecipientModal() {
             const modal = document.getElementById('recipient-modal');
             modal.classList.add('visible');
@@ -1415,6 +1501,9 @@
             const textFilter = document.getElementById('filter-text').value.toLowerCase();
 
             const filtered = allUsers.filter(user => {
+                const isCurrentUser = user.id === currentUserProfile.id;
+                if(isCurrentUser) return false;
+
                 const matchDept = deptFilter === "" || user.department === deptFilter;
                 const matchRole = roleFilter === "" || user.role === roleFilter;
                 const matchText = user.full_name.toLowerCase().includes(textFilter) || 
@@ -1565,7 +1654,13 @@
                     <div class="card">
                         <h3 class="card-title"><span class="material-icons">outbox</span> Chamados que eu abri (${createdPendencies.length})</h3>
                         <div class="pendencies-grid">
-                            ${createdPendencies.map(p => `
+                            ${createdPendencies.map(p => {
+                                const readStatusText = p.first_read_at
+                                    ? `Visto em: ${new Date(p.first_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'})}`
+                                    : 'Aguardando visualização';
+                                const readStatusClass = p.first_read_at ? '' : 'pendency-alert';
+                                
+                                return `
                                 <div class="pendency-card" style="border-left-color: var(--color-info)">
                                     <div class="pendency-header">
                                         <h4 class="pendency-title"><span class="material-icons" style="font-size: 18px;">${p.type === 'ticket' ? 'support_agent' : 'mail'}</span> Chamado Aberto</h4>
@@ -1575,9 +1670,9 @@
                                         <div>Para: ${p.recipients_names || 'N/A'}</div>
                                         ${p.due_date ? `<div>Prazo: ${new Date(p.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : ''}
                                     </div>
-                                    ${p.first_read_at ? `<div style="color:var(--color-text-secondary); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 4px;">Visto pelo menos uma vez</div>` : `<div class="pendency-alert">Aguardando visualização</div>`}
+                                    <div class="${readStatusClass}" style="margin-top: auto;">${readStatusText}</div>
                                 </div>
-                            `).join('')}
+                            `}).join('')}
                         </div>
                     </div>`;
             }
