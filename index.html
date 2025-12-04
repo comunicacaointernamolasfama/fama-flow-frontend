@@ -190,21 +190,6 @@
         .history-item .info-wrapper .action-text { font-weight: 500; }
         .history-item .info-wrapper .timestamp { font-size: 0.85rem; color: var(--color-text-secondary); }
 
-        /* --- History Item Refactor Styles (NEW) --- */
-        .history-item-card {
-            padding: 1rem;
-            border-left: 4px solid var(--color-success);
-            background-color: var(--color-surface);
-            border-radius: 8px;
-            border: 1px solid var(--color-border);
-            box-shadow: var(--shadow);
-        }
-        .history-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
-        .history-title { margin: 0; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
-        .history-id { font-size: 0.8rem; font-weight: 500; color: var(--color-text-secondary); }
-        .history-meta { font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.5rem; }
-        .history-timeline { font-size: 0.85rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--color-border); display: flex; flex-direction: column; gap: 0.25rem; }
-
         /* --- TEAM PAGE STYLES (REFACTORED) --- */
         .team-section-title { grid-column: 1 / -1; margin: 2rem 0 1rem 0; font-size: 1.1rem; color: var(--color-text-primary); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
         .team-section-title .material-icons { color: var(--color-text-secondary); }
@@ -1739,50 +1724,45 @@
             let historyHTML = '';
             if (resolvedTickets && resolvedTickets.length > 0) {
                 historyHTML = `
-                    <div class="card history-card">
-                        <details class="history-details">
-                            <summary class="history-summary">
-                                <span class="material-icons">chevron_right</span>
-                                Histórico de Atividades (${resolvedTickets.length})
-                            </summary>
-                            <div class="history-list">
-                                ${resolvedTickets.map(ticket => {
-                                    const ticketIdShort = `#${ticket.id.substring(0, 4).toUpperCase()}`;
-                                    const priorityTag = ticket.priority === 'urgent' ? `<span class="tag-fino tag-urgent">Urgente</span>` : (ticket.priority === 'important' ? `<span class="tag-fino tag-important">Importante</span>` : '');
+                    <div class="card">
+                        <h3 class="card-title"><span class="material-icons">history</span> Histórico de Atividades (${resolvedTickets.length})</h3>
+                        <div class="pendencies-grid">
+                            ${resolvedTickets.map(ticket => {
+                                const ticketIdShort = `#${ticket.id.substring(0, 4).toUpperCase()}`;
+                                const priorityTag = ticket.priority === 'urgent' ? `<span class="tag-fino tag-urgent">Urgente</span>` : (ticket.priority === 'important' ? `<span class="tag-fino tag-important">Importante</span>` : '');
 
-                                    const firstReadDate = ticket.first_read_at
-                                        ? `Visualizado em: ${new Date(ticket.first_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`
-                                        : 'Não visualizado antes da resolução';
+                                const firstReadDate = ticket.first_read_at
+                                    ? `Visualizado em: ${new Date(ticket.first_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`
+                                    : 'Não visualizado antes da resolução';
 
-                                    const resolvedDate = ticket.resolved_at
-                                        ? `Resolvido em: ${new Date(ticket.resolved_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`
-                                        : 'Data de resolução indisponível';
+                                const resolvedDate = ticket.resolved_at
+                                    ? `Resolvido em: ${new Date(ticket.resolved_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`
+                                    : 'Data de resolução indisponível';
 
-                                    return `
-                                        <div class="history-item-card">
-                                            <div class="history-header">
-                                                <h4 class="history-title">
-                                                    <span class="material-icons" style="color: var(--color-success);">check_circle</span>
-                                                    Chamado Resolvido
-                                                </h4>
-                                                <div>
-                                                    <span class="history-id">${ticketIdShort}</span>
-                                                    ${priorityTag}
-                                                </div>
-                                            </div>
-                                            <div class="history-meta">
-                                                <div>De: ${ticket.creator_name}</div>
-                                                ${ticket.due_date ? `<div>Prazo Final: ${new Date(ticket.due_date).toLocaleDateString('pt-BR')}</div>` : ''}
-                                            </div>
-                                            <div class="history-timeline">
-                                                <div>${firstReadDate}</div>
-                                                <div>${resolvedDate}</div>
+                                return `
+                                    <div class="pendency-card" style="border-left-color: var(--color-success);">
+                                        <div class="pendency-header">
+                                            <h4 class="pendency-title">
+                                                <span class="material-icons" style="color: var(--color-success);">check_circle</span>
+                                                Chamado Resolvido
+                                            </h4>
+                                            <div>
+                                                <span style="font-size: 0.8rem; font-weight: 500; color: var(--color-text-secondary);">${ticketIdShort}</span>
+                                                ${priorityTag}
                                             </div>
                                         </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </details>
+                                        <div class="pendency-meta">
+                                            <div>De: ${ticket.creator_name}</div>
+                                            ${ticket.due_date ? `<div>Prazo Final: ${new Date(ticket.due_date).toLocaleDateString('pt-BR')}</div>` : ''}
+                                        </div>
+                                        <div style="font-size: 0.85rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--color-border); display: flex; flex-direction: column; gap: 0.25rem;">
+                                            <div>${firstReadDate}</div>
+                                            <div>${resolvedDate}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
                     </div>
                 `;
             }
