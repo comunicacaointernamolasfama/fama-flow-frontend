@@ -3,2183 +3,826 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fama Flow</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <title>Centralização do Plano de Corte - Molas Fama</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        :root {
-            --color-background: #F9F9F9; --color-surface: #FFFFFF; --color-text-primary: #1E1E1E; --color-text-secondary: #6B7280; --color-brand-primary: #D81920; --color-border: #E0E0E0; --color-success: #10B981; --color-warning: #F59E0B; --color-danger: #D81920; --color-info: #3B82F6; --color-success-bg: #E7F8F2; --color-warning-bg: #FFFBEB; --color-danger-bg: #FEF2F2; --color-info-bg: #EFF6FF; --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            --read-bg: #f3f4f6; --unread-bg: #FFFFFF;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        body.dark-mode {
-            --color-background: #121212; --color-surface: #1E1E1E; --color-text-primary: #FFFFFF; --color-text-secondary: #A8A8A8; --color-border: #383838; --color-success-bg: #052e16; --color-warning-bg: #2a2105; --color-danger-bg: #3b1212; --color-info-bg: #1e293b; --shadow: none;
-            --read-bg: #1a1a1a; --unread-bg: #252525;
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
         }
-        body { font-family: 'Inter', sans-serif; margin: 0; background-color: var(--color-background); color: var(--color-text-primary); transition: background-color 0.3s, color 0.3s; line-height: 1.6; }
-        * { box-sizing: border-box; }
-        .login-wrapper { display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .theme-toggle { position: fixed; top: 1.5rem; right: 1.5rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow); z-index: 3000; }
-        .theme-toggle .material-icons { color: var(--color-text-secondary); }
-        #icon-sun { display: none; } body.dark-mode #icon-sun { display: block; } body.dark-mode #icon-moon { display: none; }
-        .login-container { width: 100%; max-width: 400px; padding: 2.5rem; text-align: center; background-color: var(--color-surface); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--color-border); }
-        .login-logo { max-width: 180px; margin-bottom: 1rem; }
-        .login-subtitle { color: var(--color-text-secondary); margin-bottom: 2.5rem; font-size: 1rem; }
-        .input-group { position: relative; margin-bottom: 1.5rem; text-align: left;}
-        .input-field { width: 100%; padding: 1rem; background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: 8px; color: var(--color-text-primary); font-size: 1rem; }
-        .btn-primary { padding: 1rem; border: none; border-radius: 8px; background-color: var(--color-brand-primary); color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity: 0.2s; }
-        #app-container, .login-wrapper { display: none; }
-        #app-container.visible, .login-wrapper.visible { display: flex; }
-        .sidebar { width: 260px; background-color: var(--color-surface); border-right: 1px solid var(--color-border); padding: 1.5rem; display: flex; flex-direction: column; height: 100vh; position: fixed; }
-        .sidebar-header { margin-bottom: 2rem; } .sidebar-logo { width: 120px; }
-        .nav-menu { list-style: none; padding: 0; margin: 0; } .nav-menu li { margin-bottom: 0.5rem; }
-        .nav-link { display: flex; align-items: center; padding: 0.75rem 1rem; border-radius: 8px; text-decoration: none; color: var(--color-text-secondary); font-weight: 500; transition: background-color 0.2s, color 0.2s; }
-        .nav-link .material-icons { margin-right: 1rem; }
-        .nav-link:hover { background-color: var(--color-background); color: var(--color-text-primary); }
-        .nav-link.active { background-color: var(--color-brand-primary); color: white; }
-        .nav-section-title { font-size: 0.8rem; color: var(--color-text-secondary); text-transform: uppercase; margin: 2rem 0 1rem 1rem; font-weight: 600; }
-        .sidebar-scroll-area { flex-grow: 1; overflow-y: auto; padding-right: 5px; margin-right: -5px; }
-        
-        /* SIDEBAR FOOTER & SHORTCUT STYLES */
-        .sidebar-footer { margin-top: auto; border-top: 1px solid var(--color-border); padding-top: 1rem; }
-        .profile-shortcut { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; border-radius: 8px; margin-bottom: 1rem; cursor: pointer; transition: background-color 0.2s; }
-        .profile-shortcut:hover, .profile-shortcut.active { background-color: var(--color-background); }
-        .profile-shortcut .user-avatar { width: 36px; height: 36px; font-size: 1rem; }
-        .profile-shortcut .user-name { font-weight: 600; font-size: 0.9rem; }
-        .profile-shortcut .user-role { font-size: 0.8rem; color: var(--color-text-secondary); }
 
-        main.content { flex: 1; margin-left: 260px; padding: 2rem 3rem; overflow-y: auto; background-color: var(--color-background); position: relative; }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-        .page-header h1 { margin: 0; font-size: 1.8rem; display: flex; align-items: center; gap: 1rem;} .page-header p { margin: 5px 0 0 0; color: var(--color-text-secondary); }
-        .page-header-actions { display: flex; align-items: center; gap: 1rem; }
-        .page-content { display: none; } .page-content.active { display: block; }
-        .card { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
-        .grid { display: grid; gap: 1.5rem; } .grid-cols-2 { grid-template-columns: repeat(2, 1fr); } .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-        .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; border: none; transition: background-color 0.2s, opacity 0.2s;}
-        .btn:hover { opacity: 0.9; } .btn .material-icons { margin-right: 0.5rem; font-size: 20px; }
-        .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
-        .btn-icon { padding: 0.5rem; background: none; border: none; color: var(--color-text-secondary); border-radius: 50%; line-height: 1;} .btn-icon:hover { background-color: var(--color-background); color: var(--color-text-primary); }
-        .btn-secondary { background-color: var(--color-surface); color: var(--color-text-primary); border: 1px solid var(--color-border); }
-        .btn-danger { background-color: var(--color-brand-primary); color: white; }
-        .btn-success { background-color: var(--color-success); color: white; } .btn-warning { background-color: var(--color-warning); color: white; }
-        .fab { position: fixed; right: 3rem; bottom: 3rem; width: 56px; height: 56px; background-color: var(--color-brand-primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.15); cursor: pointer; border: none; z-index: 100; transition: transform 0.2s; } .fab:hover { transform: scale(1.05); }
-        .fab.hidden { display: none; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; }
-        .modal-overlay.visible { display: flex; }
-        .modal-content { background-color: var(--color-surface); padding: 0; border-radius: 12px; width: 100%; max-width: 500px; overflow: hidden; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--color-border); }
-        .modal-body { padding: 1.5rem; } .modal-footer { padding: 1rem 1.5rem; display: flex; justify-content: flex-end; gap: 0.5rem; background-color: var(--color-background); }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.9rem; }
-        .stat-card { display: flex; align-items: center; gap: 1rem; }
-        .stat-card .stat-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .stat-card.card-warning .stat-icon { background-color: var(--color-warning-bg); color: var(--color-warning); }
-        .stat-card.card-danger .stat-icon { background-color: var(--color-danger-bg); color: var(--color-danger); }
-        .stat-card .stat-info h3 { margin: 0; font-size: 1rem; color: var(--color-text-secondary); }
-        .stat-card .stat-info p { margin: 0; font-size: 2rem; font-weight: 700; }
-        .page-header .btn { padding: 0.5rem 1rem; }
-        .message-actions-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-right: 1rem; }
-        .tabs-container { display: flex; gap: 0.5rem; }
-        .tab-link { background: none; border: none; padding: 0.75rem 1.25rem; cursor: pointer; color: var(--color-text-secondary); font-weight: 500; border-bottom: 2px solid transparent; }
-        .tab-link.active { color: var(--color-brand-primary); border-bottom-color: var(--color-brand-primary); }
-        .tab-content { display: none; } .tab-content.active { display: block; }
-        .empty-state { padding: 3rem 1rem; text-align: center; color: var(--color-text-secondary); }
-        .data-table-fino { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        .data-table-fino tr { cursor: pointer; transition: background-color 0.2s; }
-        .data-table-fino tr.row-unread { background-color: var(--unread-bg); }
-        .data-table-fino tr.row-read { background-color: var(--read-bg); }
-        .data-table-fino tr:hover { filter: brightness(0.98); }
-        .data-table-fino td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--color-border); vertical-align: middle; white-space: nowrap; }
-        .data-table-fino .col-who { width: 20%; font-weight: 400; overflow: hidden; text-overflow: ellipsis; color: var(--color-text-primary); }
-        .row-unread .col-who { font-weight: 700; color: var(--color-text-primary); }
-        .data-table-fino .col-subject { width: 50%; overflow: hidden; text-overflow: ellipsis; }
-        .data-table-fino .subject-title { font-weight: 400; color: var(--color-text-primary); }
-        .row-unread .subject-title { font-weight: 700; }
-        .data-table-fino .subject-preview { color: var(--color-text-secondary); margin-left: 0.5rem; font-weight: 400; }
-        .data-table-fino .col-meta { width: 15%; text-align: right; }
-        .data-table-fino .col-meta .meta-tags { display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; }
-        .data-table-fino .col-date { width: 10%; text-align: right; color: var(--color-text-secondary); font-size: 0.85rem; font-weight: 400; }
-        .row-unread .col-date { font-weight: 600; color: var(--color-text-primary); }
-        .data-table-fino .col-actions { width: 5%; text-align: center; }
-        .data-table-fino .col-actions button { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
-        .data-table-fino .col-actions button:hover { background-color: var(--color-background); color: var(--color-text-primary); }
-        .tag-fino { font-size: 0.7rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 12px; margin-left: 0.5rem; display: inline-block; line-height: 1.2; vertical-align: middle; }
-        .tag-fino.tag-urgent { background-color: var(--color-danger-bg); color: var(--color-danger); }
-        .tag-fino.tag-important { background-color: var(--color-warning-bg); color: var(--color-warning); }
-        .tag-icon { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.8rem; color: var(--color-text-secondary); }
-        .tag-icon .material-icons { font-size: 18px; }
-        .due-date-tag { font-weight: 500; color: var(--color-text-primary); }
-        .read-receipt { display: inline-flex; vertical-align: middle; margin-right: 8px; }
-        .read-receipt .material-icons { font-size: 18px; }
-        .read-receipt.read .material-icons { color: var(--color-info); }
-        .read-receipt.delivered .material-icons { color: var(--color-text-secondary); opacity: 0.6; }
-        .refresh-btn { background: none; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; line-height: 1; }
-        .refresh-btn:hover { background-color: var(--color-background); }
-        .refresh-btn .material-icons { color: var(--color-text-secondary); transition: transform 0.3s; }
-        .refresh-btn:hover .material-icons { color: var(--color-text-primary); }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .refresh-btn.loading .material-icons { animation: spin 1s linear infinite; }
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--color-border); }
-        .data-table thead th { background-color: var(--color-background); font-weight: 600; color: var(--color-text-secondary); font-size: 0.9rem; }
-        .user-info-cell { display: flex; align-items: center; gap: 1rem; }
-        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--color-info-bg); color: var(--color-info); display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; }
-        .user-info-cell .user-name { font-weight: 600; }
-        .user-info-cell .user-email { font-size: 0.9rem; color: var(--color-text-secondary); }
-        .user-meta-cell { display: flex; flex-direction: column; gap: 0.25rem; }
-        .user-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .user-tag { font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.25rem; }
-        .user-tag.department { background-color: var(--color-info-bg); color: var(--color-info); }
-        .user-tag.role-admin { background-color: var(--color-danger-bg); color: var(--color-danger); }
-        .user-tag.role { background-color: var(--color-background); color: var(--color-text-secondary); border: 1px solid var(--color-border); }
-        .score-cell { font-weight: 600; display: flex; align-items: center; gap: 0.25rem; text-align: left !important; }
-        .score-cell .material-icons { color: var(--color-warning); font-size: 18px; }
-        .action-buttons { text-align: right; }
-        .action-buttons .btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
-        .action-buttons .btn:hover { background-color: var(--color-background); color: var(--color-text-primary); }
-        
-        /* --- PROFILE PAGE REFACTOR --- */
-        #profile-page .page-header { margin-bottom: 1rem; }
-        .profile-header-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-bottom: 2rem; }
-        .profile-header-card .user-avatar { width: 80px; height: 80px; font-size: 2.5rem; margin-bottom: 1rem; transition: border-color 0.3s; border: 4px solid transparent; }
-        .profile-info h3 { margin: 0; font-size: 1.5rem; }
-        .profile-info p { margin: 0.25rem 0 0; color: var(--color-text-secondary); }
-        
-        /* Zonas de Risco */
-        .status-badge { display: inline-block; margin-top: 0.5rem; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
-        .zone-green .user-avatar { border-color: var(--color-success); }
-        .zone-green .status-badge { background-color: var(--color-success-bg); color: var(--color-success); }
-        .zone-yellow .user-avatar { border-color: var(--color-warning); }
-        .zone-yellow .status-badge { background-color: var(--color-warning-bg); color: var(--color-warning); }
-        .zone-red .user-avatar { border-color: var(--color-danger); }
-        .zone-red .status-badge { background-color: var(--color-danger-bg); color: var(--color-danger); }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-        .card-title { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; }
-        .card-title .material-icons { color: var(--color-brand-primary); }
-        .progress-bar-container { width: 100%; background-color: var(--color-background); border-radius: 8px; overflow: hidden; height: 12px; }
-        .progress-bar { height: 100%; width: 0%; background-color: var(--color-brand-primary); border-radius: 8px; transition: width 0.5s ease-out; }
-        .score-display { display: flex; justify-content: space-between; align-items: baseline; margin-top: 0.5rem; }
-        .score-display .score-value { font-size: 1.2rem; font-weight: 700; }
-        .score-display .score-label { font-size: 0.9rem; color: var(--color-text-secondary); }
-        
-        /* Grid para Pendências */
-        .pendencies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
-        .pendency-card { padding: 1rem; border-left: 4px solid; display: flex; flex-direction: column; gap: 0.5rem; background-color: var(--color-surface); border-radius: 8px; border-top: 1px solid var(--color-border); border-right: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); box-shadow: var(--shadow); }
-        .pendency-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
-        .pendency-title { margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; font-weight: 600; line-height: 1.2; }
-        .pendency-meta { font-size: 0.85rem; color: var(--color-text-secondary); }
-        .pendency-meta div { margin-bottom: 2px; }
-        .pendency-alert { font-size: 0.85rem; font-weight: 600; color: var(--color-danger); margin-top: auto; }
-        
-        .achievements-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem; text-align: center; }
-        .achievement-badge { opacity: 0.4; }
-        .achievement-badge.unlocked { opacity: 1; }
-        .achievement-badge .badge-icon { font-size: 48px; color: var(--color-warning); }
-        .achievement-badge p { font-weight: 500; margin: 0.5rem 0 0; font-size: 0.9rem; }
-        
-        /* --- History Section Styles --- */
-        .history-card { margin-top: 1.5rem; }
-        .history-summary { font-size: 1.1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
-        .history-summary .material-icons { transition: transform 0.2s; }
-        .history-details[open] .history-summary .material-icons { transform: rotate(90deg); }
-        .history-list { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
-        .history-item { display: flex; align-items: center; gap: 1rem; }
-        .history-item .icon-wrapper { color: var(--color-success); }
-        .history-item .info-wrapper .action-text { font-weight: 500; }
-        .history-item .info-wrapper .timestamp { font-size: 0.85rem; color: var(--color-text-secondary); }
+        header {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
 
-        /* --- TEAM PAGE STYLES (REFACTORED) --- */
-        .team-section-title { grid-column: 1 / -1; margin: 2rem 0 1rem 0; font-size: 1.1rem; color: var(--color-text-primary); font-weight: 700; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
-        .team-section-title .material-icons { color: var(--color-text-secondary); }
-        
-        .team-user-card { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
-        .team-user-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--color-info); }
-        
-        .team-avatar-img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 2px solid var(--color-border); }
-        .team-user-card .user-avatar { width: 64px; height: 64px; font-size: 1.5rem; margin-bottom: 1rem; } /* Fallback */
-        
-        .team-user-card h3 { margin: 0 0 0.25rem 0; font-size: 1.1rem; font-weight: 600; }
-        .team-user-card p { margin: 0; color: var(--color-text-secondary); font-size: 0.85rem; }
-        
-        .score-pill { display: inline-flex; align-items: center; gap: 0.25rem; background-color: var(--color-background); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-top: 0.75rem; border: 1px solid var(--color-border); }
-        .score-pill.good { color: var(--color-success); border-color: var(--color-success-bg); background-color: var(--color-success-bg); }
-        .score-pill.med { color: var(--color-warning); border-color: var(--color-warning-bg); background-color: var(--color-warning-bg); }
-        .score-pill.bad { color: var(--color-danger); border-color: var(--color-danger-bg); background-color: var(--color-danger-bg); }
-        
-        #new-message-popup { position: fixed; bottom: 0; right: 3rem; width: 600px; max-width: 90vw; background-color: var(--color-surface); border: 1px solid var(--color-border); border-top-left-radius: 12px; border-top-right-radius: 12px; box-shadow: 0 -5px 25px rgba(0,0,0,0.1); z-index: 1001; display: none; flex-direction: column; transition: transform 0.3s ease-out; transform: translateY(100%); }
-        #new-message-popup.visible { display: flex; transform: translateY(0); }
-        .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background-color: var(--color-background); border-bottom: 1px solid var(--color-border); cursor: move; }
-        .popup-header h3 { margin: 0; font-size: 1rem; }
-        #new-message-form { display: flex; flex-direction: column; height: 500px; max-height: 70vh; }
-        .popup-body { padding: 0.5rem 1rem; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .popup-body .form-group { margin: 0; }
-        .popup-body .input-field { background: transparent; border: none; border-bottom: 1px solid var(--color-border); border-radius: 0; padding: 0.75rem 0; font-size: 0.9rem; }
-        .popup-body .input-field:focus { outline: none; border-bottom-color: var(--color-info); }
-        .ql-editor.ql-blank::before { color: var(--color-text-secondary); font-style: normal; pointer-events: none; }
-        #editor-wrapper { flex-grow: 1; display: flex; flex-direction: column; min-height: 0; }
-        #editor-wrapper .ql-toolbar { flex-shrink: 0; border-bottom: 1px solid var(--color-border) !important; }
-        #editor-wrapper .ql-container.ql-snow { border: none !important; flex-grow: 1; overflow-y: auto; }
-        #recipient-group { position: relative; margin-bottom: 1.5rem !important;}
-        #recipient-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; z-index: 1002; max-height: 200px; overflow-y: auto; display: none; box-shadow: var(--shadow); }
-        .suggestion-item { padding: 0.5rem 1rem; cursor: pointer; }
-        .suggestion-item:hover { background-color: var(--color-background); }
-        .popup-footer { padding: 0.75rem 1rem; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; align-items: stretch; gap: 0.75rem; }
-        .popup-footer-top-row { display: flex; justify-content: space-between; align-items: center; min-height: 38px; }
-        .popup-footer-main { display: flex; justify-content: space-between; align-items: center; }
-        .popup-actions-left { display: flex; align-items: center; gap: 1rem; }
-        #attachment-preview { font-size: 0.8rem; color: var(--color-text-secondary); background-color: var(--color-background); padding: 0.25rem 0.5rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.5rem; }
-        #attachment-preview .remove-attachment { cursor: pointer; }
-        .message-type-selector { display: flex; gap: 0.5rem; border: 1px solid var(--color-border); border-radius: 8px; padding: 0.25rem; background-color: var(--color-background);}
-        .message-type-selector label { flex: 1; display: block; text-align: center; padding: 0.25rem 0.5rem; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 0.8rem; }
-        .message-type-selector input[type="radio"] { display: none; }
-        .message-type-selector input[type="radio"]:checked + label { background-color: var(--color-surface); box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-weight: 600; }
-        .urgency-selector { display: flex; gap: 0.5rem; }
-        .urgency-selector .btn { font-size: 0.8rem; padding: 0.4rem 0.8rem; border-radius: 20px; }
-        .custom-checkbox { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; white-space: nowrap; }
-        .custom-checkbox input[type="checkbox"] { display: none; }
-        .custom-checkbox .checkbox-box { width: 18px; height: 18px; border: 2px solid var(--color-border); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
-        .custom-checkbox .checkbox-box .material-icons { font-size: 14px; color: white; transform: scale(0); transition: transform 0.2s; }
-        .custom-checkbox input[type="checkbox"]:checked + .checkbox-box { background-color: var(--color-info); border-color: var(--color-info); }
-        .custom-checkbox input[type="checkbox"]:checked + .checkbox-box .material-icons { transform: scale(1); }
-        #chamado-fields { display: flex; align-items: center; gap: 0.75rem; }
-        #chamado-fields label { font-size: 0.9rem; margin-bottom: 0; color: var(--color-text-secondary); white-space: nowrap; }
-        #chamado-fields .input-field { font-size: 0.9rem; padding: 0.4rem 0.8rem; border: 1px solid var(--color-border); background: var(--color-background); }
-        #chamado-fields .date-presets { display: flex; gap: 0.25rem; }
-        #chamado-fields .date-presets button { font-size: 0.8rem; padding: 0.25rem 0.5rem; }
-        #recipient-input-wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--color-border); padding: 0.375rem 0; cursor: text; }
-        #recipient-input-wrapper:focus-within { border-bottom-color: var(--color-info); }
-        .recipient-pill { display: inline-flex; align-items: center; gap: 0.5rem; background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: 16px; padding: 0.25rem 0.75rem; font-size: 0.9rem; }
-        .recipient-pill .pill-remove { cursor: pointer; font-size: 1rem; font-weight: 700; color: var(--color-text-secondary); }
-        #destinatario-input { border: none; outline: none; background: transparent; flex-grow: 1; min-width: 100px; font-size: 0.9rem; padding: 0.375rem 0; }
-        #toast-container { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.75rem; }
-        .toast { display: flex; align-items: center; gap: 1rem; padding: 1rem; background-color: var(--color-surface); border-radius: 8px; box-shadow: var(--shadow); border-left: 4px solid; min-width: 300px; transform: translateX(120%); opacity: 0; transition: transform 0.4s ease-out, opacity 0.4s ease-out; }
-        .toast.show { transform: translateX(0); opacity: 1; }
-        .toast .toast-icon { font-size: 24px; }
-        .toast .toast-message { flex: 1; font-weight: 500; font-size: 0.9rem; }
-        .toast .toast-close { background: none; border: none; color: var(--color-text-secondary); cursor: pointer; }
-        .toast.toast-success { border-color: var(--color-success); background-color: var(--color-success-bg); } .toast.toast-success .toast-icon { color: var(--color-success); }
-        .toast.toast-danger { border-color: var(--color-danger); background-color: var(--color-danger-bg); } .toast.toast-danger .toast-icon { color: var(--color-danger); }
-        .toast.toast-warning { border-color: var(--color-warning); background-color: var(--color-warning-bg); } .toast.toast-warning .toast-icon { color: var(--color-warning); }
-        .toast.toast-info { border-color: var(--color-info); background-color: var(--color-info-bg); } .toast.toast-info .toast-icon { color: var(--color-info); }
-        
-        /* --- CONVERSATION VIEW REFACTOR --- */
-        #conversation-view-page .page-header { flex-direction: column; align-items: stretch; gap: 0.75rem; }
-        .conversation-main-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .conversation-info-block { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; padding: 0.75rem; background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: 8px; font-size: 0.9rem; }
-        .conversation-info-block h1 { font-size: 1.5rem; margin: 0 0 0.5rem 0; }
-        .conversation-info-block p { color: var(--color-text-secondary); margin: 0; }
-        .conversation-ticket-info { background-color: var(--color-background); border: 1px solid var(--color-border); border-radius: 8px; padding: 0.75rem 1rem; display: flex; justify-content: space-around; align-items: center; font-size: 0.9rem; gap: 1rem; }
-        .conversation-ticket-info div { display: flex; align-items: center; gap: 0.5rem; }
-        .conversation-ticket-info .tag-fino { font-size: 0.8rem; }
-        #conversation-view-page .card { display: flex; flex-direction: column; height: calc(100vh - 16rem); padding: 0; }
-        #conversation-messages { flex-grow: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-        .message-bubble-wrapper { display: flex; flex-direction: column; max-width: 70%; }
-        .message-bubble { padding: 0.75rem 1rem; border-radius: 18px; word-break: break-word; }
-        .message-attachment { margin-top: 0.5rem; }
-        .message-attachment-link { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background-color: rgba(0,0,0,0.05); border-radius: 8px; text-decoration: none; color: inherit; font-size: 0.9rem; border: 1px solid var(--color-border); }
-        .message-attachment-link:hover { background-color: rgba(0,0,0,0.1); }
-        .message-bubble.sent .message-attachment-link { background-color: rgba(255,255,255,0.2); color: white; border-color: rgba(255,255,255,0.3); }
-        .message-bubble.sent .message-attachment-link:hover { background-color: rgba(255,255,255,0.3); }
-        .message-metadata { font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 0.25rem; }
-        .message-bubble-wrapper.sent { align-self: flex-end; align-items: flex-end; }
-        .message-bubble-wrapper.received { align-self: flex-start; align-items: flex-start; }
-        .message-bubble.sent { background-color: var(--color-brand-primary); color: white; border-bottom-right-radius: 4px; }
-        .message-bubble.received { background-color: var(--color-background); border: 1px solid var(--color-border); border-bottom-left-radius: 4px; }
-        #reply-form-wrapper { padding: 1rem 1.5rem; border-top: 1px solid var(--color-border); background-color: var(--color-surface); }
-        #reply-form { display: flex; gap: 1rem; align-items: center; }
-        #reply-input { flex-grow: 1; }
-        #reply-attachment-preview { margin-top: 0.5rem; font-size: 0.8rem; }
-        
-        /* New Styles for Recipient Search Layout */
-        .search-row { display: flex; align-items: flex-start; gap: 0.5rem; }
-        #recipient-input-wrapper { flex-grow: 1; }
-        
-        /* New Styles for Recipient Modal */
-        #recipient-modal .modal-content { max-width: 700px; height: 80vh; display: flex; flex-direction: column; }
-        .filter-row { padding: 1rem; border-bottom: 1px solid var(--color-border); display: flex; gap: 0.75rem; background-color: var(--color-background); align-items: center;}
-        .filter-row select, .filter-row input { flex: 1; padding: 0.6rem; border: 1px solid var(--color-border); border-radius: 8px; font-size: 0.9rem; background: var(--color-surface); color: var(--color-text-primary); }
-        .recipient-table-container { flex: 1; overflow-y: auto; padding: 0; }
-        .recipient-table-container thead { position: sticky; top: 0; background: var(--color-surface); z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .recipient-table-container th { padding: 0.75rem 1rem; text-align: left; font-size: 0.85rem; color: var(--color-text-secondary); font-weight: 600; border-bottom: 1px solid var(--color-border); }
-        .selected-row { background-color: var(--color-info-bg); }
-        .check-icon { color: var(--color-border); font-size: 24px; }
-        .selected-row .check-icon { color: var(--color-success); }
+        h1 {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
-        /* Custom Confirmation Modal Styles */
-        #confirmation-modal .modal-content { max-width: 400px; text-align: center; }
-        .confirm-icon { font-size: 48px; color: var(--color-warning); margin-bottom: 1rem; }
-        .confirm-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
-        .confirm-message { color: var(--color-text-secondary); margin-bottom: 2rem; }
+        .subtitle {
+            font-size: 1.4em;
+            color: #764ba2;
+            font-weight: 600;
+        }
 
-        /* Team Page Styles */
-        .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-        .team-user-card { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-        .team-user-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
-        .team-user-card .user-avatar { width: 64px; height: 64px; font-size: 2rem; margin-bottom: 1rem; }
-        .team-user-card h3 { margin: 0 0 0.25rem 0; font-size: 1.1rem; }
-        .team-user-card p { margin: 0; color: var(--color-text-secondary); font-size: 0.9rem; }
-        /* TASK 3: TEAM FILTERS STYLE */
-        .team-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .main-sections {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
 
-        /* --- MURAL CULTURAL STYLES (REFACTORED) --- */
-        .mural-post-card { margin-bottom: 2rem; overflow: hidden; padding: 1.5rem; }
-        .post-header { display: flex; align-items: center; gap: 1rem; }
-        .post-meta h3 { margin: 0; font-size: 1rem; font-weight: 600; }
-        .post-meta p { margin: 0; font-size: 0.85rem; color: var(--color-text-secondary); }
-        .post-title { margin: 1rem 0; font-size: 1.5rem; line-height: 1.3; }
-        .post-content-text { white-space: pre-wrap; color: var(--color-text-primary); margin-bottom: 1rem; }
-        .media-container { width: calc(100% + 3rem); margin: 0 -1.5rem 1rem -1.5rem; max-height: 500px; background-color: #000; display: flex; justify-content: center; align-items: center; }
-        .media-container img { max-width: 100%; max-height: 500px; object-fit: contain; cursor: zoom-in; }
-        .media-container iframe { width: 100%; aspect-ratio: 16/9; border: none; }
-        .post-stats { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--color-border); font-size: 0.9rem; color: var(--color-text-secondary); }
-        .post-stats-likes { display: flex; align-items: center; gap: 0.25rem; }
-        .post-stats-likes .material-icons { font-size: 16px; color: var(--color-info); }
-        .post-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; padding-top: 0.5rem; }
-        .post-actions .btn-icon { width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.6rem; border-radius: 8px; font-size: 0.9rem; }
-        .post-actions .btn-icon:hover { background-color: var(--color-background); }
-        .post-actions .btn-icon.liked { color: var(--color-info); font-weight: 700; }
-        .comments-section { display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--color-border); }
-        .comments-section.visible { display: block; }
-        .comment-item { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
-        .comment-avatar { width: 32px; height: 32px; font-size: 0.8rem; border-radius: 50%; background-color: var(--color-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .comment-box { background-color: var(--color-background); padding: 0.75rem; border-radius: 12px; flex-grow: 1; }
-        .comment-author { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem; display: block; }
-        .comment-text { font-size: 0.9rem; margin: 0; }
-        .comment-input-wrapper { display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem; }
-        .comment-input-wrapper input { flex-grow: 1; }
-        #new-post-modal .modal-content { max-width: 600px; height: auto; max-height: 90vh; overflow-y: auto; }
-        .media-type-options { display: flex; gap: 1rem; margin-bottom: 1rem; }
-        .media-option { flex: 1; border: 1px solid var(--color-border); border-radius: 8px; padding: 0.75rem; text-align: center; cursor: pointer; transition: all 0.2s; }
-        .media-option:hover, .media-option.selected { background-color: var(--color-info-bg); border-color: var(--color-info); color: var(--color-info); font-weight: 600; }
-        .media-option .material-icons { display: block; margin-bottom: 0.5rem; }
-        #preview-area { margin-top: 1rem; padding: 1rem; background: var(--color-background); border-radius: 8px; text-align: center; display: none; }
-        #preview-area img { max-width: 100%; max-height: 200px; border-radius: 4px; }
-        #preview-area p { margin: 0; font-size: 0.8rem; color: var(--color-text-secondary); }
-        #lightbox-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 5000; cursor: zoom-out; }
-        #lightbox-overlay.visible { display: flex; }
-        #lightbox-image { max-width: 90vw; max-height: 90vh; object-fit: contain; }
-        #lightbox-close { position: absolute; top: 2rem; right: 2rem; color: white; font-size: 36px; cursor: pointer; }
+        .section.novo-modelo {
+            grid-column: 1 / -1; /* Ocupa toda a largura */
+        }
 
-        /* --- REQUESTS MODULE STYLES --- */
-        .status-tag { padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 600; font-size: 0.8rem; text-transform: capitalize; }
-        .status-pending { background-color: var(--color-warning-bg); color: var(--color-warning); }
-        .status-approved { background-color: var(--color-success-bg); color: var(--color-success); }
-        .status-rejected { background-color: var(--color-danger-bg); color: var(--color-danger); }
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
 
-        #request-modal .modal-content { max-width: 700px; }
-        #request-modal .modal-body { max-height: 70vh; overflow-y: auto; }
-        .request-type-selection { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-        .type-card { border: 1px solid var(--color-border); border-radius: 8px; padding: 1.5rem 1rem; text-align: center; cursor: pointer; transition: all 0.2s; }
-        .type-card:hover { background-color: var(--color-info-bg); border-color: var(--color-info); color: var(--color-info); }
-        .type-card .material-icons { font-size: 36px; margin-bottom: 0.75rem; }
-        .type-card h3 { margin: 0; font-size: 1rem; }
-        .form-section-title { font-weight: 600; margin: 1.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); }
-        .radio-group label { display: inline-flex; align-items: center; margin-right: 1.5rem; font-weight: normal; }
-        .radio-group input { margin-right: 0.5rem; }
-        textarea.input-field { resize: vertical; min-height: 100px; }
+        .section:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
 
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid;
+        }
+
+        .problema .section-header {
+            border-color: #e74c3c;
+        }
+
+        .solucao .section-header {
+            border-color: #3498db;
+        }
+
+        .novo-modelo .section-header {
+            border-color: #2ecc71;
+        }
+
+        .section-icon {
+            font-size: 3em;
+            margin-right: 15px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .problema .section-title {
+            color: #e74c3c;
+        }
+
+        .solucao .section-title {
+            color: #3498db;
+        }
+
+        .novo-modelo .section-title {
+            color: #2ecc71;
+        }
+
+        .card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .problema .card {
+            border-color: #e74c3c;
+        }
+
+        .solucao .card {
+            border-color: #3498db;
+        }
+
+        .novo-modelo .card {
+            border-color: #2ecc71;
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-title span {
+            margin-right: 10px;
+        }
+
+        .card-content {
+            padding-left: 15px;
+        }
+
+        .card-content li {
+            margin: 8px 0;
+            list-style: none;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .card-content li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.5em;
+        }
+
+        .dor {
+            background: #fee;
+            border-left-color: #e74c3c;
+            margin-top: 10px;
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+
+        .dor strong {
+            color: #e74c3c;
+        }
+
+        .flow-section {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .flow-title {
+            text-align: center;
+            font-size: 2em;
+            color: #3498db;
+            margin-bottom: 30px;
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .flow-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            min-width: 200px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .flow-box:hover {
+            transform: scale(1.05);
+        }
+
+        .flow-arrow {
+            font-size: 2.5em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .roi-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 20px;
+            padding: 50px;
+            margin: 40px 0;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .roi-title {
+            text-align: center;
+            font-size: 2.5em;
+            color: white;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .roi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .roi-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .roi-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .roi-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .roi-card-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .roi-card-content {
+            color: #555;
+            font-size: 1.05em;
+            line-height: 1.8;
+        }
+
+        .roi-card-content strong {
+            color: #f5576c;
+            font-size: 1.2em;
+        }
+
+        .transformation {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .transformation h2 {
+            color: #667eea;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+        }
+
+        .transformation-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .before, .after {
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .before {
+            background: #fee;
+            border: 3px solid #e74c3c;
+        }
+
+        .after {
+            background: #efe;
+            border: 3px solid #2ecc71;
+        }
+
+        .before h3 {
+            color: #e74c3c;
+            margin-bottom: 15px;
+        }
+
+        .after h3 {
+            color: #2ecc71;
+            margin-bottom: 15px;
+        }
+
+        .arrow-transform {
+            font-size: 3em;
+            color: #667eea;
+        }
+
+        .key-insight {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            font-size: 1.3em;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: white;
+            font-size: 1.1em;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .main-sections {
+                grid-template-columns: 1fr;
+            }
+
+            .transformation-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .arrow-transform {
+                transform: rotate(90deg);
+            }
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #ffd89b 0%, #f5576c 100%);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .controle-painel {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .controle-painel h4 {
+            color: #19547b;
+            margin-bottom: 10px;
+        }
+
+        .controle-lista {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .controle-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            color: #19547b;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
-    <div id="root"></div>
-    <button class="theme-toggle" id="theme-toggle" title="Alterar tema" style="display: none;"><span class="material-icons" id="icon-moon">dark_mode</span><span class="material-icons" id="icon-sun">light_mode</span></button>
-    <div id="toast-container"></div>
-    
-    <!-- MAIN MESSAGE POPUP -->
-    <div id="new-message-popup"><div class="popup-header"><h3>Nova Mensagem</h3><button onclick="closeNewMessagePopup()"><span class="material-icons">close</span></button></div><form id="new-message-form"><div class="popup-body">
-        
-        <div class="form-group" id="recipient-group">
-            <div class="search-row">
-                <div id="recipient-input-wrapper" onclick="document.getElementById('destinatario-input').focus()">
-                    <input type="text" id="destinatario-input" placeholder="Digite ou busque ao lado..." autocomplete="off">
+    <div class="container">
+        <header>
+            <h1>🎯 Centralização do Plano de Corte</h1>
+            <p class="subtitle">Molas Fama - Transformação Digital do Setor de Otimização</p>
+        </header>
+
+        <div class="main-sections">
+            <!-- PROBLEMA -->
+            <div class="section problema">
+                <div class="section-header">
+                    <div class="section-icon">❌</div>
+                    <div class="section-title">O PROBLEMA<br><small style="font-size: 0.6em;">Silos Atuais</small></div>
                 </div>
-                <button type="button" class="btn btn-secondary" onclick="openRecipientModal()" title="Abrir Lista Avançada">
-                    <span class="material-icons">list</span>
-                </button>
-            </div>
-            <div id="recipient-suggestions"></div>
-        </div>
 
-        <div class="form-group"><input type="text" id="assunto" class="input-field" placeholder="Assunto"></div><div id="editor-wrapper"><div id="editor-container"></div></div></div><div class="popup-footer"><div class="popup-footer-top-row"><div class="urgency-selector"><button type="button" class="btn btn-success active" data-priority="normal">Normal</button><button type="button" class="btn btn-secondary" data-priority="important">Importante</button><button type="button" class="btn btn-secondary" data-priority="urgent">Urgente</button></div><div id="chamado-fields" style="display:none;"><label for="due_date">Prazo:</label><input type="date" id="due_date" class="input-field"><div class="date-presets"><button type="button" class="btn btn-secondary" onclick="setDueDate(1)">+1d</button><button type="button" class="btn btn-secondary" onclick="setDueDate(7)">+7d</button></div></div></div><div class="popup-footer-main"><div class="popup-actions-left"><button type="submit" id="btn-send-message" class="btn btn-danger">Enviar</button><input type="file" id="attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><div id="attachment-preview"></div><div class="message-type-selector"><div><input type="radio" id="tipo-simples" name="message-type" value="message" checked onchange="toggleChamadoFields()"><label for="tipo-simples">Simples</label></div><div><input type="radio" id="tipo-chamado" name="message-type" value="ticket" onchange="toggleChamadoFields()"><label for="tipo-chamado">Chamado</label></div></div></div><label class="custom-checkbox"><input type="checkbox" id="requires_response"><span class="checkbox-box"><span class="material-icons">check</span></span> Exige Resposta</label></div></div></form></div>
-
-    <!-- RECIPIENT SELECTION MODAL -->
-    <div id="recipient-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Selecionar Destinatários</h3>
-                <span class="material-icons" style="cursor:pointer;" onclick="closeRecipientModal()">close</span>
-            </div>
-            
-            <div class="filter-row">
-                <select id="filter-dept" onchange="applyRecipientFilters()" autocomplete="off">
-                    <option value="">Todos Departamentos</option>
-                </select>
-                <select id="filter-role" onchange="applyRecipientFilters()" autocomplete="off">
-                    <option value="">Todos Cargos</option>
-                </select>
-                <input type="text" id="filter-text" placeholder="Buscar Nome..." oninput="applyRecipientFilters()" autocomplete="off">
-            </div>
-
-            <div class="modal-body recipient-table-container">
-                <table class="data-table-fino" style="width: 100%;">
-                    <thead>
-                        <tr>
-                            <th style="width: 40%;">Funcionário</th>
-                            <th style="width: 30%;">Departamento</th>
-                            <th style="width: 20%;">Cargo</th>
-                            <th style="width: 10%; text-align: center;">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recipient-table-body">
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="modal-footer">
-                <div style="flex-grow: 1; font-size: 0.9rem; color: var(--color-text-secondary);" id="selected-count-display">0 selecionados</div>
-                <button class="btn btn-danger" onclick="closeRecipientModal()">Concluir Seleção</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- NEW POST MODAL (MURAL) -->
-    <div id="new-post-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Nova Publicação no Mural</h3>
-                <span class="material-icons" style="cursor:pointer;" onclick="closeNewPostModal()">close</span>
-            </div>
-            <div class="modal-body">
-                <form id="new-post-form">
-                    <div class="form-group">
-                        <label for="post-title">Título</label>
-                        <input type="text" id="post-title" class="input-field" placeholder="Ex: Festa de Fim de Ano" required>
+                <div class="card">
+                    <div class="card-title">
+                        <span>🔴</span> Linha Helicoidal
                     </div>
-                    
-                    <div class="form-group">
-                        <label>Tipo de Mídia</label>
-                        <div class="media-type-options">
-                            <div class="media-option selected" onclick="selectMediaType('text')" id="opt-text">
-                                <span class="material-icons">notes</span> Texto
-                            </div>
-                            <div class="media-option" onclick="selectMediaType('image')" id="opt-image">
-                                <span class="material-icons">image</span> Imagem
-                            </div>
-                            <div class="media-option" onclick="selectMediaType('carousel')" id="opt-carousel">
-                                <span class="material-icons">view_carousel</span> Carrossel
-                            </div>
-                            <div class="media-option" onclick="selectMediaType('video')" id="opt-video">
-                                <span class="material-icons">smart_display</span> Vídeo
-                            </div>
-                        </div>
-                        <input type="hidden" id="post-media-type" value="text">
-                    </div>
-
-                    <div class="form-group" id="media-input-group" style="display: none;">
-                        <label id="media-input-label">Arquivo de Mídia</label>
-                        <input type="file" id="post-media-file" class="input-field" accept="image/*">
-                        <div id="preview-area"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="post-content">Conteúdo</label>
-                        <textarea id="post-content" class="input-field" rows="6" placeholder="Escreva a mensagem aqui..." style="resize: vertical;"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeNewPostModal()">Cancelar</button>
-                <button class="btn btn-danger" id="btn-publish-post" onclick="submitPost()">Publicar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- REQUESTS MODAL -->
-    <div id="request-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="request-modal-title">Nova Requisição</h3>
-                <span class="material-icons" style="cursor:pointer;" onclick="closeRequestModal()">close</span>
-            </div>
-            <div class="modal-body" id="request-modal-body">
-                <!-- Dynamic Content will be injected here -->
-            </div>
-            <div class="modal-footer" id="request-modal-footer">
-                <!-- Dynamic Buttons will be injected here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- CONFIRMATION MODAL -->
-    <div id="confirmation-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-body" style="display: flex; flex-direction: column; align-items: center; padding-top: 2rem;">
-                <span class="material-icons confirm-icon">warning</span>
-                <h3 class="confirm-title" id="confirm-title">Tem certeza?</h3>
-                <p class="confirm-message" id="confirm-message">Esta ação é irreversível.</p>
-                <div style="display: flex; gap: 1rem; width: 100%;">
-                    <button class="btn btn-secondary" style="flex: 1;" onclick="closeConfirmationModal()">Cancelar</button>
-                    <button class="btn btn-danger" style="flex: 1;" id="btn-confirm-action">Sim, confirmar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- LIGHTBOX FOR IMAGES (NEW) -->
-    <div id="lightbox-overlay" onclick="closeLightbox()">
-        <span id="lightbox-close" onclick="closeLightbox()">&times;</span>
-        <img id="lightbox-image" src="">
-    </div>
-
-    <script>
-        const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        // --- N8N WEBHOOK URLs ---
-        const N8N_CREATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-user';
-        const N8N_UPDATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/update-user';
-        const N8N_DELETE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/delete-user';
-        const N8N_SEND_MESSAGE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/21446ed7-79bd-4a14-b954-ab729bb61f26';
-        const N8N_MARK_AS_READ_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/mark-as-read';
-        const N8N_TOGGLE_ARCHIVE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/toggle-archive';
-        const N8N_RESOLVE_TICKET_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/resolve-ticket';
-        const N8N_CREATE_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-post';
-        const N8N_LIKE_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/like-post';
-        const N8N_COMMENT_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/comment-post';
-        
-        // ! AÇÃO NECESSÁRIA: Substitua '...' pela URL do seu webhook do n8n para criar requisições.
-        const N8N_CREATE_REQUEST_URL = '...';
-
-
-        let currentUserProfile = null;
-        let quillEditor = null;
-        let allUsers = [];
-        let selectedRecipients = [];
-        let selectedFile = null;
-        let currentRequestType = null; // Used for the new requests module
-
-        const root = document.getElementById('root');
-        const themeToggleBtn = document.getElementById('theme-toggle');
-
-        const authHTML = `<div class="login-wrapper visible" id="auth-wrapper"><div id="auth-container" class="login-container"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo"><p class="login-subtitle">Comunicação interna Molas Fama</p><form id="login-form"><div class="input-group"><input type="email" id="email" class="input-field" placeholder="Email" required></div><div class="input-group"><input type="password" id="password" class="input-field" placeholder="Senha" required></div><button type="submit" class="btn-primary" style="width: 100%;">Entrar</button></form></div></div>`;
-        const appHTML = `<div id="app-container">
-            <aside class="sidebar">
-                <div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div>
-                <div class="sidebar-scroll-area">
-                    <ul class="nav-menu">
-                        <li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li>
-                        <li><a href="#" class="nav-link" data-page="messages-page"><span class="material-icons">inbox</span> Mensagens</a></li>
-                        <li><a href="#" class="nav-link" data-page="requests-page"><span class="material-icons">description</span> Requisições</a></li>
-                        <li><a href="#" class="nav-link" data-page="channels-page"><span class="material-icons">tag</span> Canais</a></li>
-                        <li><a href="#" class="nav-link" data-page="team-page"><span class="material-icons">people</span> Equipe</a></li>
-                        <li><a href="#" class="nav-link" data-page="rankings-page"><span class="material-icons">leaderboard</span> Performance e Rankings</a></li>
-                        <li><a href="#" class="nav-link" data-page="mural-page"><span class="material-icons">campaign</span> Mural Cultural</a></li>
-                        <li><a href="#" class="nav-link" data-page="kb-page"><span class="material-icons">school</span> Base de Conhecimento</a></li>
-                    </ul>
-                    <div id="admin-section" style="display: none;">
-                        <h3 class="nav-section-title">Administração</h3>
-                        <ul class="nav-menu">
-                            <li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li>
-                            <li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li>
+                    <div class="card-content">
+                        <strong>Executor:</strong>
+                        <ul>
+                            <li>Clevandy (Gerente de Fábrica)</li>
                         </ul>
-                    </div>
-                </div>
-                <div class="sidebar-footer">
-                    <div id="profile-shortcut" class="profile-shortcut"></div>
-                    <ul class="nav-menu">
-                        <li><a href="#" class="nav-link" id="logout-button"><span class="material-icons">logout</span> Sair</a></li>
-                    </ul>
-                </div>
-            </aside>
-            <main class="content">
-                <div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Abertos</h3><p id="urgent-tickets-count">0</p></div></div></div></div>
-                <div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button><button class="tab-link" data-tab="archived-content">Arquivados</button></div><button id="refresh-messages-btn" class="refresh-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div><div id="archived-content" class="tab-content"></div></div></div>
-                <div id="requests-page" class="page-content"><div class="page-header"><div><h1>Requisições</h1><p>Gerencie solicitações de RH e administrativas.</p></div><div class="page-header-actions"><button id="btn-new-request" class="btn btn-danger"><span class="material-icons">add</span> Nova Requisição</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th style="width: 25%;">Tipo</th><th style="width: 25%;">Solicitante</th><th style="width: 20%;">Data</th><th style="width: 15%;">Status</th><th style="width: 15%;">Ações</th></tr></thead><tbody id="request-table-body"></tbody></table></div></div>
-                <div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"></div><div class="card"><div id="conversation-messages">Carregando conversa...</div><div id="reply-form-wrapper"><div id="reply-attachment-preview"></div><form id="reply-form"><input type="file" id="reply-attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('reply-attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div>
-                <div id="team-page" class="page-content"><div class="page-header"><h1>Equipe</h1><p>Veja os perfis e performance dos seus colegas.</p></div>
-                    <div class="card team-filters">
-                        <div class="form-group" style="margin:0;"><label for="team-search-name">Buscar por Nome</label><input type="text" id="team-search-name" class="input-field" placeholder="Digite um nome..."></div>
-                        <div class="form-group" style="margin:0;"><label for="team-filter-dept">Filtrar por Setor</label><select id="team-filter-dept" class="input-field"></select></div>
-                        <div class="form-group" style="margin:0;"><label for="team-filter-role">Filtrar por Cargo</label><select id="team-filter-role" class="input-field"></select></div>
-                    </div>
-                <div id="team-list-content">Carregando equipe...</div></div>
-                <div id="channels-page" class="page-content"><div class="page-header"><h1>Canais</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
-                <div id="rankings-page" class="page-content"><div class="page-header"><h1>Performance e Rankings</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
-                <div id="mural-page" class="page-content"><div class="page-header"><h1>Mural Cultural</h1><p>Acompanhe os eventos e novidades da Fama.</p></div><div id="mural-content">Carregando...</div><button class="fab hidden" id="fab-new-post" title="Nova Postagem"><span class="material-icons">add</span></button></div>
-                <div id="kb-page" class="page-content"><div class="page-header"><h1>Base de Conhecimento</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
-                <div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div>
-                <div id="users-page" class="page-content"><div class="page-header"><div class="page-header-title"><h1>Gerenciamento de Usuários</h1></div><div class="page-header-actions"><button id="refresh-users-btn" class="refresh-btn" title="Atualizar usuários"><span class="material-icons">refresh</span></button><button id="btn-new-user" class="btn btn-danger"><span class="material-icons">add</span> Novo Usuário</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th>Usuário & Email</th><th>Departamento & Cargo</th><th>Score</th><th>Ações</th></tr></thead><tbody id="user-table-body"></tbody></table></div></div>
-                <div id="profile-page" class="page-content">
-                    <div id="user-profile-content"></div>
-                    <div id="user-history-content"></div>
-                </div>
-                <button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button>
-            </main>
-            <div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div>
-        </div>`;
-        
-        document.addEventListener('DOMContentLoaded', checkUserSession);
-        
-        function showToast(message, type = 'info') { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast toast-${type}`; const icons = { success: 'check_circle', danger: 'error', warning: 'warning', info: 'info' }; toast.innerHTML = `<span class="material-icons toast-icon">${icons[type]}</span><span class="toast-message">${message}</span><button class="toast-close">&times;</button>`; container.appendChild(toast); setTimeout(() => toast.classList.add('show'), 100); const removeToast = () => { toast.classList.remove('show'); toast.addEventListener('transitionend', () => toast.remove()); }; const timeoutId = setTimeout(removeToast, 5000); toast.querySelector('.toast-close').addEventListener('click', () => { clearTimeout(timeoutId); removeToast(); }); }
-        
-        async function checkUserSession() {
-            applyTheme(localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-            themeToggleBtn.style.display = 'flex';
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                await fetchUserProfile(session.user);
-                renderAppLayout();
-            } else {
-                renderAuthLayout();
-            }
-        }
-        
-        function renderAuthLayout() { root.innerHTML = authHTML; document.getElementById('login-form').addEventListener('submit', handleLogin); }
-        function renderAppLayout() { root.innerHTML = appHTML; setupEventListeners(); showApp(); }
-
-        function setupEventListeners() {
-            document.getElementById('logout-button').addEventListener('click', handleLogout);
-            document.getElementById('new-message-form').addEventListener('submit', sendMessage);
-            document.getElementById('btn-new-user')?.addEventListener('click', () => openUserModal(null));
-            document.getElementById('fab-new-message').addEventListener('click', openNewMessagePopup);
-            document.getElementById('fab-new-post').addEventListener('click', openNewPostModal); 
-            document.getElementById('btn-new-request').addEventListener('click', openRequestModal);
-            document.getElementById('attachment-input').addEventListener('change', handleFileSelection);
-            
-            document.getElementById('post-media-file').addEventListener('change', handlePostMediaPreview);
-
-            document.querySelectorAll('.nav-link[data-page]').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); showPage(e.currentTarget.dataset.page); }); });
-            document.querySelectorAll('.urgency-selector .btn').forEach(button => { button.addEventListener('click', (e) => { e.preventDefault(); document.querySelectorAll('.urgency-selector .btn').forEach(btn => { btn.classList.remove('btn-success', 'btn-warning', 'btn-danger', 'active'); btn.classList.add('btn-secondary'); }); const clickedButton = e.currentTarget; clickedButton.classList.remove('btn-secondary'); clickedButton.classList.add('active'); const priority = clickedButton.dataset.priority; if (priority === 'normal') clickedButton.classList.add('btn-success'); else if (priority === 'important') clickedButton.classList.add('btn-warning'); else if (priority === 'urgent') clickedButton.classList.add('btn-danger'); }); });
-            const recipientInput = document.getElementById('destinatario-input');
-            if (recipientInput) { recipientInput.addEventListener('input', handleRecipientSearch); recipientInput.addEventListener('keydown', handleRecipientBackspace); }
-            document.querySelectorAll('#messages-page .tab-link').forEach(tab => { tab.addEventListener('click', (e) => { const targetId = e.currentTarget.dataset.tab; document.querySelectorAll('#messages-page .tab-link').forEach(t => t.classList.remove('active')); document.querySelectorAll('#messages-page .tab-content').forEach(c => c.classList.remove('active')); e.currentTarget.classList.add('active'); document.getElementById(targetId).classList.add('active'); }); });
-            
-            document.getElementById('team-search-name').addEventListener('input', loadTeamPage);
-            document.getElementById('team-filter-dept').addEventListener('change', loadTeamPage);
-            document.getElementById('team-filter-role').addEventListener('change', loadTeamPage);
-
-            const refreshMessagesBtn = document.getElementById('refresh-messages-btn');
-            if(refreshMessagesBtn) {
-                refreshMessagesBtn.addEventListener('click', async () => {
-                    refreshMessagesBtn.disabled = true;
-                    refreshMessagesBtn.classList.add('loading');
-                    try { await loadMessages(); showToast("Caixa de entrada atualizada!", "info"); } 
-                    catch (e) { showToast("Falha ao atualizar.", "danger"); } 
-                    finally { refreshMessagesBtn.classList.remove('loading'); refreshMessagesBtn.disabled = false; }
-                });
-            }
-
-            const refreshUsersBtn = document.getElementById('refresh-users-btn');
-            if(refreshUsersBtn) {
-                refreshUsersBtn.addEventListener('click', async () => {
-                    refreshUsersBtn.disabled = true;
-                    refreshUsersBtn.classList.add('loading');
-                    try { await loadUsersForAdmin(); showToast("Lista de usuários atualizada!", "info"); } 
-                    catch (e) { showToast("Falha ao atualizar usuários.", "danger"); } 
-                    finally { refreshUsersBtn.classList.remove('loading'); refreshUsersBtn.disabled = false; }
-                });
-            }
-        }
-
-        async function handleLogin(e) { e.preventDefault(); const email = document.getElementById('email').value; const password = document.getElementById('password').value; const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password }); if (error) { showToast('Erro no login: ' + error.message, 'danger'); } else if (data.user) { await fetchUserProfile(data.user); renderAppLayout(); } }
-        async function handleLogout() { await supabaseClient.auth.signOut(); currentUserProfile = null; allUsers = []; renderAuthLayout(); }
-        
-        async function fetchUserProfile(user) {
-            const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
-            if (data) { currentUserProfile = { ...data, email: user.email }; } 
-            else { console.error("Perfil não encontrado:", error); currentUserProfile = { id: user.id, email: user.email, full_name: 'Usuário' }; }
-        }
-
-        function showApp() { 
-            const appContainer = document.getElementById('app-container'); if (!appContainer) return;
-            appContainer.classList.add('visible'); 
-            const isAdmin = currentUserProfile && (currentUserProfile.role === 'Admin' || currentUserProfile.role === 'RH');
-            document.getElementById('admin-section').style.display = (currentUserProfile && currentUserProfile.role === 'Admin') ? 'block' : 'none'; 
-            
-            const profileShortcut = document.getElementById('profile-shortcut');
-            const avatarInitial = currentUserProfile.full_name ? currentUserProfile.full_name.charAt(0).toUpperCase() : '?';
-            profileShortcut.innerHTML = `
-                <div class="user-avatar">${avatarInitial}</div>
-                <div>
-                    <div class="user-name">${currentUserProfile.full_name}</div>
-                    <div class="user-role">${currentUserProfile.role || 'Colaborador'}</div>
-                </div>
-            `;
-            profileShortcut.onclick = () => showPage('profile-page');
-
-            showPage('dashboard-page'); 
-            loadAllDynamicData();
-            document.getElementById('dashboard-title').textContent = `Dashboard de ${currentUserProfile.full_name.split(' ')[0]}`;
-        }
-        
-        function showPage(pageId, targetUserId = null) { 
-            const appContainer = document.getElementById('app-container'); if (!appContainer) return;
-            appContainer.querySelectorAll('.page-content').forEach(page => page.classList.remove('active')); 
-            const targetPage = appContainer.querySelector(`#${pageId}`); 
-            if (targetPage) targetPage.classList.add('active'); 
-            appContainer.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active')); 
-
-            const profileShortcut = document.getElementById('profile-shortcut');
-            profileShortcut.classList.remove('active');
-
-            if (pageId === 'profile-page' && (!targetUserId || targetUserId === currentUserProfile.id)) {
-                 profileShortcut.classList.add('active');
-                 // Garante que nenhum outro link de navegação principal esteja ativo
-                 appContainer.querySelector('.nav-link.active')?.classList.remove('active');
-            } else {
-                const activeLink = appContainer.querySelector(`.nav-link[data-page="${pageId}"]`); 
-                if (activeLink) activeLink.classList.add('active');
-            }
-            
-            const fabMessage = document.getElementById('fab-new-message');
-            const fabPost = document.getElementById('fab-new-post');
-            
-            fabMessage.classList.add('hidden');
-            fabPost.classList.add('hidden');
-            
-            if (pageId === 'mural-page' && (currentUserProfile.role === 'Admin' || currentUserProfile.role === 'RH')) {
-                fabPost.classList.remove('hidden');
-            } else if (!['conversation-view-page', 'mural-page', 'requests-page'].includes(pageId)) {
-                fabMessage.classList.remove('hidden');
-            }
-
-            if (pageId === 'messages-page') loadMessages();
-            if (pageId === 'requests-page') loadRequests();
-            if (pageId === 'team-page') {
-                document.getElementById('team-search-name').value = '';
-                document.getElementById('team-filter-dept').value = '';
-                document.getElementById('team-filter-role').value = '';
-                loadTeamPage();
-            }
-            if (pageId === 'profile-page') loadUserProfileData(targetUserId);
-            if (pageId === 'mural-page') loadMuralPage();
-        }
-
-        async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
-        
-        async function loadDashboardStats() {
-            if (!currentUserProfile) return;
-            const { data, error } = await supabaseClient.rpc('get_dashboard_stats').single();
-            if (error) { 
-                console.error('Error fetching dashboard stats:', error); 
-                document.getElementById('pending-messages-count').textContent = '-';
-                document.getElementById('urgent-tickets-count').textContent = '-';
-                return;
-            }
-            document.getElementById('pending-messages-count').textContent = data.pending_messages_count || 0;
-            document.getElementById('urgent-tickets-count').textContent = data.urgent_tickets_count || 0;
-        }
-
-        async function fetchAllUsersForSearch() { 
-            const { data, error } = await supabaseClient.from('profiles').select('id, full_name, score, department, role'); 
-            if(error) console.error("Erro ao buscar usuários para pesquisa:", error); 
-            else allUsers = data; 
-        }
-
-        // --- REQUESTS MODULE LOGIC ---
-
-        async function loadRequests() {
-            const tableBody = document.getElementById('request-table-body');
-            tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Carregando requisições...</td></tr>`;
-
-            const { data, error } = await supabaseClient.rpc('get_all_requests_for_viewing');
-            
-            if (error) {
-                console.error("Erro ao buscar requisições:", error);
-                tableBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color: var(--color-danger)">Falha ao carregar requisições.</td></tr>`;
-                return;
-            }
-
-            if (!data || data.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhuma requisição encontrada.</td></tr>`;
-                return;
-            }
-
-            const requestTypeLabels = {
-                'new_hire': 'Contratação',
-                'termination': 'Desligamento',
-                'promotion': 'Promoção Interna',
-                'overtime': 'Horas Extras',
-                'training': 'Treinamento'
-            };
-
-            const userNames = {};
-            const userIds = [...new Set(data.map(r => r.requester_id))];
-            const { data: profiles, error: profileError } = await supabaseClient.from('profiles').select('id, full_name').in('id', userIds);
-            if (!profileError) {
-                profiles.forEach(p => { userNames[p.id] = p.full_name; });
-            }
-
-            tableBody.innerHTML = data.map(req => {
-                const typeLabel = requestTypeLabels[req.type] || req.type;
-                const requesterName = userNames[req.requester_id] || 'Desconhecido';
-                const date = new Date(req.created_at).toLocaleDateString('pt-BR');
-                const statusLabel = req.status === 'pending' ? 'Pendente' : (req.status === 'approved' ? 'Aprovada' : 'Recusada');
-
-                return `
-                    <tr>
-                        <td><strong>${typeLabel}</strong></td>
-                        <td>${requesterName}</td>
-                        <td>${date}</td>
-                        <td><span class="status-tag status-${req.status}">${statusLabel}</span></td>
-                        <td><button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;">Ver Detalhes</button></td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function openRequestModal() {
-            const modal = document.getElementById('request-modal');
-            const modalBody = document.getElementById('request-modal-body');
-            const modalFooter = document.getElementById('request-modal-footer');
-            
-            document.getElementById('request-modal-title').textContent = 'Nova Requisição';
-
-            modalBody.innerHTML = `
-                <h3>Selecione o tipo de solicitação</h3>
-                <div class="request-type-selection">
-                    <div class="type-card" data-type="new_hire">
-                        <span class="material-icons">person_add</span>
-                        <h3>Contratação de Pessoal</h3>
-                    </div>
-                    <div class="type-card" data-type="termination">
-                        <span class="material-icons">person_remove</span>
-                        <h3>Solicitar Desligamento</h3>
-                    </div>
-                    <div class="type-card" data-type="promotion">
-                        <span class="material-icons">trending_up</span>
-                        <h3>Promoção Interna</h3>
-                    </div>
-                    <div class="type-card" data-type="overtime">
-                        <span class="material-icons">schedule</span>
-                        <h3>Solicitar Horas Extras</h3>
-                    </div>
-                     <div class="type-card" data-type="training">
-                        <span class="material-icons">school</span>
-                        <h3>Solicitar Treinamento</h3>
-                    </div>
-                </div>
-            `;
-
-            modalFooter.innerHTML = `<button class="btn btn-secondary" onclick="closeRequestModal()">Cancelar</button>`;
-
-            modal.querySelectorAll('.type-card').forEach(card => {
-                card.addEventListener('click', () => renderRequestForm(card.dataset.type));
-            });
-            
-            modal.classList.add('visible');
-        }
-
-        function closeRequestModal() {
-            document.getElementById('request-modal').classList.remove('visible');
-            currentRequestType = null;
-        }
-
-        function renderRequestForm(type) {
-            currentRequestType = type;
-            const modalBody = document.getElementById('request-modal-body');
-            const modalFooter = document.getElementById('request-modal-footer');
-            const modalTitle = document.getElementById('request-modal-title');
-
-            let formHTML = '';
-            let title = 'Nova Requisição';
-
-            const backButtonHTML = `<button class="btn btn-icon" onclick="openRequestModal()" style="position: absolute; left: 1.5rem; top: 1rem;"><span class="material-icons">arrow_back</span></button>`;
-            
-            const formTemplates = {
-                'new_hire': {
-                    title: 'Requisição de Contratação',
-                    html: `
-                        <h3 class="form-section-title">Informações da Vaga</h3>
-                        <div class="form-group"><label for="req-funcao">Função*</label><input type="text" id="req-funcao" name="funcao" class="input-field" required></div>
-                        <div class="form-group"><label for="req-quantidade">Quantidade de Vagas*</label><input type="number" id="req-quantidade" name="quantidade" class="input-field" value="1" required></div>
-                        <div class="form-group">
-                            <label>Motivo da Contratação*</label>
-                            <div class="radio-group">
-                                <label><input type="radio" name="motivo_contratacao" value="aumento_quadro" checked> Aumento de Quadro</label>
-                                <label><input type="radio" name="motivo_contratacao" value="substituicao"> Substituição</label>
-                                <label><input type="radio" name="motivo_contratacao" value="outro"> Outro</label>
-                            </div>
-                        </div>
-                        <h3 class="form-section-title">Requisitos e Perfil</h3>
-                        <div class="form-group"><label for="req-escolaridade">Escolaridade Mínima</label><input type="text" id="req-escolaridade" name="escolaridade" class="input-field"></div>
-                        <div class="form-group"><label for="req-competencias">Competências Desejadas (Ex: proatividade, trabalho em equipe)</label><textarea id="req-competencias" name="competencias" class="input-field"></textarea></div>
-                    `
-                },
-                'termination': {
-                    title: 'Solicitação de Desligamento',
-                    html: `
-                        <h3 class="form-section-title">Dados do Colaborador</h3>
-                        <div class="form-group"><label for="req-nome-colaborador">Nome Completo do Colaborador*</label><input type="text" id="req-nome-colaborador" name="nome_colaborador" class="input-field" required></div>
-                        <div class="form-group"><label for="req-cargo-colaborador">Cargo</label><input type="text" id="req-cargo-colaborador" name="cargo_colaborador" class="input-field"></div>
-                        <h3 class="form-section-title">Motivo do Desligamento (Iniciativa da Empresa)</h3>
-                        <div class="form-group"><label for="req-motivo-desligamento">Descreva o motivo*</label><textarea id="req-motivo-desligamento" name="motivo_desligamento" class="input-field" required></textarea></div>
-                    `
-                },
-                'promotion': {
-                    title: 'Solicitação de Promoção Interna',
-                     html: `
-                        <h3 class="form-section-title">Detalhes da Promoção</h3>
-                        <div class="form-group"><label for="req-nome-funcionario">Nome do Funcionário*</label><input type="text" id="req-nome-funcionario" name="nome_funcionario" class="input-field" required></div>
-                        <div class="form-group"><label for="req-cargo-atual">Cargo/Salário Atual*</label><input type="text" id="req-cargo-atual" name="cargo_atual" class="input-field" required></div>
-                        <div class="form-group"><label for="req-cargo-pretendido">Cargo/Salário Pretendido*</label><input type="text" id="req-cargo-pretendido" name="cargo_pretendido" class="input-field" required></div>
-                        <div class="form-group"><label for="req-justificativa-promocao">Justificativa (motivações, resultados, conquistas)*</label><textarea id="req-justificativa-promocao" name="justificativa" class="input-field" required></textarea></div>
-                    `
-                },
-                 'overtime': {
-                    title: 'Requisição de Horas Extras',
-                    html: `
-                        <h3 class="form-section-title">Informações das Horas Extras</h3>
-                        <div class="form-group"><label for="req-data-he">Data a ser realizada*</label><input type="date" id="req-data-he" name="data_he" class="input-field" required></div>
-                        <div class="form-group"><label for="req-horario-adicional">Horário Adicional (Ex: Das 08h às 16h - 8 horas)*</label><input type="text" id="req-horario-adicional" name="horario_adicional" class="input-field" required></div>
-                        <div class="form-group"><label for="req-qtd-funcionarios">Quantidade de Funcionários*</label><input type="number" id="req-qtd-funcionarios" name="qtd_funcionarios" class="input-field" value="1" required></div>
-                        <div class="form-group"><label for="req-setor-he">Setor a realizar as Horas Extras*</label><input type="text" id="req-setor-he" name="setor_he" class="input-field" required></div>
-                    `
-                },
-                'training': {
-                    title: 'Requisição de Treinamento / Evento',
-                    html: `
-                        <h3 class="form-section-title">Informações do Treinamento ou Evento</h3>
-                        <div class="form-group"><label for="req-titulo-treinamento">Título (Nome do curso, treinamento ou evento)*</label><input type="text" id="req-titulo-treinamento" name="titulo" class="input-field" required></div>
-                        <div class="form-group"><label for="req-instituicao">Instituição/Fornecedor</label><input type="text" id="req-instituicao" name="instituicao" class="input-field"></div>
-                        <div class="form-group"><label for="req-objetivo-treinamento">Objetivo da Participação*</label><textarea id="req-objetivo-treinamento" name="objetivo" class="input-field" required></textarea></div>
-                         <div class="form-group"><label for="req-nomes-participantes">Nome(s) dos participantes (Listar nomes)</label><textarea id="req-nomes-participantes" name="nomes_participantes" class="input-field"></textarea></div>
-                    `
-                }
-            };
-            
-            if (formTemplates[type]) {
-                title = formTemplates[type].title;
-                formHTML = formTemplates[type].html;
-            }
-
-            modalTitle.textContent = title;
-            modalBody.innerHTML = backButtonHTML + `<form id="dynamic-request-form">${formHTML}</form>`;
-            modalFooter.innerHTML = `
-                <button class="btn btn-secondary" onclick="closeRequestModal()">Cancelar</button>
-                <button class="btn btn-danger" id="btn-submit-request">Enviar Requisição</button>
-            `;
-            document.getElementById('btn-submit-request').addEventListener('click', submitRequest);
-        }
-
-        async function submitRequest(event) {
-            event.preventDefault();
-            const btn = event.target;
-            const form = document.getElementById('dynamic-request-form');
-            if (!form.checkValidity()) {
-                showToast("Por favor, preencha todos os campos obrigatórios (*).", 'warning');
-                return;
-            }
-
-            if (!currentRequestType) {
-                showToast("Tipo de requisição inválido.", "danger");
-                return;
-            }
-            
-            if (N8N_CREATE_REQUEST_URL === '...') {
-                showToast("A URL do webhook de requisições não foi configurada.", "danger");
-                console.error("ERRO: N8N_CREATE_REQUEST_URL não está configurada.");
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerHTML = 'Enviando...';
-
-            const formData = new FormData(form);
-            const dataObject = {};
-            formData.forEach((value, key) => { dataObject[key] = value; });
-
-            try {
-                const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-                if (sessionError || !session) throw new Error("Sessão inválida. Faça login novamente.");
-                
-                const response = await fetch(N8N_CREATE_REQUEST_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${session.access_token}`
-                    },
-                    body: JSON.stringify({
-                        type: currentRequestType,
-                        data: dataObject
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Falha ao enviar requisição.');
-                }
-
-                showToast("Requisição enviada com sucesso!", "success");
-                closeRequestModal();
-                loadRequests();
-
-            } catch (error) {
-                console.error("Erro ao enviar requisição:", error);
-                showToast(error.message, "danger");
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = 'Enviar Requisição';
-            }
-        }
-        
-        // --- MURAL CULTURAL LOGIC ---
-        
-        function openNewPostModal() {
-            document.getElementById('new-post-modal').classList.add('visible');
-            selectMediaType('text');
-            document.getElementById('post-title').value = '';
-            document.getElementById('post-content').value = '';
-            document.getElementById('post-media-file').value = '';
-            document.getElementById('preview-area').innerHTML = '';
-            document.getElementById('preview-area').style.display = 'none';
-        }
-
-        function closeNewPostModal() {
-            document.getElementById('new-post-modal').classList.remove('visible');
-        }
-
-        function selectMediaType(type) {
-            document.querySelectorAll('.media-option').forEach(el => el.classList.remove('selected'));
-            document.getElementById(`opt-${type}`).classList.add('selected');
-            document.getElementById('post-media-type').value = type;
-
-            const mediaGroup = document.getElementById('media-input-group');
-            const fileInput = document.getElementById('post-media-file');
-            const label = document.getElementById('media-input-label');
-            const preview = document.getElementById('preview-area');
-
-            preview.innerHTML = '';
-            preview.style.display = 'none';
-            fileInput.value = '';
-
-            if (type === 'text') {
-                mediaGroup.style.display = 'none';
-            } else {
-                mediaGroup.style.display = 'block';
-                if (type === 'image') {
-                    label.textContent = "Selecione a Imagem";
-                    fileInput.accept = "image/*";
-                    fileInput.removeAttribute('multiple');
-                } else if (type === 'carousel') {
-                    label.textContent = "Selecione as Imagens (Múltiplas)";
-                    fileInput.accept = "image/*";
-                    fileInput.setAttribute('multiple', 'multiple');
-                } else if (type === 'video') {
-                    label.textContent = "Selecione o Vídeo";
-                    fileInput.accept = "video/*";
-                    fileInput.removeAttribute('multiple');
-                }
-            }
-        }
-
-        function handlePostMediaPreview(event) {
-            const files = event.target.files;
-            const preview = document.getElementById('preview-area');
-            const type = document.getElementById('post-media-type').value;
-
-            if (files.length > 0) {
-                preview.style.display = 'block';
-                if (type === 'video') {
-                     preview.innerHTML = `<p><span class="material-icons">movie</span> ${files[0].name} selecionado para upload.</p>`;
-                } else {
-                    let html = `<p>${files.length} arquivo(s) selecionado(s)</p><div style="display:flex; gap:5px; overflow-x:auto; margin-top:5px;">`;
-                    const limit = Math.min(files.length, 5); 
-                    for(let i=0; i<limit; i++) {
-                        const src = URL.createObjectURL(files[i]);
-                        html += `<img src="${src}" style="height:60px; width:auto;">`;
-                    }
-                    if(files.length > 5) html += `<span>...</span>`;
-                    html += `</div>`;
-                    preview.innerHTML = html;
-                }
-            } else {
-                preview.style.display = 'none';
-            }
-        }
-
-        async function submitPost() {
-            const btn = document.getElementById('btn-publish-post');
-            const title = document.getElementById('post-title').value;
-            const content = document.getElementById('post-content').value;
-            const mediaType = document.getElementById('post-media-type').value;
-            const fileInput = document.getElementById('post-media-file');
-
-            if (!title) { showToast('O título é obrigatório.', 'warning'); return; }
-            if (mediaType !== 'text' && fileInput.files.length === 0) { showToast('Selecione o arquivo de mídia.', 'warning'); return; }
-
-            btn.disabled = true;
-            btn.innerHTML = 'Publicando...';
-
-            try {
-                const formData = new FormData();
-                formData.append('title', title);
-                formData.append('content', content);
-                formData.append('author_id', currentUserProfile.id);
-                formData.append('media_type', mediaType);
-
-                if (mediaType !== 'text') {
-                    for (let i = 0; i < fileInput.files.length; i++) {
-                        formData.append('file', fileInput.files[i]);
-                    }
-                }
-
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (!session) throw new Error("Sessão expirou.");
-
-                const response = await fetch(N8N_CREATE_POST_URL, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${session.access_token}` },
-                    body: formData
-                });
-
-                if (!response.ok) throw new Error('Erro ao comunicar com n8n.');
-
-                showToast('Publicação enviada com sucesso!', 'success');
-                closeNewPostModal();
-                loadMuralPage(); 
-
-            } catch (error) {
-                console.error(error);
-                showToast('Erro ao publicar: ' + error.message, 'danger');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = 'Publicar';
-            }
-        }
-
-        async function loadMuralPage() {
-            const container = document.getElementById('mural-content');
-            container.innerHTML = `<div class="empty-state">Carregando mural...</div>`;
-            
-            const { data: posts, error: postsError } = await supabaseClient
-                .from('posts')
-                .select('*, author:profiles(full_name, avatar_url)')
-                .order('created_at', { ascending: false });
-
-            if (postsError) {
-                console.error("Erro no mural:", postsError);
-                container.innerHTML = `<div class="empty-state" style="color: var(--color-danger)">Erro ao carregar o mural.</div>`;
-                return;
-            }
-
-            if (!posts || posts.length === 0) {
-                container.innerHTML = `<div class="empty-state">Nenhuma publicação no mural ainda.</div>`;
-                return;
-            }
-
-            const postsHTML = await Promise.all(posts.map(async (post) => {
-                const [likesRes, commentsRes, myLikeRes] = await Promise.all([
-                    supabaseClient.from('post_likes').select('id', { count: 'exact', head: true }).eq('post_id', post.id),
-                    supabaseClient.from('post_comments').select('id', { count: 'exact', head: true }).eq('post_id', post.id),
-                    supabaseClient.from('post_likes').select('id').eq('post_id', post.id).eq('user_id', currentUserProfile.id)
-                ]);
-
-                const likesCount = likesRes.count || 0;
-                const commentsCount = commentsRes.count || 0;
-                const isLiked = myLikeRes.data && myLikeRes.data.length > 0;
-                const avatarInitial = post.author.full_name ? post.author.full_name.charAt(0).toUpperCase() : '?';
-                
-                let mediaHTML = '';
-                if (post.media_data && post.media_data.type !== 'text') {
-                    const md = post.media_data;
-                    if (md.type === 'image' && md.id) {
-                        const src = `https://lh3.googleusercontent.com/d/${md.id}`;
-                        mediaHTML = `<div class="media-container"><img src="${src}" loading="lazy" onclick="openLightbox(event, '${src}')"></div>`;
-                    } else if (md.type === 'video') {
-                         if(md.source === 'youtube' && md.id) {
-                             mediaHTML = `<div class="media-container"><iframe src="https://www.youtube.com/embed/${md.id}" allowfullscreen></iframe></div>`;
-                        } else if (md.embed_url) {
-                             mediaHTML = `<div class="media-container"><iframe src="${md.embed_url}" allowfullscreen></iframe></div>`;
-                        }
-                    } 
-                }
-
-                const likeBtnClass = isLiked ? 'btn-icon liked' : 'btn-icon';
-
-                return `
-                    <div class="card mural-post-card">
-                        <div class="post-header">
-                            <div class="user-avatar">${avatarInitial}</div>
-                            <div class="post-meta">
-                                <h3>${post.author.full_name}</h3>
-                                <p>${new Date(post.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', hour: '2-digit', minute:'2-digit' })}</p>
-                            </div>
-                        </div>
-                        <h2 class="post-title">${post.title}</h2>
-                        <div class="post-content-text">${post.content || ''}</div>
-                        ${mediaHTML}
-                        
-                        <div class="post-stats">
-                            <div class="post-stats-likes">
-                                ${likesCount > 0 ? '<span class="material-icons">thumb_up</span>' : ''}
-                                <span id="likes-count-${post.id}">${likesCount > 0 ? (likesCount + (likesCount > 1 ? ' curtidas' : ' curtida')) : ''}</span>
-                            </div>
-                            <span id="comments-count-display-${post.id}">${commentsCount} comentários</span>
-                        </div>
-                        
-                        <div class="post-actions">
-                            <button class="${likeBtnClass}" onclick="likePost('${post.id}')" id="like-btn-${post.id}">
-                                <span class="material-icons">thumb_up</span> Curtir
-                            </button>
-                            <button class="btn-icon" onclick="toggleComments('${post.id}')">
-                                <span class="material-icons">comment</span> Comentar
-                            </button>
-                        </div>
-                        
-                        <div class="comments-section" id="comments-${post.id}">
-                            <div id="comments-list-${post.id}"></div>
-                            <div class="comment-input-wrapper">
-                                <div class="user-avatar" style="width:32px; height:32px; font-size:0.8rem;">${currentUserProfile.full_name.charAt(0)}</div>
-                                <input type="text" class="input-field" id="comment-input-${post.id}" placeholder="Escreva um comentário...">
-                                <button class="btn btn-icon" onclick="submitComment('${post.id}')"><span class="material-icons">send</span></button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }));
-
-            container.innerHTML = postsHTML.join('');
-        }
-
-        async function likePost(postId) {
-            const btn = document.getElementById(`like-btn-${postId}`);
-            const countSpan = document.getElementById(`likes-count-${postId}`);
-            const statsContainer = document.querySelector(`#likes-count-${postId}`).parentElement;
-            
-            const isLiked = btn.classList.contains('liked');
-
-            // Optimistic UI update
-            btn.classList.toggle('liked');
-
-            // Backend call
-            try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (!session) throw new Error("Sessão inválida");
-
-                fetch(N8N_LIKE_POST_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                    body: JSON.stringify({ post_id: postId })
-                }).catch(e => {
-                    console.error("Erro na chamada de rede para curtir:", e);
-                    // Revert UI on network error
-                    btn.classList.toggle('liked');
-                });
-
-            } catch (e) {
-                console.error("Falha ao curtir:", e);
-                showToast("Erro ao processar curtida", "danger");
-                // Revert UI on other errors
-                btn.classList.toggle('liked');
-            }
-        }
-
-        async function toggleComments(postId) {
-            const section = document.getElementById(`comments-${postId}`);
-            const isVisible = section.classList.contains('visible');
-            
-            if (isVisible) {
-                section.classList.remove('visible');
-            } else {
-                section.classList.add('visible');
-                loadComments(postId);
-            }
-        }
-
-        async function loadComments(postId) {
-            const list = document.getElementById(`comments-list-${postId}`);
-            list.innerHTML = '<p style="font-size: 0.9rem; color: var(--color-text-secondary)">Carregando...</p>';
-
-            const { data: comments, error } = await supabaseClient
-                .from('post_comments')
-                .select('*, author:profiles(full_name)')
-                .eq('post_id', postId)
-                .order('created_at', { ascending: true });
-
-            if (error) {
-                list.innerHTML = '<p class="text-error">Erro ao carregar comentários.</p>';
-                return;
-            }
-
-            if (comments.length === 0) {
-                list.innerHTML = ''; // No message if empty, looks cleaner
-                return;
-            }
-
-            list.innerHTML = comments.map(c => `
-                <div class="comment-item">
-                    <div class="comment-avatar">${c.author.full_name.charAt(0)}</div>
-                    <div class="comment-box">
-                        <span class="comment-author">${c.author.full_name}</span>
-                        <p class="comment-text">${c.content}</p>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        async function submitComment(postId) {
-            const input = document.getElementById(`comment-input-${postId}`);
-            const content = input.value.trim();
-            if (!content) return;
-
-            // Optimistic Append
-            const list = document.getElementById(`comments-list-${postId}`);
-            const tempId = `temp-${Date.now()}`;
-            const tempHTML = `
-                <div class="comment-item" id="${tempId}" style="opacity: 0.6;">
-                    <div class="comment-avatar">${currentUserProfile.full_name.charAt(0)}</div>
-                    <div class="comment-box"><span class="comment-author">${currentUserProfile.full_name}</span><p class="comment-text">${content}</p></div>
-                </div>`;
-            list.insertAdjacentHTML('beforeend', tempHTML);
-            input.value = '';
-
-            try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                const res = await fetch(N8N_COMMENT_POST_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                    body: JSON.stringify({ post_id: postId, content: content })
-                });
-                
-                if(!res.ok) throw new Error("Falha ao enviar comentário.");
-
-                // On success, remove optimistic comment and reload to get real one
-                document.getElementById(tempId)?.remove();
-                loadComments(postId);
-
-            } catch (e) {
-                showToast("Erro ao enviar comentário", "danger");
-                document.getElementById(tempId)?.remove(); // Remove optimistic on error too
-            }
-        }
-        
-        function openLightbox(event, src) {
-            event.stopPropagation();
-            const overlay = document.getElementById('lightbox-overlay');
-            const img = document.getElementById('lightbox-image');
-            img.src = src;
-            overlay.classList.add('visible');
-        }
-
-        function closeLightbox() {
-            document.getElementById('lightbox-overlay').classList.remove('visible');
-        }
-        
-        // --- EXISTING UTILS ---
-
-        async function loadTeamPage() {
-            const container = document.getElementById('team-list-content');
-            container.innerHTML = `<div class="empty-state">Carregando equipe...</div>`;
-            
-            const { data: users, error } = await supabaseClient.from('profiles').select('*').order('full_name');
-            if (error) {
-                container.innerHTML = `<div class="empty-state">Falha ao carregar a equipe.</div>`;
-                console.error("Erro ao carregar equipe:", error);
-                return;
-            }
-
-            populateTeamFilters(users);
-
-            const nameFilter = document.getElementById('team-search-name').value.toLowerCase();
-            const deptFilter = document.getElementById('team-filter-dept').value;
-            const roleFilter = document.getElementById('team-filter-role').value;
-
-            const filteredUsers = users.filter(user => {
-                const nameMatch = user.full_name && user.full_name.toLowerCase().includes(nameFilter);
-                const deptMatch = !deptFilter || user.department === deptFilter;
-                const roleMatch = !roleFilter || user.role === roleFilter;
-                return nameMatch && deptMatch && roleMatch;
-            });
-
-            const myDept = currentUserProfile.department;
-            const myTeam = filteredUsers.filter(u => u.department === myDept && u.id !== currentUserProfile.id);
-            const others = filteredUsers.filter(u => u.department !== myDept && u.id !== currentUserProfile.id);
-
-            const generateCardHTML = (user) => {
-                let avatarHTML = '';
-                if (user.avatar_url) {
-                    const src = user.avatar_url.includes('http') ? user.avatar_url : `https://lh3.googleusercontent.com/d/${user.avatar_url}`;
-                    avatarHTML = `<img src="${src}" class="team-avatar-img" alt="${user.full_name}">`;
-                } else {
-                    const initial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
-                    avatarHTML = `<div class="user-avatar">${initial}</div>`;
-                }
-
-                const score = user.score || 100;
-                let scoreClass = 'good';
-                if (score < 50) scoreClass = 'bad';
-                else if (score < 80) scoreClass = 'med';
-
-                return `
-                    <div class="team-user-card" onclick="showPage('profile-page', '${user.id}')">
-                        ${avatarHTML}
-                        <h3>${user.full_name}</h3>
-                        <p>${user.role || 'Colaborador'} • ${user.department || 'Geral'}</p>
-                        <div class="score-pill ${scoreClass}">
-                            <span class="material-icons" style="font-size:12px;">star</span> ${score}
-                        </div>
-                    </div>
-                `;
-            };
-
-            let html = '';
-
-            if (myDept && myTeam.length > 0) {
-                html += `<div class="team-section-title"><span class="material-icons">groups</span> MEU SETOR (${myDept.toUpperCase()})</div>`;
-                html += `<div class="team-grid">`;
-                html += myTeam.map(generateCardHTML).join('');
-                html += `</div>`;
-            }
-
-            if (others.length > 0) {
-                html += `<div class="team-section-title" style="margin-top: 2rem;"><span class="material-icons">public</span> OUTROS COLABORADORES</div>`;
-                html += `<div class="team-grid">`;
-                html += others.map(generateCardHTML).join('');
-                html += `</div>`;
-            }
-
-            if (html === '') {
-                html = `<div class="empty-state">Nenhum outro membro encontrado.</div>`;
-            }
-
-            container.innerHTML = html;
-        }
-
-        function populateTeamFilters(users) {
-            const deptSelect = document.getElementById('team-filter-dept');
-            const roleSelect = document.getElementById('team-filter-role');
-            
-            const depts = [...new Set(users.map(u => u.department).filter(Boolean))].sort();
-            const roles = [...new Set(users.map(u => u.role).filter(Boolean))].sort();
-            
-            // Evita repopular os dropdowns a cada filtro
-            if(deptSelect.options.length <= 1) {
-                deptSelect.innerHTML = '<option value="">Todos os Setores</option>';
-                depts.forEach(d => {
-                    const opt = document.createElement('option');
-                    opt.value = d; opt.textContent = d;
-                    deptSelect.appendChild(opt);
-                });
-            }
-            if(roleSelect.options.length <= 1) {
-                roleSelect.innerHTML = '<option value="">Todos os Cargos</option>';
-                roles.forEach(r => {
-                    const opt = document.createElement('option');
-                    opt.value = r; opt.textContent = r;
-                    roleSelect.appendChild(opt);
-                });
-            }
-        }
-
-        function openRecipientModal() {
-            const modal = document.getElementById('recipient-modal');
-            modal.classList.add('visible');
-            populateRecipientFilters();
-            applyRecipientFilters(); 
-        }
-
-        function closeRecipientModal() {
-            document.getElementById('recipient-modal').classList.remove('visible');
-            renderRecipientPills(); 
-        }
-
-        function populateRecipientFilters() {
-            const depts = [...new Set(allUsers.map(u => u.department).filter(Boolean))].sort();
-            const roles = [...new Set(allUsers.map(u => u.role).filter(Boolean))].sort();
-
-            const deptSelect = document.getElementById('filter-dept');
-            const roleSelect = document.getElementById('filter-role');
-            
-            deptSelect.innerHTML = '<option value="">Todos Departamentos</option>';
-            roleSelect.innerHTML = '<option value="">Todos Cargos</option>';
-
-            depts.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d; opt.textContent = d;
-                deptSelect.appendChild(opt);
-            });
-            roles.forEach(r => {
-                const opt = document.createElement('option');
-                opt.value = r; opt.textContent = r;
-                roleSelect.appendChild(opt);
-            });
-        }
-
-        function applyRecipientFilters() {
-            const deptFilter = document.getElementById('filter-dept').value;
-            const roleFilter = document.getElementById('filter-role').value;
-            const textFilter = document.getElementById('filter-text').value.toLowerCase();
-
-            const filtered = allUsers.filter(user => {
-                const isCurrentUser = user.id === currentUserProfile.id;
-                if(isCurrentUser) return false;
-
-                const matchDept = deptFilter === "" || user.department === deptFilter;
-                const matchRole = roleFilter === "" || user.role === roleFilter;
-                const matchText = user.full_name.toLowerCase().includes(textFilter) || 
-                                  (user.role && user.role.toLowerCase().includes(textFilter)) ||
-                                  (user.department && user.department.toLowerCase().includes(textFilter));
-                return matchDept && matchRole && matchText;
-            });
-
-            renderRecipientModalTable(filtered);
-        }
-
-        function renderRecipientModalTable(users) {
-            const tbody = document.getElementById('recipient-table-body');
-            tbody.innerHTML = '';
-
-            users.forEach(user => {
-                const isSelected = selectedRecipients.some(r => r.id === user.id);
-                const tr = document.createElement('tr');
-                tr.onclick = () => toggleRecipientSelection(user);
-                if (isSelected) tr.classList.add('selected-row');
-
-                const avatarInitial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
-
-                tr.innerHTML = `
-                    <td style="padding: 0.75rem 1rem;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem;">
-                            <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.8rem;">${avatarInitial}</div>
-                            <strong>${user.full_name}</strong>
-                        </div>
-                    </td>
-                    <td style="padding: 0.75rem 1rem;">
-                        ${user.department ? `<span class="tag-fino" style="background: var(--color-info-bg); color: var(--color-info);">${user.department}</span>` : '-'}
-                    </td>
-                    <td style="padding: 0.75rem 1rem;">${user.role || '-'}</td>
-                    <td style="text-align: center;">
-                        <span class="material-icons check-icon">${isSelected ? 'check_circle' : 'radio_button_unchecked'}</span>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-            
-            document.getElementById('selected-count-display').textContent = `${selectedRecipients.length} selecionados`;
-        }
-
-        function toggleRecipientSelection(user) {
-            const exists = selectedRecipients.find(r => r.id === user.id);
-            if (exists) {
-                selectedRecipients = selectedRecipients.filter(r => r.id !== user.id);
-            } else {
-                selectedRecipients.push(user);
-            }
-            applyRecipientFilters(); 
-        }
-        
-        function showConfirmation(title, message, onConfirm) {
-            const modal = document.getElementById('confirmation-modal');
-            document.getElementById('confirm-title').textContent = title;
-            document.getElementById('confirm-message').textContent = message;
-            
-            const btnConfirm = document.getElementById('btn-confirm-action');
-            const newBtn = btnConfirm.cloneNode(true);
-            btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
-            
-            newBtn.onclick = () => {
-                onConfirm();
-                closeConfirmationModal();
-            };
-            
-            modal.classList.add('visible');
-        }
-
-        function closeConfirmationModal() {
-            document.getElementById('confirmation-modal').classList.remove('visible');
-        }
-
-        async function loadUserProfileData(userId) {
-            const container = document.getElementById('user-profile-content');
-            const targetId = userId || currentUserProfile.id;
-            if (!targetId) {
-                container.innerHTML = '<p>Usuário não encontrado.</p>';
-                return;
-            }
-            
-            container.innerHTML = `<div class="page-header"><h1>Carregando Perfil...</h1></div>`;
-
-            const isMyProfile = targetId === currentUserProfile.id;
-
-            const promises = [
-                supabaseClient.from('profiles').select('*').eq('id', targetId).single(),
-                supabaseClient.rpc('get_user_pendencies', { target_user_id: targetId }),
-                supabaseClient.rpc('calculate_user_score', { target_user_id: targetId }),
-                supabaseClient.rpc('get_resolved_tickets', { target_user_id: targetId })
-            ];
-            
-            if (isMyProfile) {
-                promises.push(supabaseClient.rpc('get_created_pendencies', { creator_user_id: targetId }));
-            }
-
-            const [profileRes, pendenciesRes, scoreRes, resolvedTicketsRes, createdPendenciesRes] = await Promise.all(promises);
-
-            const { data: profile, error: profileError } = profileRes;
-            if (profileError || !profile) {
-                container.innerHTML = '<p>Erro ao carregar perfil.</p>';
-                console.error(profileError);
-                return;
-            }
-
-            const { data: pendencies, error: pendenciesError } = pendenciesRes;
-            const { data: resolvedTickets, error: resolvedTicketsError } = resolvedTicketsRes || { data: null };
-            const { data: createdPendencies, error: createdPendenciesError } = createdPendenciesRes || { data: null };
-            
-            const score = Math.min(profile.score || 100, 100);
-            
-            let riskZone = 'green';
-            let riskText = 'Em Dia';
-            let barColor = 'var(--color-success)'; 
-            
-            if (score < 50) {
-                riskZone = 'red'; riskText = 'Crítico'; barColor = 'var(--color-danger)';
-            } else if (score < 80) {
-                riskZone = 'yellow'; riskText = 'Atenção'; barColor = 'var(--color-warning)';
-            }
-
-            const avatarInitial = profile.full_name ? profile.full_name.charAt(0).toUpperCase() : '?';
-            const roleAndDept = [profile.role, profile.department].filter(Boolean).join(' • ');
-
-            let pendenciesHTML = `<div class="empty-state" style="grid-column: 1/-1;">Nenhuma pendência encontrada.</div>`;
-            if (pendencies && pendencies.length > 0) {
-                pendenciesHTML = pendencies.map(p => {
-                    const readStatus = p.first_read_at
-                        ? `<div style="color:var(--color-text-secondary); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 4px;">Visto em: ${new Date(p.first_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'})}</div>`
-                        : `<div class="pendency-alert">⚠️ Ainda não visualizado</div>`;
-                    return `<div class="pendency-card" style="border-left-color: ${p.priority === 'urgent' ? 'var(--color-danger)' : 'var(--color-warning)'}">
-                                <div class="pendency-header">
-                                    <h4 class="pendency-title"><span class="material-icons" style="font-size: 18px;">${p.type === 'ticket' ? 'support_agent' : 'mail'}</span> Chamado Aberto</h4>
-                                    ${p.priority === 'urgent' ? `<span class="tag-fino tag-urgent">Urgente</span>` : ''}
-                                </div>
-                                <div class="pendency-meta">
-                                    <div>De: ${p.sender_name.split(' ')[0]} (${p.sender_department || '-'})</div>
-                                    ${p.due_date ? `<div>Prazo: ${new Date(p.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : ''}
-                                </div>
-                                ${readStatus}
-                            </div>`;
-                }).join('');
-            }
-
-            let createdPendenciesHTML = '';
-            if (isMyProfile && createdPendencies && createdPendencies.length > 0) {
-                 createdPendenciesHTML = `
-                    <div class="card">
-                        <h3 class="card-title"><span class="material-icons">outbox</span> Chamados que eu abri (${createdPendencies.length})</h3>
-                        <div class="pendencies-grid">
-                            ${createdPendencies.map(p => {
-                                const readStatusText = p.first_read_at
-                                    ? `Visto em: ${new Date(p.first_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'})}`
-                                    : 'Aguardando visualização';
-                                const readStatusClass = p.first_read_at ? '' : 'pendency-alert';
-                                
-                                return `
-                                <div class="pendency-card" style="border-left-color: var(--color-info)">
-                                    <div class="pendency-header">
-                                        <h4 class="pendency-title"><span class="material-icons" style="font-size: 18px;">${p.type === 'ticket' ? 'support_agent' : 'mail'}</span> Chamado Aberto</h4>
-                                        ${p.priority === 'urgent' ? `<span class="tag-fino tag-urgent">Urgente</span>` : ''}
-                                    </div>
-                                    <div class="pendency-meta">
-                                        <div>Para: ${p.recipients_names || 'N/A'}</div>
-                                        ${p.due_date ? `<div>Prazo: ${new Date(p.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : ''}
-                                    </div>
-                                    <div class="${readStatusClass}" style="margin-top: auto;">${readStatusText}</div>
-                                </div>
-                            `}).join('')}
-                        </div>
-                    </div>`;
-            }
-
-            container.innerHTML = `
-                <div class="profile-header-card zone-${riskZone}">
-                    <div class="user-avatar">${avatarInitial}</div>
-                    <div class="profile-info">
-                        <h3>${profile.full_name}</h3>
-                        <p>${roleAndDept || 'Colaborador Fama'}</p>
-                        <span class="status-badge">${riskText}</span>
-                    </div>
-                </div>
-                
-                <div class="card"><h3 class="card-title"><span class="material-icons">radar</span> Radar de Engajamento</h3>
-                    <div>
-                        <div class="score-display"><span class="score-label">Score Atual</span><span class="score-value">${score}</span></div>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar" style="width: ${score}%; background-color: ${barColor};"></div>
+                        <div class="dor">
+                            <strong>💸 Dores:</strong>
+                            <ul>
+                                <li>Hora-gerente desperdiçada em tarefa operacional</li>
+                                <li>Conhecimento preso na cabeça dele</li>
+                                <li>Risco de perda de expertise</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h3 class="card-title"><span class="material-icons">pending_actions</span> ${isMyProfile ? 'Minhas Pendências' : `Pendências com ${profile.full_name.split(' ')[0]}`} (${pendencies ? pendencies.length : 0})</h3>
-                    <div class="pendencies-grid">${pendenciesHTML}</div>
-                </div>
-                
-                ${createdPendenciesHTML}
-            `;
-
-            const historyContainer = document.getElementById('user-history-content');
-            let historyHTML = '';
-            if (resolvedTickets && resolvedTickets.length > 0) {
-                historyHTML = `
-                    <div class="card">
-                        <h3 class="card-title"><span class="material-icons">history</span> Histórico de Atividades (${resolvedTickets.length})</h3>
-                        <div class="pendencies-grid">
-                            ${resolvedTickets.map(ticket => {
-                                const ticketIdShort = `#${ticket.id.substring(0, 4).toUpperCase()}`;
-                                const priorityTag = ticket.priority === 'urgent' ? `<span class="tag-fino tag-urgent">Urgente</span>` : (ticket.priority === 'important' ? `<span class="tag-fino tag-important">Importante</span>` : '');
-
-                                const firstReadDate = ticket.first_read_at
-                                    ? `Visualizado em: ${new Date(ticket.first_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`
-                                    : 'Não visualizado antes da resolução';
-
-                                const resolvedDate = ticket.resolved_at
-                                    ? `Resolvido em: ${new Date(ticket.resolved_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`
-                                    : 'Data de resolução indisponível';
-
-                                return `
-                                    <div class="pendency-card" style="border-left-color: var(--color-success);">
-                                        <div class="pendency-header">
-                                            <h4 class="pendency-title">
-                                                <span class="material-icons" style="color: var(--color-success);">check_circle</span>
-                                                Chamado Resolvido
-                                            </h4>
-                                            <div>
-                                                <span style="font-size: 0.8rem; font-weight: 500; color: var(--color-text-secondary);">${ticketIdShort}</span>
-                                                ${priorityTag}
-                                            </div>
-                                        </div>
-                                        <div class="pendency-meta">
-                                            <div>De: ${ticket.creator_name}</div>
-                                            ${ticket.due_date ? `<div>Prazo Final: ${new Date(ticket.due_date).toLocaleDateString('pt-BR')}</div>` : ''}
-                                        </div>
-                                        <div style="font-size: 0.85rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--color-border); display: flex; flex-direction: column; gap: 0.25rem;">
-                                            <div>${firstReadDate}</div>
-                                            <div>${resolvedDate}</div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
+                    <div class="card-title">
+                        <span>🔴</span> Linha Grampos
+                    </div>
+                    <div class="card-content">
+                        <strong>Executoras:</strong>
+                        <ul>
+                            <li>2 Colaboradoras em cálculos manuais</li>
+                            <li>Capacidade atual saturada</li>
+                        </ul>
+                        <div class="dor">
+                            <strong>💸 Dor Principal: CUSTO LINEAR DE CRESCIMENTO</strong>
+                            <ul>
+                                <li><strong>Gargalo:</strong> Para produzir mais, é preciso contratar mais calculistas</li>
+                                <li>Trabalho repetitivo limita escalabilidade</li>
+                                <li>Alto risco de erro humano em processos críticos</li>
+                                <li>Sem padrão de otimização = desperdício</li>
+                                <li><strong>Crescimento refém de contratação</strong></li>
+                            </ul>
                         </div>
                     </div>
-                `;
-            }
-            historyContainer.innerHTML = historyHTML;
-        }
+                </div>
 
-        function handleAvatarUpload(event) {
-            const file = event.target.files[0]; if (!file) return;
-            showToast(`Simulando upload da imagem: ${file.name}. Backend a ser implementado.`, 'info');
-        }
+                <div class="card">
+                    <div class="card-title">
+                        <span>🔴</span> Linha Convencionais
+                    </div>
+                    <div class="card-content">
+                        <strong>Executor:</strong>
+                        <ul>
+                            <li>Fábio (Técnico) - 100% do tempo em cálculos</li>
+                            <li>Capacidade operacional no limite</li>
+                        </ul>
+                        <div class="dor">
+                            <strong>💸 Dor Principal: CUSTO LINEAR DE CRESCIMENTO</strong>
+                            <ul>
+                                <li><strong>Gargalo:</strong> Aumento de demanda exige contratar mais técnicos</li>
+                                <li>Tempo operacional impede trabalho analítico</li>
+                                <li>Talento técnico desperdiçado em tarefas repetitivas</li>
+                                <li><strong>Impossível escalar sem aumentar folha de pagamento</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        function initializeQuillEditor() {
-            if (document.getElementById('editor-container') && !quillEditor) {
-                const toolbarOptions = [ ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link'], [{ 'header': [1, 2, 3, false] }], ['clean'] ];
-                quillEditor = new Quill('#editor-container', { modules: { toolbar: toolbarOptions }, placeholder: 'Escreva sua mensagem...', theme: 'snow' });
-            }
-        }
-        function openNewMessagePopup() { document.getElementById('new-message-popup').classList.add('visible'); if (!quillEditor) initializeQuillEditor(); }
-        function closeNewMessagePopup() { document.getElementById('new-message-popup').classList.remove('visible'); document.getElementById('new-message-form').reset(); selectedRecipients = []; renderRecipientPills(); document.getElementById('recipient-suggestions').style.display = 'none'; if (quillEditor) quillEditor.setContents([]); document.getElementById('tipo-simples').checked = true; toggleChamadoFields(); clearAttachment(); }
-        function toggleChamadoFields() { const isChamado = document.getElementById('tipo-chamado').checked; document.getElementById('chamado-fields').style.display = isChamado ? 'flex' : 'none'; }
-        function setDueDate(days) { const date = new Date(); date.setDate(date.getDate() + days); document.getElementById('due_date').value = date.toISOString().split('T')[0]; }
-        function renderRecipientPills() { const wrapper = document.getElementById('recipient-input-wrapper'); const input = document.getElementById('destinatario-input'); wrapper.querySelectorAll('.recipient-pill').forEach(pill => pill.remove()); selectedRecipients.forEach(user => { const pill = document.createElement('span'); pill.className = 'recipient-pill'; pill.dataset.userId = user.id; pill.innerHTML = `${user.full_name} <span class="pill-remove" onclick="removeRecipient('${user.id}')">&times;</span>`; wrapper.insertBefore(pill, input); }); input.placeholder = selectedRecipients.length > 0 ? '' : 'Para:'; }
-        function addRecipient(user) { if (!selectedRecipients.some(r => r.id === user.id)) { selectedRecipients.push(user); renderRecipientPills(); } const input = document.getElementById('destinatario-input'); input.value = ''; input.focus(); document.getElementById('recipient-suggestions').style.display = 'none'; }
-        window.removeRecipient = (userId) => { selectedRecipients = selectedRecipients.filter(r => r.id !== userId); renderRecipientPills(); }
-        function handleRecipientBackspace(e) { const input = e.target; if (e.key === 'Backspace' && input.value === '' && selectedRecipients.length > 0) { removeRecipient(selectedRecipients[selectedRecipients.length - 1].id); } }
-        function handleRecipientSearch(e) { const query = e.target.value.toLowerCase(); const suggestionsContainer = document.getElementById('recipient-suggestions'); if (query.length < 1) { suggestionsContainer.style.display = 'none'; return; } const filteredUsers = allUsers.filter(user => (user.full_name && user.full_name.toLowerCase().includes(query))); suggestionsContainer.innerHTML = ''; if (filteredUsers.length > 0) { filteredUsers.forEach(user => { const item = document.createElement('div'); item.className = 'suggestion-item'; item.textContent = `${user.full_name}`; item.onclick = () => addRecipient(user); suggestionsContainer.appendChild(item); }); suggestionsContainer.style.display = 'block'; } else { suggestionsContainer.style.display = 'none'; } }
-        
-        function handleFileSelection(event) {
-            const file = event.target.files[0];
-            const previewContainer = document.getElementById('attachment-preview');
-            if (file) {
-                selectedFile = file;
-                previewContainer.innerHTML = `<span>${file.name}</span> <span class="material-icons remove-attachment" onclick="clearAttachment()">close</span>`;
-            } else { clearAttachment(); }
-        }
-        function clearAttachment() { selectedFile = null; document.getElementById('attachment-input').value = ''; document.getElementById('attachment-preview').innerHTML = ''; }
+            <!-- SOLUÇÃO -->
+            <div class="section solucao">
+                <div class="section-header">
+                    <div class="section-icon">⚙️</div>
+                    <div class="section-title">A SOLUÇÃO<br><small style="font-size: 0.6em;">Motor n8n</small></div>
+                </div>
 
-        async function sendMessage(e) {
-            e.preventDefault();
-            const sendButton = document.getElementById('btn-send-message');
-            if (sendButton.disabled) return;
-            if (!currentUserProfile) { showToast("Você precisa estar logado.", 'warning'); return; }
-            if (selectedRecipients.length === 0) { showToast("Adicione pelo menos um destinatário.", 'warning'); return; }
+                <div class="card">
+                    <div class="card-title">
+                        <span>🧮</span> Tecnologia
+                    </div>
+                    <div class="card-content">
+                        <ul>
+                            <li><strong>Algoritmo de Otimização Unificado</strong></li>
+                            <li>Padronização da lógica de corte</li>
+                            <li>Réplica do conhecimento do Clevandir</li>
+                            <li>Matemática pura aplicada</li>
+                        </ul>
+                    </div>
+                </div>
 
-            sendButton.disabled = true; sendButton.innerHTML = '<span class="material-icons" style="font-size: 18px; margin-right: 8px;">hourglass_top</span> Enviando...';
+                <div class="card">
+                    <div class="card-title">
+                        <span>🔄</span> Automação
+                    </div>
+                    <div class="card-content">
+                        <ul>
+                            <li><strong>Input:</strong> Pedidos do sistema</li>
+                            <li><strong>Processamento:</strong> Cálculo matemático do melhor corte</li>
+                            <li><strong>Output:</strong> Geração automática de ordem otimizada</li>
+                        </ul>
+                    </div>
+                </div>
 
-            try {
-                const formData = new FormData();
-                formData.append('p_subject', document.getElementById('assunto').value || "Sem assunto");
-                formData.append('p_type', document.querySelector('input[name="message-type"]:checked').value);
-                formData.append('p_priority', document.querySelector('.urgency-selector .btn.active').dataset.priority);
-                formData.append('p_requires_response', document.getElementById('requires_response').checked);
-                const dueDate = document.getElementById('due_date').value;
-                if (dueDate) { formData.append('p_due_date', dueDate); }
-                formData.append('p_content', quillEditor.root.innerHTML);
-                formData.append('p_recipient_ids', JSON.stringify(selectedRecipients.map(u => u.id)));
-                if (selectedFile) { formData.append('file', selectedFile); }
+                <div class="card">
+                    <div class="card-title">
+                        <span>🧠</span> Inteligência
+                    </div>
+                    <div class="card-content">
+                        <ul>
+                            <li>Sistema aprende com padrões históricos</li>
+                            <li>Otimização global (não local)</li>
+                            <li>Redução máxima de desperdício</li>
+                            <li>Propriedade intelectual da empresa</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (!session) throw new Error("Usuário não autenticado.");
+            <!-- NOVO MODELO -->
+            <div class="section novo-modelo">
+                <div class="section-header">
+                    <div class="section-icon">✅</div>
+                    <div class="section-title">NOVO MODELO<br><small style="font-size: 0.6em;">Operador Único</small></div>
+                </div>
 
-                const response = await fetch(N8N_SEND_MESSAGE_URL, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${session.access_token}` },
-                    body: formData
-                });
-
-                if (!response.ok) { throw new Error('Falha na comunicação com o servidor n8n.'); }
-                
-                showToast("Mensagem enviada com sucesso!", 'success'); closeNewMessagePopup();
-                await Promise.all([loadMessages(), loadDashboardStats()]);
-            } catch (error) {
-                console.error("Erro ao enviar mensagem via n8n:", error);
-                showToast("Falha ao enviar mensagem: " + error.message, 'danger');
-            } finally {
-                sendButton.disabled = false; sendButton.innerHTML = 'Enviar';
-            }
-        }
-        
-        function cleanParticipantList(namesString, senderName = null) {
-            if (!namesString || !currentUserProfile) return '';
-            let names = namesString.split(',').map(n => n.trim());
-            let filtered = names.filter(n => {
-                let isCurrentUser = n === currentUserProfile.full_name;
-                let isSender = senderName ? n === senderName : false;
-                return !isCurrentUser && !isSender;
-            });
-            return filtered.join(', ');
-        }
-
-        function renderMessageTable(conversations, containerId, type) {
-            const container = document.getElementById(containerId);
-            if (!conversations || conversations.length === 0) {
-                container.innerHTML = `<div class="empty-state">Nenhuma mensagem aqui.</div>`; return;
-            }
-            const tableRows = conversations.map(conv => {
-                const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ') : '';
-                const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
-                
-                let who = '';
-                const cleanNames = cleanParticipantList(conv.other_participants_names);
-
-                if (type === 'sent') {
-                    who = cleanNames || conv.other_participants_names || 'Destinatário Desconhecido';
-                } else if (type === 'inbox') {
-                    who = conv.last_message_sender_name || 'Desconhecido';
-                } else { 
-                    if (conv.last_message_sender_id === currentUserProfile.id) {
-                         who = `Para: ${cleanNames}`;
-                    } else {
-                         who = conv.last_message_sender_name;
-                    }
-                }
-
-                let priorityTag = '';
-                if (conv.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
-                if (conv.priority === 'important') priorityTag = `<span class="tag-fino tag-important">Importante</span>`;
-                let metaTagsHTML = '';
-                if (conv.due_date) metaTagsHTML += `<span class="tag-icon due-date-tag" title="Prazo"><span class="material-icons">event</span> ${new Date(conv.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>`;
-                if (conv.type === 'ticket') {
-                    const statusIcon = conv.status === 'resolved' ? 'check_circle' : 'support_agent';
-                    const statusTitle = conv.status === 'resolved' ? 'Chamado Resolvido' : 'Chamado';
-                    metaTagsHTML += `<span class="tag-icon" title="${statusTitle}"><span class="material-icons">${statusIcon}</span></span>`;
-                }
-                if (conv.requires_response) metaTagsHTML += '<span class="tag-icon" title="Exige Resposta"><span class="material-icons">reply</span></span>';
-                const isUnread = type === 'inbox' && conv.is_unread;
-                const rowClass = isUnread ? 'row-unread' : 'row-read';
-                let readReceiptHTML = '';
-                if (type === 'sent') {
-                    const isReadByRecipient = conv.recipient_read_at && new Date(conv.recipient_read_at) >= new Date(conv.last_message_created_at);
-                    if (isReadByRecipient) {
-                         const readDate = new Date(conv.recipient_read_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                         readReceiptHTML = `<span class="read-receipt read" title="Lida em: ${readDate}"><span class="material-icons">done_all</span></span>`;
-                    } else { readReceiptHTML = `<span class="read-receipt delivered" title="Enviada"><span class="material-icons">check</span></span>`; }
-                }
-                const archiveIcon = conv.is_archived ? 'unarchive' : 'archive';
-                const archiveTitle = conv.is_archived ? 'Desarquivar' : 'Arquivar';
-                return `<tr class="${rowClass}" data-conversation-id="${conv.id}">
-                        <td class="col-who" onclick="openConversation(this.parentElement)">${who}</td>
-                        <td class="col-subject" onclick="openConversation(this.parentElement)">${readReceiptHTML}<span class="subject-title">${conv.subject}</span>${priorityTag}<span class="subject-preview"> - ${preview}</span></td>
-                        <td class="col-meta" onclick="openConversation(this.parentElement)"><div class="meta-tags">${metaTagsHTML}</div></td>
-                        <td class="col-date" onclick="openConversation(this.parentElement)">${timestamp}</td>
-                        <td class="col-actions"><button title="${archiveTitle}" onclick="toggleArchive(this, '${conv.id}')"><span class="material-icons">${archiveIcon}</span></button></td>
-                    </tr>`;
-            }).join('');
-            container.innerHTML = `<table class="data-table-fino"><tbody>${tableRows}</tbody></table>`;
-        }
-
-        async function loadMessages() {
-            if (!currentUserProfile) return;
-            const containers = ['inbox-content', 'sent-content', 'archived-content'];
-            containers.forEach(id => document.getElementById(id).innerHTML = '<div class="empty-state">Carregando...</div>');
-            
-            const { data, error } = await supabaseClient.from('user_conversations_view').select('*').order('last_message_created_at', { ascending: false, nulls: 'last' });
-
-            if (error) {
-                console.error('Erro ao buscar mensagens:', error);
-                const errorMsg = `<div class="empty-state" style="color: var(--color-danger);">Erro ao carregar mensagens.</div>`;
-                containers.forEach(id => document.getElementById(id).innerHTML = errorMsg); return;
-            }
-            const nonArchived = data.filter(conv => !conv.is_archived);
-            const archived = data.filter(conv => conv.is_archived);
-            const inboxMessages = nonArchived.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.other_participants_names === null));
-            const sentMessages = nonArchived.filter(conv => conv.last_message_sender_id === currentUserProfile.id);
-
-            renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
-            renderMessageTable(sentMessages, 'sent-content', 'sent');
-            renderMessageTable(archived, 'archived-content', 'archived');
-        }
-
-        async function toggleArchive(buttonElement, conversationId) {
-            const row = buttonElement.closest('tr');
-            if (row) { row.style.transition = 'opacity 0.3s ease-out'; row.style.opacity = '0'; setTimeout(() => row.remove(), 300); }
-            try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (!session) throw new Error("Sessão expirou.");
-                const response = await fetch(N8N_TOGGLE_ARCHIVE_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                    body: JSON.stringify({ conversation_id: conversationId })
-                });
-                if (!response.ok) throw new Error("Falha ao comunicar com o servidor.");
-                showToast("Status da conversa alterado.", 'success');
-            } catch (e) {
-                console.error("Erro ao arquivar:", e.message); showToast("Falha ao arquivar conversa.", 'danger');
-                if (row) row.style.opacity = '1';
-            }
-        }
-        
-        async function resolveTicket(conversationId) {
-            showConfirmation(
-                "Confirmar Resolução",
-                "Tem certeza que deseja marcar este chamado como resolvido? Esta ação não pode ser desfeita.",
-                async () => {
-                    try {
-                        const { data: { session } } = await supabaseClient.auth.getSession();
-                        if (!session) throw new Error("Sessão expirou.");
-                        const response = await fetch(N8N_RESOLVE_TICKET_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                            body: JSON.stringify({ conversation_id: conversationId, resolved_at: new Date().toISOString() })
-                        });
-                        if (!response.ok) throw new Error("Falha ao resolver o chamado. Você pode não ter permissão.");
+                <!-- DESTAQUE: A NOVA PROFISSÃO -->
+                <div style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); border-radius: 15px; padding: 30px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(46, 204, 113, 0.4); border: 3px solid #27ae60;">
+                    <h3 style="color: white; font-size: 1.8em; text-align: center; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                        👨‍✈️ A NOVA PROFISSÃO: OPERADOR DE AUTOMAÇÃO
+                    </h3>
+                    
+                    <div style="background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 25px; margin-bottom: 20px;">
+                        <h4 style="color: #27ae60; font-size: 1.4em; margin-bottom: 15px; border-bottom: 2px solid #2ecc71; padding-bottom: 10px;">
+                            📋 Best Practices do Cargo
+                        </h4>
                         
-                        showToast("Chamado resolvido com sucesso!", 'success');
-                        showPage('messages-page'); 
-                        await Promise.all([loadMessages(), loadDashboardStats()]);
+                        <div style="margin-bottom: 15px; padding: 15px; background: #f0f9ff; border-left: 5px solid #3498db; border-radius: 8px;">
+                            <strong style="color: #3498db; font-size: 1.2em;">Regra 1: Auditoria, não Execução</strong>
+                            <p style="margin-top: 8px; color: #555; line-height: 1.6;">
+                                O operador <strong>nunca faz a conta</strong>, ele confere o resultado. Seu papel é validar, não calcular.
+                            </p>
+                        </div>
 
-                    } catch(e) {
-                        console.error("Erro ao resolver chamado:", e.message);
-                        showToast(e.message, 'danger');
-                    }
-                }
-            );
-        }
+                        <div style="margin-bottom: 15px; padding: 15px; background: #fff4e6; border-left: 5px solid #f39c12; border-radius: 8px;">
+                            <strong style="color: #f39c12; font-size: 1.2em;">Regra 2: Gestão por Exceção</strong>
+                            <p style="margin-top: 8px; color: #555; line-height: 1.6;">
+                                Se o sinal está <span style="color: #2ecc71; font-weight: bold;">✓ VERDE</span> no painel, ele aprova em lote. Ele só gasta tempo se o sistema alertar uma anomalia.
+                            </p>
+                        </div>
 
-        async function openConversation(rowElement) {
-            const conversationId = rowElement.dataset.conversationId;
-            if (!conversationId) { showToast('ID da conversa não encontrado.', 'danger'); return; }
+                        <div style="padding: 15px; background: #f3e5f5; border-left: 5px solid #9b59b6; border-radius: 8px;">
+                            <strong style="color: #9b59b6; font-size: 1.2em;">Regra 3: Feedback Loop</strong>
+                            <p style="margin-top: 8px; color: #555; line-height: 1.6;">
+                                Se o sistema errou, o operador <strong>não corrige na planilha</strong>, ele pede ajuste na lógica do n8n para <strong>não errar nunca mais</strong>.
+                            </p>
+                        </div>
+                    </div>
 
-            if (rowElement.classList.contains('row-unread')) {
-                rowElement.classList.remove('row-unread'); 
-                rowElement.classList.add('row-read');
-
-                try {
-                    const { data: { session } } = await supabaseClient.auth.getSession();
-                    if (session) {
-                        fetch(N8N_MARK_AS_READ_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                            body: JSON.stringify({ conversation_id: conversationId, first_read_at: new Date().toISOString() })
-                        });
-                    }
-                } catch (e) { console.warn("Não foi possível marcar a mensagem como lida:", e.message); }
-            }
-
-            showPage('conversation-view-page');
-            document.getElementById('conversation-header').innerHTML = '<div class="empty-state">Carregando...</div>';
-            document.getElementById('conversation-messages').innerHTML = '<div class="empty-state">Carregando mensagens...</div>';
-
-            const [messagesRes, attachmentsRes, convDataRes] = await Promise.all([
-                supabaseClient.from('conversation_messages_view').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true }),
-                supabaseClient.from('message_attachments_view').select('*'),
-                supabaseClient.from('user_conversations_view').select('*').eq('id', conversationId).single()
-            ]);
-
-            if (messagesRes.error || attachmentsRes.error || convDataRes.error) {
-                showToast('Erro ao carregar detalhes da conversa.', 'danger');
-                console.error(messagesRes.error || attachmentsRes.error || convDataRes.error);
-                document.getElementById('conversation-header').innerHTML = ''; document.getElementById('conversation-messages').innerHTML = '<div class="empty-state">Falha ao carregar.</div>'; return;
-            }
-
-            const { data: messages } = messagesRes;
-            const { data: allAttachments } = attachmentsRes;
-            const { data: convData } = convDataRes;
-            
-            const headerContainer = document.getElementById('conversation-header');
-            let ticketInfoHTML = '';
-            let actionButtonsHTML = '';
-            
-            if (convData.type === 'ticket') {
-                let priorityTag = '';
-                if (convData.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
-                else if (convData.priority === 'important') priorityTag = `<span class="tag-fino tag-important">Importante</span>`;
-                
-                const dueDateHTML = convData.due_date ? `<div><span class="material-icons">event</span><strong>Prazo:</strong> ${new Date(convData.due_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</div>` : '';
-                
-                if (convData.status === 'resolved') {
-                    ticketInfoHTML = `<div class="conversation-ticket-info" style="justify-content:center;"><div><span class="material-icons" style="color: var(--color-success);">check_circle</span><strong>Chamado Resolvido</strong></div></div>`;
-                    document.getElementById('reply-form-wrapper').style.display = 'none';
-                } else {
-                    ticketInfoHTML = `<div class="conversation-ticket-info"><div><span class="material-icons">support_agent</span> <strong>Chamado Aberto</strong></div> <div>${priorityTag}</div> ${dueDateHTML}</div>`;
-                    document.getElementById('reply-form-wrapper').style.display = 'block';
-                }
-
-                if (convData.created_by === currentUserProfile.id && convData.status === 'open') {
-                    actionButtonsHTML = `<button class="btn btn-success" onclick="resolveTicket('${convData.id}')"><span class="material-icons">check_circle</span> Resolver Chamado</button>`;
-                }
-            } else {
-                document.getElementById('reply-form-wrapper').style.display = 'block';
-            }
-
-            const creatorProfile = await supabaseClient.from('profiles').select('full_name').eq('id', convData.created_by).single();
-            const senderName = creatorProfile.data ? creatorProfile.data.full_name : 'Desconhecido';
-            
-            let displayTo = '';
-            let allRecipientNames = convData.other_participants_names ? convData.other_participants_names.split(',').map(n => n.trim()) : [];
-
-            if (convData.created_by === currentUserProfile.id) {
-                displayTo = allRecipientNames.filter(n => n !== currentUserProfile.full_name).join(', ') || 'Sem destinatários';
-            } else {
-                let coRecipients = allRecipientNames.filter(n => n !== senderName && n !== currentUserProfile.full_name);
-                if (coRecipients.length > 0) {
-                    displayTo = `Você, ${coRecipients.join(', ')}`;
-                } else {
-                    displayTo = 'Você';
-                }
-            }
-            
-            headerContainer.innerHTML = `
-                <div class="conversation-main-header">
-                    <button class="btn btn-secondary" onclick="showPage('messages-page'); loadMessages();"><span class="material-icons">arrow_back</span> Voltar</button>
-                    <div class="page-header-actions">${actionButtonsHTML}<button class="btn btn-icon" title="Mais opções"><span class="material-icons">more_vert</span></button></div>
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                        <p style="color: white; font-size: 1.25em; font-weight: bold; line-height: 1.7; text-shadow: 1px 1px 3px rgba(0,0,0,0.3);">
+                            🎯 "O Operador de Automação é o <span style="background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 5px;">GUARDA-FREIO</span> da Inteligência Artificial.<br>
+                            Ele garante a <span style="color: #ffd700;">SEGURANÇA</span> do processo enquanto o sistema garante a <span style="color: #00ff88;">VELOCIDADE</span>."
+                        </p>
+                    </div>
                 </div>
-                <div class="conversation-info-block">
-                    <h1>${convData.subject}</h1>
-                    <p><strong>De:</strong> ${senderName}</p>
-                    <p><strong>Para:</strong> ${displayTo}</p>
+
+                <!-- Fluxo Visual: Inteligência Dispersa → Operador Único -->
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 25px; margin-bottom: 20px; border: 2px dashed #2ecc71;">
+                    <h4 style="text-align: center; color: #27ae60; font-size: 1.4em; margin-bottom: 20px;">
+                        🔄 Convergência de Inteligência
+                    </h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 15px; align-items: center;">
+                        <div style="text-align: center;">
+                            <div style="background: #fee; border: 2px solid #e74c3c; border-radius: 10px; padding: 15px; margin-bottom: 10px;">
+                                <strong style="color: #e74c3c;">👤 Clevandir</strong><br>
+                                <small>Helicoidal</small>
+                            </div>
+                            <div style="background: #fee; border: 2px solid #e74c3c; border-radius: 10px; padding: 15px; margin-bottom: 10px;">
+                                <strong style="color: #e74c3c;">👥 2 Colaboradoras</strong><br>
+                                <small>Grampos</small>
+                            </div>
+                            <div style="background: #fee; border: 2px solid #e74c3c; border-radius: 10px; padding: 15px;">
+                                <strong style="color: #e74c3c;">👤 Fábio (antigo)</strong><br>
+                                <small>Convencionais</small>
+                            </div>
+                            <p style="margin-top: 15px; color: #e74c3c; font-weight: bold;">❌ Inteligência Dispersa</p>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <div style="font-size: 3em; color: #2ecc71;">→</div>
+                            <p style="color: #27ae60; font-weight: bold; margin-top: 10px;">Sistema n8n<br>+<br>Algoritmo</p>
+                            <div style="font-size: 3em; color: #2ecc71;">→</div>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <div style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); border: 3px solid #27ae60; border-radius: 15px; padding: 25px; color: white; box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);">
+                                <div style="font-size: 3em; margin-bottom: 10px;">👨‍✈️</div>
+                                <strong style="font-size: 1.3em;">FÁBIO</strong><br>
+                                <strong style="font-size: 1.1em;">Operador de Automação</strong><br>
+                                <small style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px; margin-top: 10px; display: inline-block;">Controle Total:<br>5 Linhas de Produção</small>
+                            </div>
+                            <p style="margin-top: 15px; color: #2ecc71; font-weight: bold;">✅ Inteligência Centralizada</p>
+                        </div>
+                    </div>
                 </div>
-                ${ticketInfoHTML}
-            `;
 
-            const messagesContainer = document.getElementById('conversation-messages');
-            messagesContainer.innerHTML = messages.map(msg => {
-                const isSent = msg.sender_id === currentUserProfile.id;
-                const timestamp = new Date(msg.created_at).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-                const msgAttachments = allAttachments.filter(att => att.message_id === msg.id);
-                const attachmentsHTML = msgAttachments.map(att => `
-                    <div class="message-attachment">
-                        <a href="https://drive.google.com/file/d/${att.google_drive_file_id}/view" target="_blank" class="message-attachment-link">
-                            <span class="material-icons">attach_file</span>${att.file_name}
-                        </a>
-                    </div>`).join('');
-                return `<div class="message-bubble-wrapper ${isSent ? 'sent' : 'received'}">
-                            <div class="message-bubble ${isSent ? 'sent' : 'received'}">${msg.content}${attachmentsHTML}</div>
-                            <div class="message-metadata">${isSent ? 'Você' : msg.sender_name} • ${timestamp}</div>
-                        </div>`;
-            }).join('');
+                <div class="card">
+                    <div class="card-title">
+                        <span>👨‍✈️</span> O Piloto: Fábio
+                    </div>
+                    <div class="card-content">
+                        <p><strong>Nova Função:</strong> Não calcula mais!</p>
+                        <ul>
+                            <li>✅ <strong>VALIDA</strong> sugestões do sistema</li>
+                            <li>🔍 <strong>AUDITA</strong> resultados</li>
+                            <li>📤 <strong>DISTRIBUI</strong> ordens de corte</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <span>🎛️</span> Controle Total
+                    </div>
+                    <div class="controle-painel">
+                        <h4>Painel Único de Gestão:</h4>
+                        <div class="controle-lista">
+                            <div class="controle-item">⚙️ Helicoidal</div>
+                            <div class="controle-item">📎 Grampos</div>
+                            <div class="controle-item">🔩 Convencionais</div>
+                            <div class="controle-item">🔄 Transpasso</div>
+                            <div class="controle-item">📐 Parabólicas</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <span>🔐</span> Human-in-the-Loop
+                    </div>
+                    <div class="card-content">
+                        <p><strong>Validação Humana sobre Sugestão da Máquina</strong></p>
+                        <ul>
+                            <li>Inteligência Artificial + Experiência Humana</li>
+                            <li>Fábio tem poder de veto e ajuste</li>
+                            <li>Sistema aprende com as correções</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FLUXO DE AUTOMAÇÃO -->
+        <div class="flow-section">
+            <h2 class="flow-title">🔄 Fluxo de Automação Completo</h2>
+            <div class="flow-diagram">
+                <div class="flow-box">📥 INPUT<br>Pedidos</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">🧮 PROCESSAMENTO<br>Cálculo Otimizado</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">👨‍✈️ VALIDAÇÃO<br>Fábio</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">📤 OUTPUT<br>Ordem de Corte</div>
+            </div>
+        </div>
+
+        <!-- ROI -->
+        <div class="roi-section">
+            <h2 class="roi-title">💰 ROI - RETORNO SOBRE INVESTIMENTO</h2>
+            <div class="roi-grid">
+                <div class="roi-card">
+                    <div class="roi-icon">💵</div>
+                    <h3 class="roi-card-title">Financeiro</h3>
+                    <div class="roi-card-content">
+                        <p>✅ <strong>COST AVOIDANCE:</strong> Evita contratações futuras</p>
+                        <p style="font-size: 0.95em; margin-top: 8px;">(Crescimento desacoplado de headcount)</p>
+                        <hr style="margin: 15px 0; border: none; border-top: 2px solid #f0f0f0;">
+                        <p>✅ <strong>Realocação Inteligente:</strong> Equipe atual redireccionada</p>
+                        <p style="font-size: 0.95em; margin-top: 8px;">(Opção de dimensionar vs. obrigação de contratar)</p>
+                        <hr style="margin: 15px 0; border: none; border-top: 2px solid #f0f0f0;">
+                        <p>✅ Recuperação de <strong>20% do tempo</strong> do Gerente de Fábrica</p>
+                        <p style="font-size: 0.95em; margin-top: 8px;">(Clevandy liberto para gestão estratégica)</p>
+                        <hr style="margin: 15px 0; border: none; border-top: 2px solid #f0f0f0;">
+                        <p><strong>🎯 Fazer MAIS com a MESMA (ou menor) equipe</strong></p>
+                    </div>
+                </div>
+
+                <div class="roi-card">
+                    <div class="roi-icon">📉</div>
+                    <h3 class="roi-card-title">Material</h3>
+                    <div class="roi-card-content">
+                        <p>✅ <strong>Redução drástica</strong> de sucata de aço</p>
+                        <hr style="margin: 15px 0; border: none; border-top: 2px solid #f0f0f0;">
+                        <p>✅ <strong>Otimização global</strong> de material</p>
+                        <hr style="margin: 15px 0; border: none; border-top: 2px solid #f0f0f0;">
+                        <p>✅ Máxima eficiência por barra cortada</p>
+                        <hr style="margin: 15px 0; border: none; border-top: 2px solid #f0f0f0;">
+                        <p>✅ ROI medido em <strong>toneladas</strong> de aço economizadas</p>
+                    </div>
+                </div>
+
+                <div class="roi-card">
+                    <div class="roi-icon">🔒</div>
+                    <h3 class="roi-card-title">Segurança Estratégica</h3>
+                    <div class="roi-card-content">
+                        <p>✅ <strong>Propriedade intelectual</strong> no SISTEMA</p>
+                        <hr style="margin: 15px 0; border: none; border-top: 2px solid #f0f0f0;">
+                        <p>✅ Não depende de <strong>pessoas específicas</strong></p>
+                        <hr style="margin: 15px 0; border: none; border-top: 2px solid #f0f0f0;">
+                        <p>✅ <strong>Continuidade operacional</strong> garantida</p>
+                        <hr style="margin: 15px 0; border: none; border-top: 2px solid #f0f0f0;">
+                        <p>✅ Conhecimento permanece na <strong>empresa</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRANSFORMAÇÃO -->
+        <div class="transformation">
+            <h2>🚀 Síntese da Transformação</h2>
             
-            messagesContainer.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
+            <div class="transformation-grid">
+                <div class="before">
+                    <h3>❌ ANTES (Acoplamento Linear)</h3>
+                    <p>📊 3 Processos Diferentes</p>
+                    <p>→ 3 Padrões de Qualidade</p>
+                    <hr style="margin: 15px 0;">
+                    <p>🧠 Conhecimento Fragmentado</p>
+                    <p>→ Risco de Perda</p>
+                    <hr style="margin: 15px 0;">
+                    <p>💸 <strong>Crescimento = Mais Contratações</strong></p>
+                    <p>→ Custo Operacional Cresce Linearmente</p>
+                </div>
 
-            document.getElementById('reply-form').onsubmit = (e) => {
-                e.preventDefault();
-                showToast('Respostas ainda não implementadas nesta tela.', 'info');
-            };
-        }
+                <div class="arrow-transform">➡️</div>
 
-        async function loadUsersForAdmin() {
-            const tableBody = document.getElementById('user-table-body');
-            if (!tableBody) return;
-            tableBody.innerHTML = `<tr><td colspan="4">Carregando usuários...</td></tr>`;
-            try {
-                const { data: users, error } = await supabaseClient.from('users_with_email').select('*');
-                if (error) throw error;
-                tableBody.innerHTML = users.map(user => {
-                    const avatarInitial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
-                    const roleTag = user.role === 'Admin' ? `<span class="user-tag role-admin">Admin</span>` : (user.role ? `<span class="user-tag role">${user.role}</span>` : '');
-                    const departmentTag = user.department ? `<span class="user-tag department">${user.department}</span>` : '';
-                    return `<tr>
-                        <td><div class="user-info-cell"><div class="user-avatar">${avatarInitial}</div><div><div class="user-name">${user.full_name||'N/A'}</div><div class="user-email">${user.email||'N/A'}</div></div></div></td>
-                        <td><div class="user-meta-cell"><div class="user-tags">${departmentTag}${roleTag}</div></div></td>
-                        <td class="score-cell"><span class="material-icons">star</span> ${user.score||100}</td>
-                        <td class="action-buttons">
-                            <button class="btn btn-icon" onclick='openUserModal(${JSON.stringify(user)})' title="Editar"><span class="material-icons">edit</span></button>
-                            <button class="btn btn-icon" onclick="deleteUser('${user.id}')" title="Excluir"><span class="material-icons">delete</span></button>
-                        </td>
-                    </tr>`;
-                }).join('');
-            } catch(error) { 
-                console.error("Erro ao carregar usuários:", error);
-                tableBody.innerHTML = `<tr><td colspan="4">Erro ao carregar usuários.</td></tr>`;
-            }
-        }
+                <div class="after">
+                    <h3>✅ DEPOIS (Desacoplamento Total)</h3>
+                    <p>🎯 1 Sistema Único</p>
+                    <p>→ 1 Padrão de Excelência</p>
+                    <hr style="margin: 15px 0;">
+                    <p>💾 Conhecimento Sistematizado</p>
+                    <p>→ Asset da Empresa</p>
+                    <hr style="margin: 15px 0;">
+                    <p>⚡ <strong>Produção Cresce, Custo de Corte Fixo</strong></p>
+                    <p>→ Escalabilidade Infinita</p>
+                </div>
+            </div>
 
-        function openUserModal(user) { const modal = document.querySelector('#app-container #user-modal'); document.getElementById('user-form').reset(); const userEmailField = document.getElementById('user_email'); const passwordGroup = document.getElementById('password-group'); userEmailField.disabled = !!user; passwordGroup.style.display = user ? 'none' : 'block'; document.getElementById('user_password').required = !user; if (user) { document.getElementById('user-modal-title').textContent = 'Editar Usuário'; document.getElementById('user-id').value = user.id; document.getElementById('full_name').value = user.full_name; userEmailField.value = user.email || ''; document.getElementById('department').value = user.department; document.getElementById('role').value = user.role; } else { document.getElementById('user-modal-title').textContent = 'Novo Usuário'; document.getElementById('user-id').value = ''; } modal.classList.add('visible'); }
-        function closeUserModal() { document.querySelector('#app-container #user-modal')?.classList.remove('visible'); }
-        
-        async function saveUser() {
-            const userId = document.getElementById('user-id').value;
-            const fullName = document.getElementById('full_name').value;
-            const department = document.getElementById('department').value;
-            const role = document.getElementById('role').value;
-            const email = document.getElementById('user_email').value;
-            const password = document.getElementById('user_password').value;
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) { showToast("Sessão inválida.", 'danger'); return; }
-            const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` };
-            const btnSave = document.querySelector('#user-modal .btn-danger');
-            btnSave.disabled = true; btnSave.textContent = "Salvando...";
-            try {
-                if (userId) {
-                    const response = await fetch(N8N_UPDATE_USER_URL, { method: 'POST', headers: headers, body: JSON.stringify({ id: userId, full_name: fullName, department: department, role: role }) });
-                    if (!response.ok) throw new Error('Falha ao atualizar usuário.'); showToast("Usuário atualizado com sucesso!", 'success');
-                } else {
-                    if (!password) { throw new Error("Senha é obrigatória para novos usuários."); }
-                    const response = await fetch(N8N_CREATE_USER_URL, { method: 'POST', headers: headers, body: JSON.stringify({ email: email, password: password, full_name: fullName, department: department, role: role }) });
-                    if (!response.ok) throw new Error('Falha ao criar usuário.'); showToast("Usuário criado com sucesso!", 'success');
-                }
-                closeUserModal(); loadUsersForAdmin();
-            } catch (error) {
-                console.error(error); showToast(error.message, 'danger');
-            } finally {
-                btnSave.disabled = false; btnSave.textContent = "Salvar";
-            }
-        }
+            <div class="key-insight">
+                <p>🎯 <span class="highlight">PESSOAS CALCULANDO</span> → <span class="highlight">MÁQUINA CALCULANDO + PESSOAS VALIDANDO</span></p>
+                <p style="margin-top: 15px;">💼 Trabalho Operacional → Trabalho Analítico</p>
+                <p>🧠 Conhecimento Tácito → Conhecimento Explícito</p>
+                <p>📈 Crescimento Refém → Crescimento Autônomo</p>
+                <p style="margin-top: 20px; font-size: 1.1em;">
+                    <strong>🔓 DESACOPLAMENTO: A produção cresce, mas o custo administrativo/técnico de corte permanece FIXO.</strong>
+                </p>
+                <p style="margin-top: 15px; font-size: 1.05em;">
+                    <strong>O operador evolui de EXECUTOR para CONTROLADOR.</strong><br>
+                    <strong>A empresa evolui de DEPENDENTE para AUTÔNOMA.</strong>
+                </p>
+            </div>
+        </div>
 
-        async function deleteUser(userId) {
-            showConfirmation(
-                "Excluir Usuário",
-                "Tem certeza que deseja excluir este usuário? Esta ação é irreversível.",
-                async () => {
-                    const { data: { session } } = await supabaseClient.auth.getSession();
-                    if (!session) return;
-                    try {
-                        const response = await fetch(N8N_DELETE_USER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify({ id: userId }) });
-                        if (!response.ok) throw new Error('Falha ao excluir usuário.');
-                        showToast("Usuário excluído com sucesso!", 'success'); loadUsersForAdmin();
-                    } catch (error) {
-                        console.error(error); showToast(error.message, 'danger');
+        <footer>
+            <p>🏭 <strong>Molas Fama</strong> - Transformação Digital Industrial</p>
+            <p>Labor AI Stack: Automação Inteligente para Manufatura</p>
+        </footer>
+    </div>
+
+    <script>
+        // Animação de entrada suave
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('.section, .flow-section, .roi-section, .transformation');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '0';
+                        entry.target.style.transform = 'translateY(30px)';
+                        
+                        setTimeout(() => {
+                            entry.target.style.transition = 'all 0.6s ease';
+                            entry.target.style.opacity = '1';
+                            entry.target.style.transform = 'translateY(0)';
+                        }, 100);
                     }
-                }
-            );
-        }
-        
-        const body = document.body;
-        themeToggleBtn.addEventListener('click', () => applyTheme(body.classList.contains('dark-mode') ? 'light' : 'dark'));
-        function applyTheme(theme) { body.classList.toggle('dark-mode', theme === 'dark'); localStorage.setItem('theme', theme); }
+                });
+            }, { threshold: 0.1 });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
     </script>
 </body>
 </html>
