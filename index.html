@@ -888,72 +888,190 @@
             let title = 'Nova Requisição';
 
             const backButtonHTML = `<button class="btn btn-icon" onclick="openRequestModal()" style="position: absolute; left: 1.5rem; top: 1rem;"><span class="material-icons">arrow_back</span></button>`;
-            
-            const formTemplates = {
-                'new_hire': {
-                    title: 'Requisição de Contratação',
-                    html: `
+
+            switch (type) {
+                case 'new_hire':
+                    title = 'Requisição de Contratação de Pessoal';
+                    formHTML = `
                         <h3 class="form-section-title">Informações da Vaga</h3>
-                        <div class="form-group"><label for="req-funcao">Função*</label><input type="text" id="req-funcao" name="funcao" class="input-field" required></div>
-                        <div class="form-group"><label for="req-quantidade">Quantidade de Vagas*</label><input type="number" id="req-quantidade" name="quantidade" class="input-field" value="1" required></div>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group"><label for="req-funcao">Função*</label><input type="text" id="req-funcao" name="funcao" class="input-field" required></div>
+                            <div class="form-group"><label for="req-quantidade">Quantidade de Vagas*</label><input type="number" id="req-quantidade" name="quantidade" class="input-field" value="1" required></div>
+                        </div>
                         <div class="form-group">
                             <label>Motivo da Contratação*</label>
                             <div class="radio-group">
-                                <label><input type="radio" name="motivo_contratacao" value="aumento_quadro" checked> Aumento de Quadro</label>
-                                <label><input type="radio" name="motivo_contratacao" value="substituicao"> Substituição</label>
-                                <label><input type="radio" name="motivo_contratacao" value="outro"> Outro</label>
+                                <label><input type="radio" name="motivo_contratacao" value="aumento_quadro" checked onchange="toggleSubstituicaoFields()"> Aumento de Quadro</label>
+                                <label><input type="radio" name="motivo_contratacao" value="substituicao" onchange="toggleSubstituicaoFields()"> Substituição</label>
+                                <label><input type="radio" name="motivo_contratacao" value="outro" onchange="toggleSubstituicaoFields()"> Outro</label>
                             </div>
                         </div>
-                        <h3 class="form-section-title">Requisitos e Perfil</h3>
+                        <div id="substituicao-fields" style="display:none;" class="card" >
+                             <div class="form-group"><label for="req-subst-nome">Nome do colaborador substituído</label><input type="text" id="req-subst-nome" name="substituicao_nome" class="input-field"></div>
+                             <div class="form-group"><label for="req-subst-motivo">Motivo da saída</label><input type="text" id="req-subst-motivo" name="substituicao_motivo" class="input-field"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Contrato*</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="tipo_contrato" value="clt" checked> CLT</label>
+                                <label><input type="radio" name="tipo_contrato" value="temporario"> Temporário</label>
+                                <label><input type="radio" name="tipo_contrato" value="estagio"> Estágio</label>
+                                <label><input type="radio" name="tipo_contrato" value="jovem_aprendiz"> Jovem Aprendiz</label>
+                            </div>
+                        </div>
+                        <div class="form-group"><label for="req-horario">Horário de Trabalho</label><input type="text" id="req-horario" name="horario" class="input-field"></div>
+                        
+                        <h3 class="form-section-title">Requisitos e Perfil Desejado</h3>
                         <div class="form-group"><label for="req-escolaridade">Escolaridade Mínima</label><input type="text" id="req-escolaridade" name="escolaridade" class="input-field"></div>
-                        <div class="form-group"><label for="req-competencias">Competências Desejadas (Ex: proatividade, trabalho em equipe)</label><textarea id="req-competencias" name="competencias" class="input-field"></textarea></div>
-                    `
-                },
-                'termination': {
-                    title: 'Solicitação de Desligamento',
-                    html: `
-                        <h3 class="form-section-title">Dados do Colaborador</h3>
-                        <div class="form-group"><label for="req-nome-colaborador">Nome Completo do Colaborador*</label><input type="text" id="req-nome-colaborador" name="nome_colaborador" class="input-field" required></div>
-                        <div class="form-group"><label for="req-cargo-colaborador">Cargo</label><input type="text" id="req-cargo-colaborador" name="cargo_colaborador" class="input-field"></div>
-                        <h3 class="form-section-title">Motivo do Desligamento (Iniciativa da Empresa)</h3>
-                        <div class="form-group"><label for="req-motivo-desligamento">Descreva o motivo*</label><textarea id="req-motivo-desligamento" name="motivo_desligamento" class="input-field" required></textarea></div>
-                    `
-                },
-                'promotion': {
-                    title: 'Solicitação de Promoção Interna',
-                     html: `
-                        <h3 class="form-section-title">Detalhes da Promoção</h3>
+                        <div class="form-group"><label for="req-experiencia">Experiência Necessária</label><textarea id="req-experiencia" name="experiencia" class="input-field"></textarea></div>
+                        <div class="form-group"><label for="req-conhecimentos">Conhecimentos Específicos (máquinas, ferramentas, processos)</label><textarea id="req-conhecimentos" name="conhecimentos" class="input-field"></textarea></div>
+                        <div class="form-group"><label for="req-competencias">Competências Comportamentais Desejadas</label><textarea id="req-competencias" name="competencias" class="input-field"></textarea></div>
+
+                        <h3 class="form-section-title">Informações Adicionais</h3>
+                        <div class="form-group"><label for="req-local">Local de Trabalho (planta/unidade)</label><input type="text" id="req-local" name="local_trabalho" class="input-field"></div>
+                        <div class="form-group">
+                            <label>Possui Candidato Interno em Vista?</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="candidato_interno" value="sim" onchange="toggleCandidatoInterno()"> Sim</label>
+                                <label><input type="radio" name="candidato_interno" value="nao" checked onchange="toggleCandidatoInterno()"> Não</label>
+                            </div>
+                        </div>
+                        <div id="candidato-interno-nome" style="display:none;" class="form-group">
+                            <label for="req-candidato-nome">Nome do candidato interno</label><input type="text" id="req-candidato-nome" name="candidato_interno_nome" class="input-field">
+                        </div>
+                         <div class="form-group">
+                            <label>Urgência da Contratação*</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="urgencia" value="urgente"> Urgente</label>
+                                <label><input type="radio" name="urgencia" value="ate_data"> Até</label>
+                                <label><input type="radio" name="urgencia" value="sem_urgencia" checked> Sem urgência</label>
+                            </div>
+                            <input type="date" name="urgencia_data" class="input-field" style="max-width: 150px; margin-top: 8px; display: none;">
+                        </div>
+                    `;
+                    break;
+
+                case 'termination':
+                    title = 'Solicitação de Rescisão de Contrato';
+                    formHTML = `
+                        <h3 class="form-section-title">1. Dados do Colaborador</h3>
+                        <div class="form-group"><label for="req-nome-colaborador">Nome Completo*</label><input type="text" id="req-nome-colaborador" name="nome_colaborador" class="input-field" required></div>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group"><label for="req-cargo-colaborador">Cargo</label><input type="text" id="req-cargo-colaborador" name="cargo_colaborador" class="input-field"></div>
+                            <div class="form-group"><label for="req-data-demissao">Data Prevista Demissão*</label><input type="date" id="req-data-demissao" name="data_demissao" class="input-field" required></div>
+                        </div>
+
+                        <h3 class="form-section-title">2. Informações da Rescisão</h3>
+                        <div class="form-group"><label>Tipo de rescisão solicitada*</label>
+                            <div class="radio-group" style="flex-direction: column; align-items: flex-start;">
+                                <label><input type="radio" name="tipo_rescisao" value="pedido_demissao"> Pedido de demissão (iniciativa do colaborador)</label>
+                                <label><input type="radio" name="tipo_rescisao" value="sem_justa_causa"> Demissão sem justa causa (iniciativa da empresa)</label>
+                                <label><input type="radio" name="tipo_rescisao" value="com_justa_causa"> Demissão com justa causa</label>
+                                <label><input type="radio" name="tipo_rescisao" value="termino_contrato"> Término de contrato por prazo determinado</label>
+                                <label><input type="radio" name="tipo_rescisao" value="acordo_partes"> Acordo entre as partes (Art. 484-A da CLT)</label>
+                                <label><input type="radio" name="tipo_rescisao" value="outros"> Outros</label>
+                            </div>
+                        </div>
+                        <div class="form-group"><label>Aviso prévio*</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="aviso_previo" value="cumprido"> Cumprido</label>
+                                <label><input type="radio" name="aviso_previo" value="indenizado"> Indenizado</label>
+                                <label><input type="radio" name="aviso_previo" value="dispensado"> Dispensado</label>
+                                <label><input type="radio" name="aviso_previo" value="nao_aplicavel"> Não aplicável</label>
+                            </div>
+                        </div>
+                        <div class="form-group"><label>Reposição da Vaga?*</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="reposicao_vaga" value="sim"> SIM</label>
+                                <label><input type="radio" name="reposicao_vaga" value="nao"> NÃO</label>
+                            </div>
+                        </div>
+
+                        <h3 class="form-section-title">3. Motivo do Desligamento (para iniciativa da empresa)</h3>
+                        <div class="form-group"><label>Marcar um ou mais, se aplicável:</label>
+                            <div class="radio-group" style="flex-direction: column; align-items: flex-start;">
+                                <label><input type="checkbox" name="motivo_desligamento" value="desempenho_abaixo"> Desempenho abaixo do esperado</label>
+                                <label><input type="checkbox" name="motivo_desligamento" value="inadequacao_cultura"> Inadequação à cultura organizacional</label>
+                                <label><input type="checkbox" name="motivo_desligamento" value="comportamento_incompativel"> Comportamento incompatível com as diretrizes</label>
+                                <label><input type="checkbox" name="motivo_desligamento" value="reestruturacao"> Reestruturação / corte de custos</label>
+                                <label><input type="checkbox" name="motivo_desligamento" value="fim_projeto"> Fim de projeto ou contrato</label>
+                                <label><input type="checkbox" name="motivo_desligamento" value="faltas"> Faltas injustificadas ou indisciplina</label>
+                                <label><input type="checkbox" name="motivo_desligamento" value="outras"> Outras razões</label>
+                            </div>
+                        </div>
+                        <div class="form-group"><label for="req-motivo-breve">Relate brevemente o Motivo</label><textarea id="req-motivo-breve" name="motivo_breve" class="input-field"></textarea></div>
+                        
+                        <h3 class="form-section-title">4. Observações Adicionais</h3>
+                        <div class="form-group"><textarea name="observacoes_adicionais" class="input-field"></textarea></div>
+                    `;
+                    break;
+
+                case 'promotion':
+                    title = 'Requisição de Promoção Interna';
+                     formHTML = `
                         <div class="form-group"><label for="req-nome-funcionario">Nome do Funcionário*</label><input type="text" id="req-nome-funcionario" name="nome_funcionario" class="input-field" required></div>
-                        <div class="form-group"><label for="req-cargo-atual">Cargo/Salário Atual*</label><input type="text" id="req-cargo-atual" name="cargo_atual" class="input-field" required></div>
-                        <div class="form-group"><label for="req-cargo-pretendido">Cargo/Salário Pretendido*</label><input type="text" id="req-cargo-pretendido" name="cargo_pretendido" class="input-field" required></div>
-                        <div class="form-group"><label for="req-justificativa-promocao">Justificativa (motivações, resultados, conquistas)*</label><textarea id="req-justificativa-promocao" name="justificativa" class="input-field" required></textarea></div>
-                    `
-                },
-                 'overtime': {
-                    title: 'Requisição de Horas Extras',
-                    html: `
+                        <div class="form-group"><label for="req-data-admissao">Data de Admissão</label><input type="date" id="req-data-admissao" name="data_admissao" class="input-field"></div>
+                        
+                        <h3 class="form-section-title">Detalhes da Solicitação</h3>
+                        <div class="form-group"><label for="req-cargo-atual">Cargo ATUAL/Salário*</label><input type="text" id="req-cargo-atual" name="cargo_atual" class="input-field" required></div>
+                        <div class="form-group"><label for="req-cargo-pretendido">Cargo PRETENDIDO/Salário*</label><input type="text" id="req-cargo-pretendido" name="cargo_pretendido" class="input-field" required></div>
+                        <div class="form-group"><label for="req-justificativa-promocao">Justificativa da solicitação*</label><textarea id="req-justificativa-promocao" name="justificativa" class="input-field" required placeholder="Descreva as motivações, resultados obtidos, conquistas e razões pelas quais acredita estar apto à promoção"></textarea></div>
+                    `;
+                    break;
+
+                case 'overtime':
+                    title = 'Requisição de Horas Extras';
+                    formHTML = `
                         <h3 class="form-section-title">Informações das Horas Extras</h3>
                         <div class="form-group"><label for="req-data-he">Data a ser realizada*</label><input type="date" id="req-data-he" name="data_he" class="input-field" required></div>
                         <div class="form-group"><label for="req-horario-adicional">Horário Adicional (Ex: Das 08h às 16h - 8 horas)*</label><input type="text" id="req-horario-adicional" name="horario_adicional" class="input-field" required></div>
-                        <div class="form-group"><label for="req-qtd-funcionarios">Quantidade de Funcionários*</label><input type="number" id="req-qtd-funcionarios" name="qtd_funcionarios" class="input-field" value="1" required></div>
-                        <div class="form-group"><label for="req-setor-he">Setor a realizar as Horas Extras*</label><input type="text" id="req-setor-he" name="setor_he" class="input-field" required></div>
-                    `
-                },
-                'training': {
-                    title: 'Requisição de Treinamento / Evento',
-                    html: `
-                        <h3 class="form-section-title">Informações do Treinamento ou Evento</h3>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group"><label for="req-qtd-funcionarios">Quantidade de Funcionários*</label><input type="number" id="req-qtd-funcionarios" name="qtd_funcionarios" class="input-field" value="1" required></div>
+                            <div class="form-group"><label for="req-setor-he">Setor a realizar as Horas Extras*</label><input type="text" id="req-setor-he" name="setor_he" class="input-field" required></div>
+                        </div>
+                    `;
+                    break;
+
+                case 'training':
+                    title = 'Requisição de Treinamento / Evento';
+                    formHTML = `
+                        <h3 class="form-section-title">1. Informações do Treinamento ou Evento</h3>
                         <div class="form-group"><label for="req-titulo-treinamento">Título (Nome do curso, treinamento ou evento)*</label><input type="text" id="req-titulo-treinamento" name="titulo" class="input-field" required></div>
                         <div class="form-group"><label for="req-instituicao">Instituição/Fornecedor</label><input type="text" id="req-instituicao" name="instituicao" class="input-field"></div>
-                        <div class="form-group"><label for="req-objetivo-treinamento">Objetivo da Participação*</label><textarea id="req-objetivo-treinamento" name="objetivo" class="input-field" required></textarea></div>
-                         <div class="form-group"><label for="req-nomes-participantes">Nome(s) dos participantes (Listar nomes)</label><textarea id="req-nomes-participantes" name="nomes_participantes" class="input-field"></textarea></div>
-                    `
-                }
-            };
-            
-            if (formTemplates[type]) {
-                title = formTemplates[type].title;
-                formHTML = formTemplates[type].html;
+                        <div class="form-group"><label>Modalidade*</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="modalidade" value="presencial"> Presencial</label>
+                                <label><input type="radio" name="modalidade" value="online"> Online</label>
+                                <label><input type="radio" name="modalidade" value="hibrido"> Híbrido</label>
+                            </div>
+                        </div>
+                        <div class="form-group"><label for="req-local-treinamento">Local (Cidade/Plataforma online)</label><input type="text" id="req-local-treinamento" name="local" class="input-field"></div>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group"><label for="req-datas-treinamento">Data(s) de início e término</label><input type="text" id="req-datas-treinamento" name="datas" class="input-field"></div>
+                            <div class="form-group"><label for="req-carga-horaria">Carga horária</label><input type="text" id="req-carga-horaria" name="carga_horaria" class="input-field"></div>
+                        </div>
+
+                        <h3 class="form-section-title">2. Objetivo da Participação</h3>
+                        <div class="form-group">
+                            <div class="radio-group">
+                                <label><input type="radio" name="participacao_tipo" value="individual" checked onchange="toggleParticipantes()"> Colaborador individual</label>
+                                <label><input type="radio" name="participacao_tipo" value="equipe" onchange="toggleParticipantes()"> Equipe ou grupo</label>
+                            </div>
+                        </div>
+                        <div id="participantes-group" class="form-group" style="display:none;">
+                            <label for="req-nomes-participantes">Nome(s) dos participantes (Listar nomes)</label>
+                            <textarea id="req-nomes-participantes" name="nomes_participantes" class="input-field"></textarea>
+                        </div>
+
+                        <h3 class="form-section-title">3. Custos Estimados</h3>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group"><label for="req-custo-inscricao">Inscrição (R$)</label><input type="number" id="req-custo-inscricao" name="custo_inscricao" class="input-field" placeholder="0.00"></div>
+                            <div class="form-group"><label for="req-custo-transporte">Transporte (R$)</label><input type="number" id="req-custo-transporte" name="custo_transporte" class="input-field" placeholder="0.00"></div>
+                            <div class="form-group"><label for="req-custo-hospedagem">Hospedagem/Alimentação (R$)</label><input type="number" id="req-custo-hospedagem" name="custo_hospedagem" class="input-field" placeholder="0.00"></div>
+                            <div class="form-group"><label for="req-custo-outras">Outras despesas (R$)</label><input type="number" id="req-custo-outras" name="custo_outras" class="input-field" placeholder="0.00"></div>
+                        </div>
+                    `;
+                    break;
             }
 
             modalTitle.textContent = title;
@@ -963,6 +1081,9 @@
                 <button class="btn btn-danger" id="btn-submit-request">Enviar Requisição</button>
             `;
             document.getElementById('btn-submit-request').addEventListener('click', submitRequest);
+            
+            // Adiciona os scripts para campos condicionais
+            addConditionalFieldListeners();
         }
 
         async function submitRequest(event) {
@@ -2180,6 +2301,61 @@
         const body = document.body;
         themeToggleBtn.addEventListener('click', () => applyTheme(body.classList.contains('dark-mode') ? 'light' : 'dark'));
         function applyTheme(theme) { body.classList.toggle('dark-mode', theme === 'dark'); localStorage.setItem('theme', theme); }
+
+        function addConditionalFieldListeners() {
+            // Para Requisição de Contratação
+            const toggleSubstituicao = document.querySelector('input[name="motivo_contratacao"][value="substituicao"]');
+            if (toggleSubstituicao) {
+                window.toggleSubstituicaoFields = () => {
+                    const fields = document.getElementById('substituicao-fields');
+                    const isSubstituicao = document.querySelector('input[name="motivo_contratacao"][value="substituicao"]').checked;
+                    fields.style.display = isSubstituicao ? 'block' : 'none';
+                };
+            }
+            const toggleCandidato = document.querySelector('input[name="candidato_interno"][value="sim"]');
+             if (toggleCandidato) {
+                window.toggleCandidatoInterno = () => {
+                    const field = document.getElementById('candidato-interno-nome');
+                    const isSim = document.querySelector('input[name="candidato_interno"][value="sim"]').checked;
+                    field.style.display = isSim ? 'block' : 'none';
+                };
+            }
+            const urgenciaDataInput = document.querySelector('input[name="urgencia_data"]');
+            if(urgenciaDataInput) {
+                document.querySelectorAll('input[name="urgencia"]').forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        urgenciaDataInput.style.display = e.target.value === 'ate_data' ? 'block' : 'none';
+                    });
+                });
+            }
+
+            // Para Requisição de Treinamento
+            const toggleParticipantesRadio = document.querySelector('input[name="participacao_tipo"]');
+            if(toggleParticipantesRadio) {
+                window.toggleParticipantes = () => {
+                    const group = document.getElementById('participantes-group');
+                    const isEquipe = document.querySelector('input[name="participacao_tipo"][value="equipe"]').checked;
+                    group.style.display = isEquipe ? 'block' : 'none';
+                }
+            }
+        }
+
+        // Adicione esta função ao final do seu script principal, fora de outras funções.
+        document.addEventListener('DOMContentLoaded', () => {
+            // Este listener garante que a função `addConditionalFieldListeners` seja chamada
+            // sempre que o corpo do modal for alterado.
+            const modalBody = document.getElementById('request-modal-body');
+            if(modalBody) {
+                const observer = new MutationObserver((mutations) => {
+                    for(const mutation of mutations) {
+                        if (mutation.type === 'childList') {
+                            addConditionalFieldListeners();
+                        }
+                    }
+                });
+                observer.observe(modalBody, { childList: true });
+            }
+        });
     </script>
 </body>
 </html>
