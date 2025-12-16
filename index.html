@@ -922,7 +922,18 @@
                         <div class="form-group"><label for="req-horario">Horário de Trabalho</label><input type="text" id="req-horario" name="horario" class="input-field"></div>
                         
                         <h3 class="form-section-title">Requisitos e Perfil Desejado</h3>
-                        <div class="form-group"><label for="req-escolaridade">Escolaridade Mínima</label><input type="text" id="req-escolaridade" name="escolaridade" class="input-field"></div>
+                        <div class="form-group"><label for="req-escolaridade">Escolaridade Mínima</label>
+                            <select id="req-escolaridade" name="escolaridade" class="input-field">
+                                <option value="">-- Selecione --</option>
+                                <option value="fundamental_incompleto">Ensino Fundamental Incompleto</option>
+                                <option value="fundamental_completo">Ensino Fundamental Completo</option>
+                                <option value="medio_incompleto">Ensino Médio Incompleto</option>
+                                <option value="medio_completo">Ensino Médio Completo</option>
+                                <option value="tecnico">Ensino Técnico</option>
+                                <option value="superior_incompleto">Ensino Superior Incompleto</option>
+                                <option value="superior_completo">Ensino Superior Completo</option>
+                            </select>
+                        </div>
                         <div class="form-group"><label for="req-experiencia">Experiência Necessária</label><textarea id="req-experiencia" name="experiencia" class="input-field"></textarea></div>
                         <div class="form-group"><label for="req-conhecimentos">Conhecimentos Específicos (máquinas, ferramentas, processos)</label><textarea id="req-conhecimentos" name="conhecimentos" class="input-field"></textarea></div>
                         <div class="form-group"><label for="req-competencias">Competências Comportamentais Desejadas</label><textarea id="req-competencias" name="competencias" class="input-field"></textarea></div>
@@ -1013,9 +1024,15 @@
                         <div class="form-group"><label for="req-data-admissao">Data de Admissão</label><input type="date" id="req-data-admissao" name="data_admissao" class="input-field"></div>
                         
                         <h3 class="form-section-title">Detalhes da Solicitação</h3>
-                        <div class="form-group"><label for="req-cargo-atual">Cargo ATUAL/Salário*</label><input type="text" id="req-cargo-atual" name="cargo_atual" class="input-field" required></div>
-                        <div class="form-group"><label for="req-cargo-pretendido">Cargo PRETENDIDO/Salário*</label><input type="text" id="req-cargo-pretendido" name="cargo_pretendido" class="input-field" required></div>
-                        <div class="form-group"><label for="req-justificativa-promocao">Justificativa da solicitação*</label><textarea id="req-justificativa-promocao" name="justificativa" class="input-field" required placeholder="Descreva as motivações, resultados obtidos, conquistas e razões pelas quais acredita estar apto à promoção"></textarea></div>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group"><label for="req-cargo-atual">Cargo ATUAL*</label><input type="text" id="req-cargo-atual" name="cargo_atual" class="input-field" required></div>
+                            <div class="form-group"><label for="req-salario-atual">Salário ATUAL (R$)*</label><input type="number" id="req-salario-atual" name="salario_atual" class="input-field" placeholder="0.00" required></div>
+                        </div>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group"><label for="req-cargo-pretendido">Cargo PRETENDIDO*</label><input type="text" id="req-cargo-pretendido" name="cargo_pretendido" class="input-field" required></div>
+                            <div class="form-group"><label for="req-salario-pretendido">Salário PRETENDIDO (R$)*</label><input type="number" id="req-salario-pretendido" name="salario_pretendido" class="input-field" placeholder="0.00" required></div>
+                        </div>
+                        <div class="form-group"><label for="req-justificativa-promocao">Justificativa da solicitação*</label><textarea id="req-justificativa-promocao" name="justificativa" class="input-field" required placeholder="Descreva as motivações, resultados obtidos, conquistas e razões..."></textarea></div>
                     `;
                     break;
 
@@ -1082,8 +1099,37 @@
             `;
             document.getElementById('btn-submit-request').addEventListener('click', submitRequest);
             
-            // Adiciona os scripts para campos condicionais
+            // Adiciona os scripts para campos condicionais logo após a renderização
             addConditionalFieldListeners();
+        }
+
+        function addConditionalFieldListeners() {
+            // Para Requisição de Contratação
+            window.toggleSubstituicaoFields = () => {
+                const fields = document.getElementById('substituicao-fields');
+                const isSubstituicao = document.querySelector('input[name="motivo_contratacao"][value="substituicao"]').checked;
+                fields.style.display = isSubstituicao ? 'block' : 'none';
+            };
+            window.toggleCandidatoInterno = () => {
+                const field = document.getElementById('candidato-interno-nome');
+                const isSim = document.querySelector('input[name="candidato_interno"][value="sim"]').checked;
+                field.style.display = isSim ? 'block' : 'none';
+            };
+            const urgenciaDataInput = document.querySelector('input[name="urgencia_data"]');
+            if(urgenciaDataInput) {
+                document.querySelectorAll('input[name="urgencia"]').forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        urgenciaDataInput.style.display = e.target.value === 'ate_data' ? 'block' : 'none';
+                    });
+                });
+            }
+
+            // Para Requisição de Treinamento
+            window.toggleParticipantes = () => {
+                const group = document.getElementById('participantes-group');
+                const isEquipe = document.querySelector('input[name="participacao_tipo"][value="equipe"]').checked;
+                group.style.display = isEquipe ? 'block' : 'none';
+            };
         }
 
         async function submitRequest(event) {
@@ -2304,22 +2350,16 @@
 
         function addConditionalFieldListeners() {
             // Para Requisição de Contratação
-            const toggleSubstituicao = document.querySelector('input[name="motivo_contratacao"][value="substituicao"]');
-            if (toggleSubstituicao) {
-                window.toggleSubstituicaoFields = () => {
-                    const fields = document.getElementById('substituicao-fields');
-                    const isSubstituicao = document.querySelector('input[name="motivo_contratacao"][value="substituicao"]').checked;
-                    fields.style.display = isSubstituicao ? 'block' : 'none';
-                };
-            }
-            const toggleCandidato = document.querySelector('input[name="candidato_interno"][value="sim"]');
-             if (toggleCandidato) {
-                window.toggleCandidatoInterno = () => {
-                    const field = document.getElementById('candidato-interno-nome');
-                    const isSim = document.querySelector('input[name="candidato_interno"][value="sim"]').checked;
-                    field.style.display = isSim ? 'block' : 'none';
-                };
-            }
+            window.toggleSubstituicaoFields = () => {
+                const fields = document.getElementById('substituicao-fields');
+                const isSubstituicao = document.querySelector('input[name="motivo_contratacao"][value="substituicao"]').checked;
+                fields.style.display = isSubstituicao ? 'block' : 'none';
+            };
+            window.toggleCandidatoInterno = () => {
+                const field = document.getElementById('candidato-interno-nome');
+                const isSim = document.querySelector('input[name="candidato_interno"][value="sim"]').checked;
+                field.style.display = isSim ? 'block' : 'none';
+            };
             const urgenciaDataInput = document.querySelector('input[name="urgencia_data"]');
             if(urgenciaDataInput) {
                 document.querySelectorAll('input[name="urgencia"]').forEach(radio => {
@@ -2330,32 +2370,12 @@
             }
 
             // Para Requisição de Treinamento
-            const toggleParticipantesRadio = document.querySelector('input[name="participacao_tipo"]');
-            if(toggleParticipantesRadio) {
-                window.toggleParticipantes = () => {
-                    const group = document.getElementById('participantes-group');
-                    const isEquipe = document.querySelector('input[name="participacao_tipo"][value="equipe"]').checked;
-                    group.style.display = isEquipe ? 'block' : 'none';
-                }
-            }
+            window.toggleParticipantes = () => {
+                const group = document.getElementById('participantes-group');
+                const isEquipe = document.querySelector('input[name="participacao_tipo"][value="equipe"]').checked;
+                group.style.display = isEquipe ? 'block' : 'none';
+            };
         }
-
-        // Adicione esta função ao final do seu script principal, fora de outras funções.
-        document.addEventListener('DOMContentLoaded', () => {
-            // Este listener garante que a função `addConditionalFieldListeners` seja chamada
-            // sempre que o corpo do modal for alterado.
-            const modalBody = document.getElementById('request-modal-body');
-            if(modalBody) {
-                const observer = new MutationObserver((mutations) => {
-                    for(const mutation of mutations) {
-                        if (mutation.type === 'childList') {
-                            addConditionalFieldListeners();
-                        }
-                    }
-                });
-                observer.observe(modalBody, { childList: true });
-            }
-        });
     </script>
 </body>
 </html>
