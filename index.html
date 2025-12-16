@@ -887,7 +887,8 @@
             let formHTML = '';
             let title = 'Nova Requisição';
 
-            const backButtonHTML = `<button class="btn btn-icon" onclick="openRequestModal()" style="position: absolute; left: 1.5rem; top: 1rem;"><span class="material-icons">arrow_back</span></button>`;
+            // AQUI ESTÁ A ADIÇÃO SOLICITADA: UM BOTÃO "VOLTAR" QUE CHAMA A TELA INICIAL DO MODAL
+            const backButtonHTML = `<button class="btn btn-icon" onclick="openRequestModal()" title="Voltar" style="position: absolute; left: 1.5rem; top: 1rem;"><span class="material-icons">arrow_back</span></button>`;
 
             switch (type) {
                 case 'new_hire':
@@ -1099,7 +1100,6 @@
             `;
             document.getElementById('btn-submit-request').addEventListener('click', submitRequest);
             
-            // Adiciona os scripts para campos condicionais logo após a renderização
             addConditionalFieldListeners();
         }
 
