@@ -887,7 +887,6 @@
             let formHTML = '';
             let title = 'Nova Requisição';
 
-            // AQUI ESTÁ A ADIÇÃO SOLICITADA: UM BOTÃO "VOLTAR" QUE CHAMA A TELA INICIAL DO MODAL
             const backButtonHTML = `<button class="btn btn-icon" onclick="openRequestModal()" title="Voltar" style="position: absolute; left: 1.5rem; top: 1rem;"><span class="material-icons">arrow_back</span></button>`;
 
             switch (type) {
@@ -1094,10 +1093,13 @@
 
             modalTitle.textContent = title;
             modalBody.innerHTML = backButtonHTML + `<form id="dynamic-request-form">${formHTML}</form>`;
+            
+            // AQUI ESTÁ A CORREÇÃO SOLICITADA
             modalFooter.innerHTML = `
-                <button class="btn btn-secondary" onclick="closeRequestModal()">Cancelar</button>
+                <button class="btn btn-secondary" onclick="openRequestModal()">Cancelar</button>
                 <button class="btn btn-danger" id="btn-submit-request">Enviar Requisição</button>
             `;
+
             document.getElementById('btn-submit-request').addEventListener('click', submitRequest);
             
             addConditionalFieldListeners();
