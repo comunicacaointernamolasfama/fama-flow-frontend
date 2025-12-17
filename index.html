@@ -607,7 +607,36 @@
                     </div>
                 <div id="team-list-content">Carregando equipe...</div></div>
                 <div id="channels-page" class="page-content"><div class="page-header"><h1>Canais</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
-                <div id="rankings-page" class="page-content"><div class="page-header"><h1>Performance e Rankings</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
+                <div id="rankings-page" class="page-content">
+                    <div class="page-header">
+                        <h1>Performance e Rankings</h1>
+                        <p>Acompanhe o desempenho e celebre as conquistas da equipe</p>
+                    </div>
+
+                    <div class="grid grid-cols-2">
+                        <!-- Card para Respondedores Rápidos -->
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 2rem;">
+                                <span class="material-icons" style="color: var(--color-success);">trending_up</span>
+                                Top 5 - Respondedores Mais Rápidos
+                            </h3>
+                            <div id="fastest-responders-list">
+                                <div class="empty-state">Carregando ranking...</div>
+                            </div>
+                        </div>
+
+                        <!-- Card para Maior Volume de Pendências -->
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 2rem;">
+                                <span class="material-icons" style="color: var(--color-danger);">report_problem</span>
+                                Top 5 - Maior Volume de Pendências
+                            </h3>
+                            <div id="most-pending-list">
+                                <div class="empty-state">Carregando ranking...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div id="mural-page" class="page-content"><div class="page-header"><h1>Mural Cultural</h1><p>Acompanhe os eventos e novidades da Fama.</p></div><div id="mural-content">Carregando...</div><button class="fab hidden" id="fab-new-post" title="Nova Postagem"><span class="material-icons">add</span></button></div>
                 <div id="kb-page" class="page-content"><div class="page-header"><h1>Base de Conhecimento</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
                 <div id="admin-dashboard-page" class="page-content"><div class="page-header"><h1>Dashboard Administrativo</h1></div><div class="card">Métricas da plataforma aparecerão aqui.</div></div>
@@ -756,6 +785,7 @@
             }
             if (pageId === 'profile-page') loadUserProfileData(targetUserId);
             if (pageId === 'mural-page') loadMuralPage();
+            if (pageId === 'rankings-page') loadRankingsPage();
         }
 
         async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
@@ -1094,7 +1124,6 @@
             modalTitle.textContent = title;
             modalBody.innerHTML = backButtonHTML + `<form id="dynamic-request-form">${formHTML}</form>`;
             
-            // AQUI ESTÁ A CORREÇÃO SOLICITADA
             modalFooter.innerHTML = `
                 <button class="btn btn-secondary" onclick="openRequestModal()">Cancelar</button>
                 <button class="btn btn-danger" id="btn-submit-request">Enviar Requisição</button>
@@ -2377,6 +2406,71 @@
                 const isEquipe = document.querySelector('input[name="participacao_tipo"][value="equipe"]').checked;
                 group.style.display = isEquipe ? 'block' : 'none';
             };
+        }
+
+        async function loadRankingsPage() {
+            const fastestList = document.getElementById('fastest-responders-list');
+            const pendingList = document.getElementById('most-pending-list');
+
+            fastestList.innerHTML = '<div class="empty-state">Carregando ranking...</div>';
+            pendingList.innerHTML = '<div class="empty-state">Carregando ranking...</div>';
+
+            const [fastestRes, pendingRes] = await Promise.all([
+                supabaseClient.rpc('get_fastest_responders'),
+                supabaseClient.rpc('get_users_with_most_pending')
+            ]);
+
+            if (fastestRes.error || !fastestRes.data || fastestRes.data.length === 0) {
+                fastestList.innerHTML = '<div class="empty-state">Não há dados de agilidade para exibir.</div>';
+            } else {
+                const fastestHTML = fastestRes.data.map((user, index) => {
+                    const avatarInitial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
+                    return `
+                        <div class="user-info-cell" style="padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; background-color: var(--color-background);">
+                            <div style="font-weight: 700; color: var(--color-text-secondary); width: 20px;">${index + 1}</div>
+                            <div class="user-avatar" style="width: 36px; height: 36px;">${avatarInitial}</div>
+                            <div style="flex-grow: 1;">
+                                <div class="user-name">${user.full_name}</div>
+                                <div class="user-email">${user.department}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 700; font-size: 1.1rem; color: var(--color-success);">${user.avg_response_time}</div>
+                                <div class="user-email">tempo médio</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                fastestList.innerHTML = fastestHTML;
+            }
+
+            if (pendingRes.error || !pendingRes.data || pendingRes.data.length === 0) {
+                pendingList.innerHTML = '<div class="empty-state">Ninguém com pendências. Ótimo!</div>';
+            } else {
+                const pendingHTML = pendingRes.data.map((user, index) => {
+                    const avatarInitial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
+                    return `
+                        <div class="user-info-cell" style="padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; background-color: var(--color-background);">
+                            <div style="font-weight: 700; color: var(--color-danger); width: 20px;">${index + 1}</div>
+                            <div class="user-avatar" style="width: 36px; height: 36px;">${avatarInitial}</div>
+                            <div style="flex-grow: 1;">
+                                <div class="user-name">${user.full_name}</div>
+                                <div class="user-email">${user.department}</div>
+                                ${user.overdue_count > 0 ? `<div style="font-size: 0.8rem; color: var(--color-danger); font-weight: 500;">${user.overdue_count} mensagens em atraso</div>` : ''}
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 700; font-size: 1.1rem; color: var(--color-danger);">${user.pending_count}</div>
+                                    <div class="user-email">pendentes</div>
+                                </div>
+                                <button class="btn-icon" onclick="showPage('profile-page', '${user.id}')" title="Ver perfil de ${user.full_name}">
+                                    <span class="material-icons">visibility</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                pendingList.innerHTML = pendingHTML;
+            }
         }
     </script>
 </body>
