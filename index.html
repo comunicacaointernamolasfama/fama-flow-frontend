@@ -550,8 +550,9 @@
         const N8N_LIKE_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/like-post';
         const N8N_COMMENT_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/comment-post';
         
-        // ! AÇÃO NECESSÁRIA: Substitua '...' pela URL do seu webhook do n8n para criar requisições.
-        const N8N_CREATE_REQUEST_URL = '...';
+        const N8N_CREATE_REQUEST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/criar-requisicao';
+        const N8N_APPROVE_REQUEST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/aprova-requisicao';
+        const N8N_REJECT_REQUEST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/reprova-requisicao';
 
 
         let currentUserProfile = null;
@@ -584,6 +585,7 @@
                         <ul class="nav-menu">
                             <li><a href="#" class="nav-link" data-page="admin-dashboard-page"><span class="material-icons">admin_panel_settings</span> Admin Dashboard</a></li>
                             <li><a href="#" class="nav-link" data-page="users-page"><span class="material-icons">group_add</span> Usuários</a></li>
+                            <li><a href="#" class="nav-link" data-page="request-management-page"><span class="material-icons">rule_folder</span> Gerenciar Requisições</a></li>
                         </ul>
                     </div>
                 </div>
@@ -644,6 +646,30 @@
                 <div id="profile-page" class="page-content">
                     <div id="user-profile-content"></div>
                     <div id="user-history-content"></div>
+                </div>
+                <div id="request-management-page" class="page-content">
+                    <div class="page-header">
+                        <div>
+                            <h1>Gerenciamento de Requisições</h1>
+                            <p>Visualize e gerencie todas as solicitações da plataforma.</p>
+                        </div>
+                    </div>
+                    <div class="card" style="padding:0;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">Solicitante</th>
+                                    <th style="width: 25%;">Tipo</th>
+                                    <th style="width: 20%;">Data</th>
+                                    <th style="width: 15%;">Status</th>
+                                    <th style="width: 20%;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="request-management-table-body">
+                                <tr><td colspan="5" class="empty-state">Carregando requisições...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button>
             </main>
@@ -725,8 +751,9 @@
         function showApp() { 
             const appContainer = document.getElementById('app-container'); if (!appContainer) return;
             appContainer.classList.add('visible'); 
-            const isAdmin = currentUserProfile && (currentUserProfile.role === 'Admin' || currentUserProfile.role === 'RH');
-            document.getElementById('admin-section').style.display = (currentUserProfile && currentUserProfile.role === 'Admin') ? 'block' : 'none'; 
+            const isAdminOrRH = currentUserProfile && (currentUserProfile.role === 'Admin' || currentUserProfile.role === 'RH');
+            const adminSection = document.getElementById('admin-section');
+            if (adminSection) adminSection.style.display = isAdminOrRH ? 'block' : 'none';
             
             const profileShortcut = document.getElementById('profile-shortcut');
             const avatarInitial = currentUserProfile.full_name ? currentUserProfile.full_name.charAt(0).toUpperCase() : '?';
@@ -786,9 +813,10 @@
             if (pageId === 'profile-page') loadUserProfileData(targetUserId);
             if (pageId === 'mural-page') loadMuralPage();
             if (pageId === 'rankings-page') loadRankingsPage();
+            if (pageId === 'request-management-page') loadRequestManagementPage();
         }
 
-        async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); if (currentUserProfile && currentUserProfile.role === 'Admin') loadUsersForAdmin(); fetchAllUsersForSearch(); }
+        async function loadAllDynamicData() { loadDashboardStats(); loadMessages(); if (currentUserProfile && (currentUserProfile.role === 'Admin' || currentUserProfile.role === 'RH')) loadUsersForAdmin(); fetchAllUsersForSearch(); }
         
         async function loadDashboardStats() {
             if (!currentUserProfile) return;
@@ -1176,12 +1204,6 @@
                 showToast("Tipo de requisição inválido.", "danger");
                 return;
             }
-            
-            if (N8N_CREATE_REQUEST_URL === '...') {
-                showToast("A URL do webhook de requisições não foi configurada.", "danger");
-                console.error("ERRO: N8N_CREATE_REQUEST_URL não está configurada.");
-                return;
-            }
 
             btn.disabled = true;
             btn.innerHTML = 'Enviando...';
@@ -1213,7 +1235,7 @@
 
                 showToast("Requisição enviada com sucesso!", "success");
                 closeRequestModal();
-                loadRequests();
+                loadRequests(); // Atualiza a lista de requisições do usuário
 
             } catch (error) {
                 console.error("Erro ao enviar requisição:", error);
@@ -2471,6 +2493,85 @@
                 }).join('');
                 pendingList.innerHTML = pendingHTML;
             }
+        }
+        
+        async function handleRequestAction(action, requestId) {
+            const url = action === 'approve' ? N8N_APPROVE_REQUEST_URL : N8N_REJECT_REQUEST_URL;
+            
+            // Desabilitar botões para prevenir múltiplos cliques
+            const buttons = document.querySelectorAll(`[data-request-id='${requestId}'] button`);
+            buttons.forEach(btn => btn.disabled = true);
+
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) throw new Error("Sessão inválida.");
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({ request_id: requestId })
+                });
+
+                if (!response.ok) throw new Error(`Falha ao ${action === 'approve' ? 'aprovar' : 'reprovar'} a requisição.`);
+
+                showToast(`Requisição ${action === 'approve' ? 'aprovada' : 'reprovada'} com sucesso!`, 'success');
+                loadRequestManagementPage(); // Recarrega a lista para mostrar o status atualizado
+            } catch (error) {
+                console.error("Erro na ação da requisição:", error);
+                showToast(error.message, "danger");
+                buttons.forEach(btn => btn.disabled = false); // Reabilita botões em caso de erro
+            }
+        }
+
+        async function loadRequestManagementPage() {
+            const tableBody = document.getElementById('request-management-table-body');
+            tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Carregando requisições...</td></tr>`;
+
+            const { data, error } = await supabaseClient.rpc('get_all_requests_for_viewing');
+            
+            if (error) {
+                console.error("Erro ao buscar requisições para gerenciamento:", error);
+                tableBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color: var(--color-danger)">Falha ao carregar.</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhuma requisição encontrada.</td></tr>`;
+                return;
+            }
+
+            const requestTypeLabels = {
+                'new_hire': 'Contratação', 'termination': 'Desligamento', 'promotion': 'Promoção',
+                'overtime': 'Horas Extras', 'training': 'Treinamento'
+            };
+
+            tableBody.innerHTML = data.map(req => {
+                const typeLabel = requestTypeLabels[req.type] || req.type.replace(/_/g, ' ');
+                const date = new Date(req.created_at).toLocaleDateString('pt-BR');
+                
+                const actionsHTML = `
+                    <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;">Ver Detalhes</button>
+                    ${req.status === 'pending' ? `
+                        <span data-request-id="${req.id}">
+                            <button class="btn btn-icon" title="Aprovar" onclick="handleRequestAction('approve', '${req.id}')"><span class="material-icons" style="color:var(--color-success);">check_circle</span></button>
+                            <button class="btn btn-icon" title="Reprovar" onclick="handleRequestAction('reject', '${req.id}')"><span class="material-icons" style="color:var(--color-danger);">cancel</span></button>
+                        </span>
+                    ` : ''}
+                `;
+
+                return `
+                    <tr>
+                        <td>${req.requester_name || 'Desconhecido'}</td>
+                        <td><strong>${typeLabel}</strong></td>
+                        <td>${date}</td>
+                        <td><span class="status-tag status-${req.status}">${req.status}</span></td>
+                        <td>${actionsHTML}</td>
+                    </tr>
+                `;
+            }).join('');
         }
     </script>
 </body>
