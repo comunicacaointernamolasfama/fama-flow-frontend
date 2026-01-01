@@ -549,7 +549,7 @@
         <img id="lightbox-image" src="">
     </div>
 
-    <!-- ROUTINE MODALS -->
+    <!-- ROUTINE MODALS (Adicionar antes do </script>) -->
     <div id="new-routine-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header"><h3>Nova Rotina</h3><span class="material-icons" style="cursor:pointer;" onclick="this.parentElement.parentElement.parentElement.classList.remove('visible')">close</span></div>
@@ -557,6 +557,7 @@
                 <form id="new-routine-form">
                     <div class="form-group"><label for="routine-title">Título da Rotina</label><input type="text" id="routine-title" class="input-field" required></div>
                     <div class="form-group"><label for="routine-description">Descrição</label><textarea id="routine-description" class="input-field" rows="3"></textarea></div>
+                     <div class="form-group"><label for="routine-owner-department">Departamento Responsável</label><input type="text" id="routine-owner-department" class="input-field"></div>
                 </form>
             </div>
             <div class="modal-footer"><button class="btn btn-secondary" onclick="this.parentElement.parentElement.parentElement.classList.remove('visible')">Cancelar</button><button class="btn btn-danger" id="btn-create-routine">Criar Rotina</button></div>
@@ -570,6 +571,7 @@
                     <input type="hidden" id="task-routine-id">
                     <div class="form-group"><label for="task-title">Título da Tarefa</label><input type="text" id="task-title" class="input-field" required></div>
                     <div class="form-group"><label for="task-description">Descrição</label><textarea id="task-description" class="input-field" rows="3"></textarea></div>
+                    <div class="form-group"><label for="task-order">Ordem (Ex: 1, 2, 3...)</label><input type="number" id="task-order" class="input-field" required></div>
                 </form>
             </div>
             <div class="modal-footer"><button class="btn btn-secondary" onclick="this.parentElement.parentElement.parentElement.classList.remove('visible')">Cancelar</button><button class="btn btn-danger" id="btn-create-task">Adicionar Tarefa</button></div>
@@ -605,11 +607,9 @@
         const N8N_CREATE_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-post';
         const N8N_LIKE_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/like-post';
         const N8N_COMMENT_POST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/comment-post';
-        
         const N8N_CREATE_REQUEST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/criar-requisicao';
         const N8N_APPROVE_REQUEST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/aprova-requisicao';
         const N8N_REJECT_REQUEST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/reprova-requisicao';
-
         const N8N_COMPLETE_TASK_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/concluir-tarefa';
         const N8N_CREATE_ROUTINE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/criar-rotina';
         const N8N_ADD_TASK_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/adicionar-tarefa';
@@ -738,6 +738,159 @@
         
         document.addEventListener('DOMContentLoaded', checkUserSession);
         
+        // --- FUNÇÕES DE CARREGAMENTO DE PÁGINA (DECLARAR ANTES DE `showPage`) ---
+    
+        async function loadMyRoutinesPage() {
+            const container = document.getElementById('my-routines-page');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="page-header">
+                    <div>
+                        <h1>Minhas Rotinas</h1>
+                        <p>Veja e complete suas tarefas diárias.</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="form-group">
+                        <label for="routine-date-picker">Selecione uma data:</label>
+                        <input type="date" id="routine-date-picker" class="input-field" style="max-width: 200px;">
+                    </div>
+                    <h3 class="card-title" id="tasks-list-title">Tarefas para Hoje</h3>
+                    <div id="tasks-list-container">
+                        <div class="empty-state">Carregando tarefas...</div>
+                    </div>
+                </div>
+            `;
+
+            const datePicker = document.getElementById('routine-date-picker');
+            const today = new Date().toISOString().split('T')[0];
+            datePicker.value = today;
+
+            fetchAndRenderTasks(today);
+
+            datePicker.addEventListener('change', (e) => {
+                fetchAndRenderTasks(e.target.value);
+            });
+        }
+
+        async function fetchAndRenderTasks(date) {
+            const tasksContainer = document.getElementById('tasks-list-container');
+            const titleElement = document.getElementById('tasks-list-title');
+            if (!tasksContainer || !titleElement) return;
+            tasksContainer.innerHTML = `<div class="empty-state">Carregando tarefas...</div>`;
+            
+            const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('pt-BR');
+            titleElement.textContent = `Tarefas para o dia ${formattedDate}`;
+
+            const { data: tasks, error } = await supabaseClient.rpc('get_user_tasks_for_date', { p_date: date });
+
+            if (error) {
+                console.error('Erro ao buscar tarefas:', error);
+                tasksContainer.innerHTML = `<div class="empty-state" style="color: var(--color-danger)">Falha ao carregar tarefas.</div>`;
+                return;
+            }
+
+            if (tasks.length === 0) {
+                tasksContainer.innerHTML = `<div class="empty-state">Nenhuma tarefa para esta data.</div>`;
+                return;
+            }
+
+            tasksContainer.innerHTML = tasks.map(task => {
+                const isCompleted = task.status === 'completed';
+                return `
+                    <div class="user-info-cell" style="padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; background-color: ${isCompleted ? 'var(--read-bg)' : 'var(--color-background)'}; opacity: ${isCompleted ? 0.6 : 1};">
+                        <div style="flex-grow: 1;">
+                            <div class="user-name" style="text-decoration: ${isCompleted ? 'line-through' : 'none'};">${task.task_title}</div>
+                            <div class="user-email">${task.routine_title}</div>
+                        </div>
+                        <button class="btn ${isCompleted ? 'btn-secondary' : 'btn-success'}" ${isCompleted ? 'disabled' : ''} onclick="completeTask(${task.task_instance_id}, this)">
+                            ${isCompleted ? 'Concluída' : 'Concluir'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function completeTask(taskInstanceId, buttonElement) {
+            buttonElement.disabled = true;
+            buttonElement.textContent = 'Processando...';
+
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) throw new Error("Sessão inválida.");
+
+                const response = await fetch(N8N_COMPLETE_TASK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`,
+                        'x-user-id': currentUserProfile.id
+                    },
+                    body: JSON.stringify({ user_task_status_id: taskInstanceId })
+                });
+
+                if (!response.ok) throw new Error('Falha ao concluir a tarefa.');
+
+                showToast('Tarefa concluída com sucesso!', 'success');
+                
+                buttonElement.textContent = 'Concluída';
+                buttonElement.classList.remove('btn-success');
+                buttonElement.classList.add('btn-secondary');
+                const parentDiv = buttonElement.closest('.user-info-cell');
+                parentDiv.style.opacity = 0.6;
+                parentDiv.style.backgroundColor = 'var(--read-bg)';
+                parentDiv.querySelector('.user-name').style.textDecoration = 'line-through';
+
+            } catch (error) {
+                console.error('Erro ao concluir tarefa:', error);
+                showToast(error.message, 'danger');
+                buttonElement.disabled = false;
+                buttonElement.textContent = 'Concluir';
+            }
+        }
+
+        async function loadManageRoutinesPage() {
+            const container = document.getElementById('manage-routines-page');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="page-header"><h1>Gerenciar Rotinas</h1></div>
+                <div class="manage-routines-layout">
+                    <div class="card routines-column-card">
+                        <div class="routines-column-header">
+                            <h3>Rotinas</h3>
+                            <button class="btn btn-danger btn-icon" id="btn-open-new-routine-modal" title="Nova Rotina"><span class="material-icons">add</span></button>
+                        </div>
+                        <div class="routines-list" id="routines-list-col1"></div>
+                    </div>
+                    <div class="card routines-column-card">
+                         <div class="routines-column-header"><h3>Tarefas da Rotina</h3><div id="add-task-button-container"></div></div>
+                         <div class="routines-list" id="tasks-list-col2"><div class="empty-state">Selecione uma rotina para ver suas tarefas.</div></div>
+                    </div>
+                    <div class="card routines-column-card">
+                        <div class="routines-column-header"><h3>Usuários Atribuídos</h3><div id="assign-user-button-container"></div></div>
+                        <div class="routines-list" id="assignments-list-col3"><div class="empty-state">Selecione uma rotina para ver as atribuições.</div></div>
+                    </div>
+                </div>`;
+
+            document.getElementById('btn-open-new-routine-modal').addEventListener('click', openNewRoutineModal);
+            
+            const { data: routines, error } = await supabaseClient.from('routines').select('*').order('title');
+            if (error) {
+                document.getElementById('routines-list-col1').innerHTML = `<div class="empty-state">Erro ao carregar rotinas.</div>`;
+                return;
+            }
+
+            const routinesListContainer = document.getElementById('routines-list-col1');
+            routinesListContainer.innerHTML = routines.map(r => `
+                <div class="routines-list-item" data-routine-id="${r.id}" onclick="selectRoutine('${r.id}', this)">
+                    <span>${r.title}</span>
+                </div>`).join('');
+        }
+    
+        // --- FUNÇÕES DE NAVEGAÇÃO E SETUP ---
+
         function showToast(message, type = 'info') { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast toast-${type}`; const icons = { success: 'check_circle', danger: 'error', warning: 'warning', info: 'info' }; toast.innerHTML = `<span class="material-icons toast-icon">${icons[type]}</span><span class="toast-message">${message}</span><button class="toast-close">&times;</button>`; container.appendChild(toast); setTimeout(() => toast.classList.add('show'), 100); const removeToast = () => { toast.classList.remove('show'); toast.addEventListener('transitionend', () => toast.remove()); }; const timeoutId = setTimeout(removeToast, 5000); toast.querySelector('.toast-close').addEventListener('click', () => { clearTimeout(timeoutId); removeToast(); }); }
         
         async function checkUserSession() {
