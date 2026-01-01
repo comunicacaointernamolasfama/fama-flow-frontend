@@ -2561,7 +2561,6 @@
         async function handleRequestAction(action, requestId) {
             const url = action === 'approve' ? N8N_APPROVE_REQUEST_URL : N8N_REJECT_REQUEST_URL;
             
-            // Desabilitar botões para prevenir múltiplos cliques
             const buttons = document.querySelectorAll(`[data-request-id='${requestId}'] button`);
             buttons.forEach(btn => btn.disabled = true);
 
@@ -2581,11 +2580,11 @@
                 if (!response.ok) throw new Error(`Falha ao ${action === 'approve' ? 'aprovar' : 'reprovar'} a requisição.`);
 
                 showToast(`Requisição ${action === 'approve' ? 'aprovada' : 'reprovada'} com sucesso!`, 'success');
-                loadRequestManagementPage(); // Recarrega a lista para mostrar o status atualizado
+                loadRequestManagementPage();
             } catch (error) {
                 console.error("Erro na ação da requisição:", error);
                 showToast(error.message, "danger");
-                buttons.forEach(btn => btn.disabled = false); // Reabilita botões em caso de erro
+                buttons.forEach(btn => btn.disabled = false);
             }
         }
 
@@ -2624,7 +2623,7 @@
                 
                 const actionsHTML = `
                     <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;" onclick="openRequestDetailsModal('${req.id}')">Ver Detalhes</button>
-                    ${req.status === 'pending' ? `
+                    ${req.status === 'Pendente' ? `
                         <span data-request-id="${req.id}">
                             <button class="btn btn-icon" title="Aprovar" onclick="handleRequestAction('approve', '${req.id}')"><span class="material-icons" style="color:var(--color-success);">check_circle</span></button>
                             <button class="btn btn-icon" title="Reprovar" onclick="handleRequestAction('reject', '${req.id}')"><span class="material-icons" style="color:var(--color-danger);">cancel</span></button>
