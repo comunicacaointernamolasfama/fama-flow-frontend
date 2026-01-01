@@ -2755,8 +2755,6 @@
 
             const container = document.getElementById('my-routines-container');
             
-            // Correção: a RPC `get_my_routines_with_tasks` não existe, então vamos buscar os dados diretamente
-            // para replicar a funcionalidade.
             const { data, error } = await supabaseClient.rpc('get_user_tasks_for_date', { p_date: new Date().toISOString().split('T')[0] });
 
             if (error) {
@@ -2770,7 +2768,6 @@
                 return;
             }
             
-            // O RPC agora retorna um formato diferente, vamos adaptar
             const routinesGrouped = data.reduce((acc, item) => {
                 if (!acc[item.routine_id]) {
                     acc[item.routine_id] = {
@@ -2926,10 +2923,10 @@
             document.getElementById('add-task-button-container').innerHTML = `<button class="btn btn-danger btn-icon" onclick="openNewTaskModal('${routineId}')" title="Adicionar Tarefa"><span class="material-icons">add</span></button>`;
             document.getElementById('assign-user-button-container').innerHTML = `<button class="btn btn-danger btn-icon" onclick="openAssignUsersModal('${routineId}')" title="Atribuir Usuários"><span class="material-icons">person_add</span></button>`;
 
-            // CORREÇÃO: Busca dados diretamente das tabelas
+            // Busca dados em paralelo
             const [tasksRes, assignmentsRes] = await Promise.all([
                 supabaseClient.from('routine_tasks').select('*').eq('routine_id', routineId).order('task_order'),
-                supabaseClient.from('user_routine_assignments').select('*, user:profiles(full_name, department)').eq('routine_id', routineId)
+                supabaseClient.from('user_routine_assignments').select('*, user:user_id(full_name, department)').eq('routine_id', routineId)
             ]);
 
             // Renderiza as tarefas
