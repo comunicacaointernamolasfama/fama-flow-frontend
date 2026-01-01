@@ -579,12 +579,26 @@
     <div id="assign-users-modal" class="modal-overlay">
          <div class="modal-content" style="max-width: 700px; height: 80vh; display: flex; flex-direction: column;">
             <div class="modal-header"><h3>Atribuir Usuários à Rotina</h3><span class="material-icons" style="cursor:pointer;" onclick="this.parentElement.parentElement.parentElement.classList.remove('visible')">close</span></div>
-            <div class="modal-body recipient-table-container" style="padding: 0;">
+            <div class="modal-body" style="padding: 0; display:flex; flex-direction:column; overflow-y: auto;">
                 <input type="hidden" id="assign-routine-id">
-                <table class="data-table" style="width: 100%;">
-                    <thead><tr><th><input type="checkbox" id="select-all-users-routine"></th><th>Funcionário</th><th>Departamento</th></tr></thead>
-                    <tbody id="assign-users-table-body"></tbody>
-                </table>
+                <div class="recipient-table-container" style="padding: 1.5rem 1.5rem 0 1.5rem;">
+                    <table class="data-table" style="width: 100%;">
+                        <thead><tr><th><input type="checkbox" id="select-all-users-routine"></th><th>Funcionário</th><th>Departamento</th></tr></thead>
+                        <tbody id="assign-users-table-body"></tbody>
+                    </table>
+                </div>
+                
+                <div style="padding: 1.5rem; background-color: var(--color-background); border-top: 1px solid var(--color-border); margin-top: auto;">
+                    <div class="form-group">
+                        <label for="assignment-date-input">Datas de Atribuição</label>
+                        <div style="display: flex; gap: 1rem;">
+                            <input type="date" id="assignment-date-input" class="input-field">
+                            <button type="button" class="btn btn-secondary" id="add-date-btn">Adicionar</button>
+                        </div>
+                    </div>
+                    <div id="selected-dates-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;">
+                    </div>
+                </div>
             </div>
             <div class="modal-footer"><button class="btn btn-secondary" onclick="this.parentElement.parentElement.parentElement.classList.remove('visible')">Cancelar</button><button class="btn btn-danger" id="btn-assign-users">Salvar Atribuições</button></div>
         </div>
@@ -623,6 +637,7 @@
         let selectedRecipients = [];
         let selectedFile = null;
         let currentRequestType = null; // Used for the new requests module
+        let selectedAssignmentDates = [];
 
         const root = document.getElementById('root');
         const themeToggleBtn = document.getElementById('theme-toggle');
@@ -2754,7 +2769,7 @@
                 </div>`;
 
             const container = document.getElementById('my-routines-container');
-            
+
             const { data, error } = await supabaseClient.rpc('get_user_tasks_for_date', { p_date: new Date().toISOString().split('T')[0] });
 
             if (error) {
@@ -2762,12 +2777,12 @@
                 console.error(error);
                 return;
             }
-            
+
             if (data.length === 0) {
                 container.innerHTML = `<div class="empty-state">Nenhuma rotina atribuída a você para hoje.</div>`;
                 return;
             }
-            
+
             const routinesGrouped = data.reduce((acc, item) => {
                 if (!acc[item.routine_id]) {
                     acc[item.routine_id] = {
@@ -2923,7 +2938,7 @@
             document.getElementById('add-task-button-container').innerHTML = `<button class="btn btn-danger btn-icon" onclick="openNewTaskModal('${routineId}')" title="Adicionar Tarefa"><span class="material-icons">add</span></button>`;
             document.getElementById('assign-user-button-container').innerHTML = `<button class="btn btn-danger btn-icon" onclick="openAssignUsersModal('${routineId}')" title="Atribuir Usuários"><span class="material-icons">person_add</span></button>`;
 
-            // Busca dados em paralelo
+            // CORREÇÃO: Busca dados em paralelo com a sintaxe explícita para o relacionamento
             const [tasksRes, assignmentsRes] = await Promise.all([
                 supabaseClient.from('routine_tasks').select('*').eq('routine_id', routineId).order('task_order'),
                 supabaseClient.from('user_routine_assignments').select('*, user:user_id(full_name, department)').eq('routine_id', routineId)
@@ -2946,10 +2961,42 @@
             }
         }
 
-        function openNewTaskModal(routineId) {
-            document.getElementById('new-task-form').reset();
-            document.getElementById('task-routine-id').value = routineId;
-            document.getElementById('new-task-modal').classList.add('visible');
+        function renderSelectedDates() {
+            const listContainer = document.getElementById('selected-dates-list');
+            if (!listContainer) return;
+
+            listContainer.innerHTML = selectedAssignmentDates.map(date => {
+                const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('pt-BR');
+                return `
+                    <span class="recipient-pill">
+                        ${formattedDate}
+                        <span class="pill-remove" onclick="removeAssignmentDate('${date}')">&times;</span>
+                    </span>
+                `;
+            }).join('');
+        }
+
+        function addAssignmentDate() {
+            const dateInput = document.getElementById('assignment-date-input');
+            const dateValue = dateInput.value;
+
+            if (!dateValue) {
+                showToast('Por favor, selecione uma data.', 'warning');
+                return;
+            }
+            if (selectedAssignmentDates.includes(dateValue)) {
+                showToast('Esta data já foi adicionada.', 'info');
+                return;
+            }
+            selectedAssignmentDates.push(dateValue);
+            selectedAssignmentDates.sort(); // Keep the list sorted
+            renderSelectedDates();
+            dateInput.value = ''; // Clear input after adding
+        }
+
+        window.removeAssignmentDate = (dateToRemove) => {
+            selectedAssignmentDates = selectedAssignmentDates.filter(date => date !== dateToRemove);
+            renderSelectedDates();
         }
 
         async function openAssignUsersModal(routineId) {
@@ -2957,7 +3004,17 @@
             const modal = document.getElementById('assign-users-modal');
             const tableBody = document.getElementById('assign-users-table-body');
             tableBody.innerHTML = `<tr><td colspan="3" class="empty-state">Carregando usuários...</td></tr>`;
+            
+            selectedAssignmentDates = [];
+            renderSelectedDates();
+
             modal.classList.add('visible');
+            
+            const addDateBtn = document.getElementById('add-date-btn');
+            if (addDateBtn && !addDateBtn.dataset.listener) {
+                addDateBtn.addEventListener('click', addAssignmentDate);
+                addDateBtn.dataset.listener = 'true';
+            }
             
             const [assignedRes, allUsersRes] = await Promise.all([
                 supabaseClient.from('user_routine_assignments').select('user_id').eq('routine_id', routineId),
@@ -3010,6 +3067,16 @@
             const routineId = document.getElementById('assign-routine-id').value;
             const selectedUserIds = Array.from(document.querySelectorAll('.user-assign-checkbox:checked')).map(cb => cb.value);
             const btn = document.getElementById('btn-assign-users');
+
+            if (selectedUserIds.length === 0) {
+                showToast('Selecione pelo menos um usuário.', 'warning');
+                return;
+            }
+            if (selectedAssignmentDates.length === 0) {
+                showToast('Adicione pelo menos uma data para a atribuição.', 'warning');
+                return;
+            }
+
             btn.disabled = true;
 
             try {
@@ -3017,13 +3084,24 @@
                 const response = await fetch(N8N_ASSIGN_ROUTINE_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}`},
-                    body: JSON.stringify({ routine_id: routineId, user_ids: selectedUserIds })
+                    body: JSON.stringify({ 
+                        routine_id: routineId, 
+                        user_ids: selectedUserIds,
+                        dates: selectedAssignmentDates
+                    })
                 });
-                if (!response.ok) throw new Error('Falha ao atribuir rotina.');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Falha ao atribuir rotina.');
+                }
                 showToast('Atribuições salvas!', 'success');
                 document.getElementById('assign-users-modal').classList.remove('visible');
                 selectRoutine(routineId, document.querySelector(`.routines-list-item[data-routine-id="${routineId}"]`));
-            } catch (e) { showToast(e.message, 'danger'); } finally { btn.disabled = false; }
+            } catch (e) { 
+                showToast(e.message, 'danger'); 
+            } finally { 
+                btn.disabled = false; 
+            }
         }
 
         // Conectar os botões de salvar dos modais às funções de ação
