@@ -2762,7 +2762,7 @@
             const page = document.getElementById('my-routines-page');
             page.innerHTML = `
                 <div class="page-header">
-                    <div><h1>Minhas Rotinas</h1><p>Suas tarefas diárias, semanais e mensais.</p></div>
+                    <div><h1>Minhas Rotinas</h1><p>Suas tarefas diárias, semanais e mensais para hoje.</p></div>
                 </div>
                 <div id="my-routines-container">
                     <div class="empty-state">Carregando suas rotinas...</div>
@@ -2770,7 +2770,7 @@
 
             const container = document.getElementById('my-routines-container');
 
-            const { data, error } = await supabaseClient.rpc('get_user_tasks_for_date', { p_date: new Date().toISOString().split('T')[0] });
+            const { data: tasks, error } = await supabaseClient.rpc('get_user_tasks_for_date', { p_date: new Date().toISOString().split('T')[0] });
 
             if (error) {
                 container.innerHTML = `<div class="empty-state">Erro ao carregar suas rotinas.</div>`;
@@ -2778,76 +2778,58 @@
                 return;
             }
 
-            if (data.length === 0) {
-                container.innerHTML = `<div class="empty-state">Nenhuma rotina atribuída a você para hoje.</div>`;
+            if (!tasks || tasks.length === 0) {
+                container.innerHTML = `<div class="empty-state">Nenhuma tarefa atribuída a você para hoje.</div>`;
                 return;
             }
 
-            const routinesGrouped = data.reduce((acc, item) => {
-                if (!acc[item.routine_id]) {
-                    acc[item.routine_id] = {
-                        routine_title: item.routine_title,
-                        routine_description: item.routine_description,
-                        tasks: []
-                    };
-                }
-                acc[item.routine_id].tasks.push(item);
-                return acc;
-            }, {});
-
-            container.innerHTML = Object.values(routinesGrouped).map(routine => {
-                const completedCount = routine.tasks.filter(t => t.completed_at).length;
-                const totalCount = routine.tasks.length;
-                const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+            container.innerHTML = `<div class="card">${tasks.map(task => {
+                const isCompleted = !!task.completed_at;
+                const taskInstanceId = task.assignment_id; 
 
                 return `
-                    <div class="card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <div>
-                                <h3 class="card-title" style="margin: 0 0 0.25rem 0;">${routine.routine_title}</h3>
-                                <p style="margin:0; color:var(--color-text-secondary);">${routine.routine_description || ''}</p>
-                            </div>
-                            <div style="text-align: right;">
-                                <span style="font-size: 1.1rem; font-weight: 600;">${completedCount} / ${totalCount}</span>
-                                <div class="progress-bar-container" style="width: 120px; margin-top: 0.25rem;">
-                                    <div class="progress-bar" style="width: ${progress}%; background-color: var(--color-success);"></div>
-                                </div>
-                            </div>
+                    <div class="user-info-cell" style="padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; background-color: ${isCompleted ? 'var(--read-bg)' : 'var(--color-background)'}; opacity: ${isCompleted ? 0.6 : 1};">
+                        <div style="flex-grow: 1;">
+                            <div class="user-name" style="text-decoration: ${isCompleted ? 'line-through' : 'none'};">${task.task_title}</div>
+                            <div class="user-email">${task.routine_title}</div>
                         </div>
-                        
-                        <div class="tasks-list">
-                            ${routine.tasks.map(task => `
-                                <div class="task-list-item ${task.completed_at ? 'completed' : ''}">
-                                    <button class="btn btn-icon" ${task.completed_at ? 'disabled' : ''} onclick="completeTask('${task.assignment_id}', '${task.task_id}')">
-                                        <span class="material-icons">${task.completed_at ? 'check_circle' : 'radio_button_unchecked'}</span>
-                                    </button>
-                                    <div class="task-info">
-                                        <h4>${task.task_title}</h4>
-                                        <p>${task.task_description || ''}</p>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
+                        <button class="btn ${isCompleted ? 'btn-secondary' : 'btn-success'}" ${isCompleted ? 'disabled' : ''} onclick="completeTask(${taskInstanceId}, this)">
+                            ${isCompleted ? 'Concluída' : 'Concluir'}
+                        </button>
                     </div>
                 `;
-            }).join('');
+            }).join('')}</div>`;
         }
 
-        async function completeTask(assignmentId, taskId) {
+
+        async function completeTask(taskInstanceId, buttonElement) {
+            buttonElement.disabled = true;
+            buttonElement.textContent = 'Concluindo...';
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 const response = await fetch(N8N_COMPLETE_TASK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                    body: JSON.stringify({ assignment_id: assignmentId, task_id: taskId })
+                    body: JSON.stringify({ assignment_id: taskInstanceId })
                 });
                 if (!response.ok) throw new Error('Falha ao concluir tarefa.');
                 showToast('Tarefa concluída!', 'success');
-                loadMyRoutinesPage(); // Reload to update status
+                
+                const taskContainer = buttonElement.parentElement;
+                taskContainer.style.opacity = 0.6;
+                taskContainer.style.backgroundColor = 'var(--read-bg)';
+                taskContainer.querySelector('.user-name').style.textDecoration = 'line-through';
+                buttonElement.textContent = 'Concluída';
+                buttonElement.classList.remove('btn-success');
+                buttonElement.classList.add('btn-secondary');
+
             } catch (e) {
                 showToast(e.message, 'danger');
+                buttonElement.disabled = false;
+                buttonElement.textContent = 'Concluir';
             }
         }
+
 
         async function loadManageRoutinesPage() {
             const page = document.getElementById('manage-routines-page');
@@ -2957,11 +2939,10 @@
                 assignmentsCol.innerHTML = `<div class="empty-state">Erro ao carregar atribuições.</div>`;
                 console.error("Erro ao buscar atribuições:", assignmentsRes.error);
             } else {
-                assignmentsCol.innerHTML = assignmentsRes.data.length > 0 ? assignmentsRes.data.map(a => `<div class="routines-list-item"><span>${a.user.full_name}</span></div>`).join('') : `<div class="empty-state">Nenhum usuário atribuído.</div>`;
+                const uniqueAssignments = Array.from(new Map(assignmentsRes.data.map(item => [item.user.full_name, item])).values());
+                assignmentsCol.innerHTML = uniqueAssignments.length > 0 ? uniqueAssignments.map(a => `<div class="routines-list-item"><span>${a.user.full_name}</span></div>`).join('') : `<div class="empty-state">Nenhum usuário atribuído.</div>`;
             }
         }
-
-        // (Adicionar este bloco de código ao seu script principal)
 
         function openNewTaskModal(routineId) {
             document.getElementById('new-task-form').reset();
