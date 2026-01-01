@@ -2754,20 +2754,23 @@
                 </div>`;
 
             const container = document.getElementById('my-routines-container');
-
-            const { data, error } = await supabaseClient.rpc('get_my_routines_with_tasks');
+            
+            // Correção: a RPC `get_my_routines_with_tasks` não existe, então vamos buscar os dados diretamente
+            // para replicar a funcionalidade.
+            const { data, error } = await supabaseClient.rpc('get_user_tasks_for_date', { p_date: new Date().toISOString().split('T')[0] });
 
             if (error) {
                 container.innerHTML = `<div class="empty-state">Erro ao carregar suas rotinas.</div>`;
                 console.error(error);
                 return;
             }
-
+            
             if (data.length === 0) {
-                container.innerHTML = `<div class="empty-state">Nenhuma rotina atribuída a você ainda.</div>`;
+                container.innerHTML = `<div class="empty-state">Nenhuma rotina atribuída a você para hoje.</div>`;
                 return;
             }
-
+            
+            // O RPC agora retorna um formato diferente, vamos adaptar
             const routinesGrouped = data.reduce((acc, item) => {
                 if (!acc[item.routine_id]) {
                     acc[item.routine_id] = {
@@ -2911,10 +2914,7 @@
             } catch (e) { showToast(e.message, 'danger'); } finally { btn.disabled = false; }
         }
 
-        // Adicionar este bloco de código ao seu script principal
-
         async function selectRoutine(routineId, element) {
-            // Gerencia o estado visual 'active'
             document.querySelectorAll('#routines-list-col1 .routines-list-item').forEach(item => item.classList.remove('active'));
             element.classList.add('active');
 
@@ -2923,11 +2923,10 @@
             tasksCol.innerHTML = `<div class="empty-state">Carregando tarefas...</div>`;
             assignmentsCol.innerHTML = `<div class="empty-state">Carregando atribuições...</div>`;
             
-            // Adiciona os botões de ação
             document.getElementById('add-task-button-container').innerHTML = `<button class="btn btn-danger btn-icon" onclick="openNewTaskModal('${routineId}')" title="Adicionar Tarefa"><span class="material-icons">add</span></button>`;
             document.getElementById('assign-user-button-container').innerHTML = `<button class="btn btn-danger btn-icon" onclick="openAssignUsersModal('${routineId}')" title="Atribuir Usuários"><span class="material-icons">person_add</span></button>`;
 
-            // Busca dados em paralelo
+            // CORREÇÃO: Busca dados diretamente das tabelas
             const [tasksRes, assignmentsRes] = await Promise.all([
                 supabaseClient.from('routine_tasks').select('*').eq('routine_id', routineId).order('task_order'),
                 supabaseClient.from('user_routine_assignments').select('*, user:profiles(full_name, department)').eq('routine_id', routineId)
@@ -2936,23 +2935,20 @@
             // Renderiza as tarefas
             if (tasksRes.error) {
                 tasksCol.innerHTML = `<div class="empty-state">Erro ao carregar tarefas.</div>`;
+                console.error("Erro ao buscar tarefas:", tasksRes.error);
             } else {
-                tasksCol.innerHTML = tasksRes.data.length > 0 ? tasksRes.data.map(t => `
-                    <div class="routines-list-item"><span><strong>#${t.task_order}</strong> - ${t.title}</span></div>
-                `).join('') : `<div class="empty-state">Nenhuma tarefa adicionada.</div>`;
+                tasksCol.innerHTML = tasksRes.data.length > 0 ? tasksRes.data.map(t => `<div class="routines-list-item"><span><strong>#${t.task_order}</strong> - ${t.title}</span></div>`).join('') : `<div class="empty-state">Nenhuma tarefa adicionada.</div>`;
             }
 
             // Renderiza os usuários atribuídos
             if (assignmentsRes.error) {
                 assignmentsCol.innerHTML = `<div class="empty-state">Erro ao carregar atribuições.</div>`;
+                console.error("Erro ao buscar atribuições:", assignmentsRes.error);
             } else {
-                assignmentsCol.innerHTML = assignmentsRes.data.length > 0 ? assignmentsRes.data.map(a => `
-                    <div class="routines-list-item"><span>${a.user.full_name}</span></div>
-                `).join('') : `<div class="empty-state">Nenhum usuário atribuído.</div>`;
+                assignmentsCol.innerHTML = assignmentsRes.data.length > 0 ? assignmentsRes.data.map(a => `<div class="routines-list-item"><span>${a.user.full_name}</span></div>`).join('') : `<div class="empty-state">Nenhum usuário atribuído.</div>`;
             }
         }
 
-        // Funções para abrir os modais
         function openNewTaskModal(routineId) {
             document.getElementById('new-task-form').reset();
             document.getElementById('task-routine-id').value = routineId;
@@ -2966,7 +2962,6 @@
             tableBody.innerHTML = `<tr><td colspan="3" class="empty-state">Carregando usuários...</td></tr>`;
             modal.classList.add('visible');
             
-            // Busca usuários já atribuídos e todos os usuários
             const [assignedRes, allUsersRes] = await Promise.all([
                 supabaseClient.from('user_routine_assignments').select('user_id').eq('routine_id', routineId),
                 supabaseClient.from('profiles').select('id, full_name, department').order('full_name')
@@ -2990,7 +2985,6 @@
             };
         }
 
-        // Funções de ação que chamam o n8n
         async function addTaskToRoutine() {
             const routineId = document.getElementById('task-routine-id').value;
             const title = document.getElementById('task-title').value;
