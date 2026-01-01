@@ -2938,7 +2938,7 @@
             document.getElementById('add-task-button-container').innerHTML = `<button class="btn btn-danger btn-icon" onclick="openNewTaskModal('${routineId}')" title="Adicionar Tarefa"><span class="material-icons">add</span></button>`;
             document.getElementById('assign-user-button-container').innerHTML = `<button class="btn btn-danger btn-icon" onclick="openAssignUsersModal('${routineId}')" title="Atribuir Usuários"><span class="material-icons">person_add</span></button>`;
 
-            // CORREÇÃO: Busca dados em paralelo com a sintaxe explícita para o relacionamento
+            // Busca dados em paralelo com a sintaxe explícita para o relacionamento
             const [tasksRes, assignmentsRes] = await Promise.all([
                 supabaseClient.from('routine_tasks').select('*').eq('routine_id', routineId).order('task_order'),
                 supabaseClient.from('user_routine_assignments').select('*, user:user_id(full_name, department)').eq('routine_id', routineId)
@@ -2961,6 +2961,69 @@
             }
         }
 
+        // (Adicionar este bloco de código ao seu script principal)
+
+        function openNewTaskModal(routineId) {
+            document.getElementById('new-task-form').reset();
+            document.getElementById('task-routine-id').value = routineId;
+            document.getElementById('new-task-modal').classList.add('visible');
+        }
+
+        async function openAssignUsersModal(routineId) {
+            document.getElementById('assign-routine-id').value = routineId;
+            const modal = document.getElementById('assign-users-modal');
+            const tableBody = document.getElementById('assign-users-table-body');
+            tableBody.innerHTML = `<tr><td colspan="3" class="empty-state">Carregando usuários...</td></tr>`;
+            
+            selectedAssignmentDates = [];
+            renderSelectedDates();
+            
+            modal.classList.add('visible');
+
+            const addDateBtn = document.getElementById('add-date-btn');
+            if (addDateBtn && !addDateBtn.dataset.listener) {
+                addDateBtn.addEventListener('click', addAssignmentDate);
+                addDateBtn.dataset.listener = 'true';
+            }
+            
+            try {
+                // Busca usuários já atribuídos e todos os usuários em paralelo
+                const [assignedRes, allUsersRes] = await Promise.all([
+                    supabaseClient.from('user_routine_assignments').select('user_id').eq('routine_id', routineId).limit(1000), // Consider pagination for large user bases
+                    supabaseClient.from('profiles').select('id, full_name, department').order('full_name')
+                ]);
+
+                if (assignedRes.error || allUsersRes.error) {
+                    throw new Error('Falha ao carregar dados de usuários.');
+                }
+                
+                const assignedUserIds = new Set(assignedRes.data.map(a => a.user_id));
+                
+                tableBody.innerHTML = allUsersRes.data.map(user => {
+                    const isChecked = assignedUserIds.has(user.id);
+                    return `
+                        <tr>
+                            <td><input type="checkbox" class="user-assign-checkbox" value="${user.id}" ${isChecked ? 'checked' : ''}></td>
+                            <td>${user.full_name}</td>
+                            <td>${user.department || '-'}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                // Lógica para o checkbox "selecionar todos"
+                const selectAllCheckbox = document.getElementById('select-all-users-routine');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.onchange = (e) => {
+                        document.querySelectorAll('.user-assign-checkbox').forEach(cb => cb.checked = e.target.checked);
+                    };
+                }
+
+            } catch (error) {
+                console.error(error);
+                tableBody.innerHTML = `<tr><td colspan="3" class="empty-state" style="color:var(--color-danger);">${error.message}</td></tr>`;
+            }
+        }
+        
         function renderSelectedDates() {
             const listContainer = document.getElementById('selected-dates-list');
             if (!listContainer) return;
@@ -2999,45 +3062,6 @@
             renderSelectedDates();
         }
 
-        async function openAssignUsersModal(routineId) {
-            document.getElementById('assign-routine-id').value = routineId;
-            const modal = document.getElementById('assign-users-modal');
-            const tableBody = document.getElementById('assign-users-table-body');
-            tableBody.innerHTML = `<tr><td colspan="3" class="empty-state">Carregando usuários...</td></tr>`;
-            
-            selectedAssignmentDates = [];
-            renderSelectedDates();
-
-            modal.classList.add('visible');
-            
-            const addDateBtn = document.getElementById('add-date-btn');
-            if (addDateBtn && !addDateBtn.dataset.listener) {
-                addDateBtn.addEventListener('click', addAssignmentDate);
-                addDateBtn.dataset.listener = 'true';
-            }
-            
-            const [assignedRes, allUsersRes] = await Promise.all([
-                supabaseClient.from('user_routine_assignments').select('user_id').eq('routine_id', routineId),
-                supabaseClient.from('profiles').select('id, full_name, department').order('full_name')
-            ]);
-            
-            const assignedUserIds = assignedRes.data ? new Set(assignedRes.data.map(a => a.user_id)) : new Set();
-            
-            tableBody.innerHTML = allUsersRes.data.map(user => {
-                const isChecked = assignedUserIds.has(user.id);
-                return `
-                    <tr>
-                        <td><input type="checkbox" class="user-assign-checkbox" value="${user.id}" ${isChecked ? 'checked' : ''}></td>
-                        <td>${user.full_name}</td>
-                        <td>${user.department || '-'}</td>
-                    </tr>
-                `;
-            }).join('');
-
-            document.getElementById('select-all-users-routine').onchange = (e) => {
-                document.querySelectorAll('.user-assign-checkbox').forEach(cb => cb.checked = e.target.checked);
-            };
-        }
 
         async function addTaskToRoutine() {
             const routineId = document.getElementById('task-routine-id').value;
