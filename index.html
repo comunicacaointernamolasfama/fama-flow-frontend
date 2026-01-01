@@ -2623,7 +2623,7 @@
                 
                 const actionsHTML = `
                     <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;" onclick="openRequestDetailsModal('${req.id}')">Ver Detalhes</button>
-                    ${req.status === 'Pendente' ? `
+                    ${req.status === 'pending' ? `
                         <span data-request-id="${req.id}">
                             <button class="btn btn-icon" title="Aprovar" onclick="handleRequestAction('approve', '${req.id}')"><span class="material-icons" style="color:var(--color-success);">check_circle</span></button>
                             <button class="btn btn-icon" title="Reprovar" onclick="handleRequestAction('reject', '${req.id}')"><span class="material-icons" style="color:var(--color-danger);">cancel</span></button>
