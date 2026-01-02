@@ -2787,7 +2787,10 @@
                 </div>
                 <div class="grid" style="grid-template-columns: 350px 1fr; gap: 2rem; align-items: flex-start;">
                     <div class="card" id="calendar-container" style="padding: 1rem;"></div>
-                    <div class="card" id="tasks-list-container"></div>
+                    <div class="card">
+                        <h3 id="tasks-list-title" style="margin-top:0; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; margin-bottom: 1rem;">Tarefas do Dia</h3>
+                        <div id="tasks-list-container"></div>
+                    </div>
                 </div>
             `;
             
@@ -2883,62 +2886,69 @@
             fetchAndRenderTasks(dateString);
         }
 
-        async function fetchAndRenderTasks(dateString) {
-            const container = document.getElementById('tasks-list-container');
-            if (!container) return;
-
-            const formattedDate = new Date(dateString + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            container.innerHTML = `<h3>Tarefas para ${formattedDate}</h3><div class="empty-state">Carregando tarefas...</div>`;
+        async function fetchAndRenderTasks(date) {
+            const tasksContainer = document.getElementById('tasks-list-container');
+            const titleElement = document.getElementById('tasks-list-title');
+            if (!tasksContainer || !titleElement) return;
+            tasksContainer.innerHTML = `<div class="empty-state">Carregando tarefas...</div>`;
             
-            const { data: tasks, error } = await supabaseClient.rpc('get_user_tasks_for_date', { p_date: dateString });
+            const dateObj = new Date(date + 'T12:00:00'); 
+            const formattedDate = dateObj.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            titleElement.textContent = `Tarefas para ${formattedDate}`;
+
+            const { data: tasks, error } = await supabaseClient.rpc('get_user_tasks_for_date', { p_date: date });
 
             if (error) {
-                container.innerHTML = `<h3>Tarefas para ${formattedDate}</h3><div class="empty-state" style="color:var(--color-danger);">Erro ao carregar suas tarefas.</div>`;
-                console.error(error);
+                console.error('Erro ao buscar tarefas:', error);
+                tasksContainer.innerHTML = `<div class="empty-state" style="color: var(--color-danger)">Falha ao carregar tarefas.</div>`;
                 return;
             }
 
-            if (!tasks || tasks.length === 0) {
-                container.innerHTML = `<h3>Tarefas para ${formattedDate}</h3><div class="empty-state">Nenhuma tarefa atribuída para este dia.</div>`;
+            if (tasks.length === 0) {
+                tasksContainer.innerHTML = `<div class="empty-state">Nenhuma tarefa atribuída a você para este dia.</div>`;
                 return;
             }
 
             const tasksByRoutine = tasks.reduce((acc, task) => {
-                if (!acc[task.routine_id]) {
-                    acc[task.routine_id] = { title: task.routine_title, tasks: [] };
+                if (!acc[task.routine_title]) {
+                    acc[task.routine_title] = [];
                 }
-                acc[task.routine_id].tasks.push(task);
+                acc[task.routine_title].push(task);
                 return acc;
             }, {});
 
-            console.log(tasksByRoutine); // For debugging purposes
+            tasksContainer.innerHTML = Object.keys(tasksByRoutine).map(routineTitle => {
+                const routineTasks = tasksByRoutine[routineTitle];
+                const completedCount = routineTasks.filter(t => t.status === 'completed').length;
+                const totalCount = routineTasks.length;
 
-            let tasksHTML = Object.values(tasksByRoutine).map(routine => {
-                return `
-                    <div class="routine-group">
-                        <h4>${routine.title}</h4>
-                        ${routine.tasks.map(task => {
-                            const isCompleted = !!task.completed_at;
-                            return `
-                            <div class="task-item ${isCompleted ? 'completed' : ''}">
-                                <label class="custom-checkbox">
-                                    <input type="checkbox" onchange="completeTask(${task.assignment_id}, this)" ${isCompleted ? 'checked disabled' : ''}>
-                                    <span class="checkbox-box"><span class="material-icons">check</span></span>
-                                    ${task.task_title}
-                                </label>
+                const tasksHTML = routineTasks.map(task => {
+                    const isCompleted = task.status === 'completed';
+                    return `
+                        <div class="task-list-item" style="padding: 0.75rem 0; border-bottom: 1px dashed var(--color-border); display: flex; align-items: center; opacity: ${isCompleted ? 0.6 : 1};">
+                            <input type="checkbox" onchange="completeTask(${task.task_instance_id}, this)" ${isCompleted ? 'checked disabled' : ''} style="margin-right: 1rem; width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;">
+                            <div class="task-info">
+                                <h5 style="margin:0; font-size: 0.95rem; text-decoration: ${isCompleted ? 'line-through' : 'none'}; color: ${isCompleted ? 'var(--color-text-secondary)' : 'var(--color-text-primary)'};">${task.task_title}</h5>
+                                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin: 0;">${task.task_description || ''}</p>
                             </div>
-                            `;
-                        }).join('')}
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="routine-group" style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+                            <h4 style="margin:0; font-size: 1rem; color: var(--color-brand-primary);">${routineTitle}</h4>
+                            <span class="score-pill ${completedCount === totalCount ? 'good' : 'med'}">${completedCount}/${totalCount}</span>
+                        </div>
+                        ${tasksHTML}
                     </div>
                 `;
             }).join('');
-            
-            container.innerHTML = `<h3>Tarefas para ${formattedDate}</h3>` + tasksHTML;
         }
 
         async function completeTask(taskInstanceId, checkboxElement) {
             checkboxElement.disabled = true;
-            const taskItem = checkboxElement.closest('.task-item');
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 const response = await fetch(N8N_COMPLETE_TASK_URL, {
@@ -2949,22 +2959,19 @@
                 if (!response.ok) throw new Error('Falha ao concluir tarefa.');
                 
                 showToast('Tarefa concluída!', 'success');
-                if (taskItem) taskItem.classList.add('completed');
                 
-                // Re-render calendar to update status indicator
-                await renderCalendar(routineCurrentDate.getFullYear(), routineCurrentDate.getMonth());
-                
-                // Re-select the current day to maintain focus
                 const activeDate = document.querySelector('.calendar-day.active')?.dataset.date;
-                if (activeDate) {
-                    const newActiveDay = document.querySelector(`.calendar-day[data-date="${activeDate}"]`);
-                    if (newActiveDay) newActiveDay.classList.add('active');
+                if(activeDate) {
+                   await renderCalendar(routineCurrentDate.getFullYear(), routineCurrentDate.getMonth());
+                   const dayEl = document.querySelector(`.calendar-day[data-date="${activeDate}"]`);
+                   if(dayEl) dayEl.classList.add('active');
+                   fetchAndRenderTasks(activeDate);
                 }
 
             } catch (e) {
                 showToast(e.message, 'danger');
                 checkboxElement.disabled = false;
-                checkboxElement.checked = false; // Revert checkbox on error
+                checkboxElement.checked = false; 
             }
         }
 
@@ -3057,13 +3064,11 @@
             document.getElementById('add-task-button-container').innerHTML = `<button class="btn btn-danger btn-icon" onclick="openNewTaskModal('${routineId}')" title="Adicionar Tarefa"><span class="material-icons">add</span></button>`;
             document.getElementById('assign-user-button-container').innerHTML = `<button class="btn btn-danger btn-icon" onclick="openAssignUsersModal('${routineId}')" title="Atribuir Usuários"><span class="material-icons">person_add</span></button>`;
 
-            // Busca dados em paralelo com a sintaxe explícita para o relacionamento
             const [tasksRes, assignmentsRes] = await Promise.all([
                 supabaseClient.from('routine_tasks').select('*').eq('routine_id', routineId).order('task_order'),
                 supabaseClient.from('user_routine_assignments').select('*, user:user_id(full_name, department)').eq('routine_id', routineId)
             ]);
 
-            // Renderiza as tarefas
             if (tasksRes.error) {
                 tasksCol.innerHTML = `<div class="empty-state">Erro ao carregar tarefas.</div>`;
                 console.error("Erro ao buscar tarefas:", tasksRes.error);
@@ -3071,7 +3076,6 @@
                 tasksCol.innerHTML = tasksRes.data.length > 0 ? tasksRes.data.map(t => `<div class="routines-list-item"><span><strong>#${t.task_order}</strong> - ${t.title}</span></div>`).join('') : `<div class="empty-state">Nenhuma tarefa adicionada.</div>`;
             }
 
-            // Renderiza os usuários atribuídos
             if (assignmentsRes.error) {
                 assignmentsCol.innerHTML = `<div class="empty-state">Erro ao carregar atribuições.</div>`;
                 console.error("Erro ao buscar atribuições:", assignmentsRes.error);
@@ -3105,9 +3109,8 @@
             }
             
             try {
-                // Busca usuários já atribuídos e todos os usuários em paralelo
                 const [assignedRes, allUsersRes] = await Promise.all([
-                    supabaseClient.from('user_routine_assignments').select('user_id').eq('routine_id', routineId).limit(1000), // Consider pagination for large user bases
+                    supabaseClient.from('user_routine_assignments').select('user_id').eq('routine_id', routineId).limit(1000), 
                     supabaseClient.from('profiles').select('id, full_name, department').order('full_name')
                 ]);
 
@@ -3128,7 +3131,6 @@
                     `;
                 }).join('');
 
-                // Lógica para o checkbox "selecionar todos"
                 const selectAllCheckbox = document.getElementById('select-all-users-routine');
                 if (selectAllCheckbox) {
                     selectAllCheckbox.onchange = (e) => {
@@ -3170,16 +3172,15 @@
                 return;
             }
             selectedAssignmentDates.push(dateValue);
-            selectedAssignmentDates.sort(); // Keep the list sorted
+            selectedAssignmentDates.sort();
             renderSelectedDates();
-            dateInput.value = ''; // Clear input after adding
+            dateInput.value = '';
         }
 
         window.removeAssignmentDate = (dateToRemove) => {
             selectedAssignmentDates = selectedAssignmentDates.filter(date => date !== dateToRemove);
             renderSelectedDates();
         }
-
 
         async function addTaskToRoutine() {
             const routineId = document.getElementById('task-routine-id').value;
@@ -3246,7 +3247,6 @@
             }
         }
 
-        // Conectar os botões de salvar dos modais às funções de ação
         document.getElementById('btn-create-task')?.addEventListener('click', addTaskToRoutine);
         document.getElementById('btn-assign-users')?.addEventListener('click', assignRoutineToUsers);
 
