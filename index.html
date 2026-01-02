@@ -389,24 +389,29 @@
         .routines-list-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-radius: 8px; cursor: pointer; margin-bottom: 0.25rem; }
         .routines-list-item:hover { background-color: var(--color-background); }
         .routines-list-item.active { background-color: var(--color-info-bg); color: var(--color-info); font-weight: 600; }
-
+        
         /* --- ROUTINES CALENDAR STYLES --- */
+        #my-routines-page .grid { grid-template-columns: 350px 1fr; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding: 0 0.5rem; }
+        .calendar-header h3 { margin: 0; text-transform: capitalize; font-size: 1.1rem; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; }
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .calendar-header h3 { margin: 0; text-transform: capitalize; }
-        .calendar-day, .calendar-weekday { display: flex; align-items: center; justify-content: center; height: 40px; text-align: center; position: relative;}
-        .calendar-weekday { font-weight: 600; color: var(--color-text-secondary); font-size: 0.8rem; }
-        .calendar-day:not(.empty) { cursor: pointer; border-radius: 50%; transition: background-color 0.2s, color 0.2s; }
+        .calendar-day, .calendar-weekday { display: flex; align-items: center; justify-content: center; height: 40px; text-align: center; position: relative; }
+        .calendar-weekday { font-weight: 600; color: var(--color-text-secondary); font-size: 0.8rem; text-transform: uppercase; }
+        .calendar-day:not(.empty) { cursor: pointer; border-radius: 50%; transition: background-color 0.2s, color 0.2s; border: 2px solid transparent; }
         .calendar-day:not(.empty):hover { background-color: var(--color-background); }
-        .calendar-day.today { font-weight: 700; border: 2px solid var(--color-border); }
+        .calendar-day.today span { font-weight: 700; color: var(--color-brand-primary); }
         .calendar-day.active { background-color: var(--color-brand-primary); color: white; border-color: var(--color-brand-primary); }
-        .task-indicator { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; border-radius: 50%; }
-        .task-indicator.pending { background-color: var(--color-warning); }
-        .task-indicator.completed { background-color: transparent; width: auto; height: auto; }
+        .calendar-day.active span { color: white !important; }
+        .task-indicator { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); }
+        .task-indicator.pending { width: 6px; height: 6px; border-radius: 50%; background-color: var(--color-warning); }
         .task-indicator.completed .material-icons { font-size: 14px; color: var(--color-success); }
+        .day-completed { border-color: var(--color-success-bg); }
+        .day-pending:not(.active) { font-weight: 600; }
         .active .task-indicator { display: none; }
+        #tasks-list-container h3 { margin-top: 0; }
         .routine-group { margin-bottom: 1.5rem; }
-        .routine-group h4 { margin: 0 0 0.75rem 0; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); }
+        .routine-group:last-child { margin-bottom: 0; }
+        .routine-group h4 { margin: 0 0 0.75rem 0; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); font-size: 1rem; }
         .task-item { padding: 0.5rem 0; }
         .task-item.completed label { text-decoration: line-through; color: var(--color-text-secondary); }
 
@@ -2780,13 +2785,13 @@
                 <div class="page-header">
                     <div><h1>Minhas Rotinas</h1><p>Organize e acompanhe suas tarefas diárias.</p></div>
                 </div>
-                <div class="grid grid-cols-3" style="gap: 2rem; align-items: flex-start;">
-                    <div class="card" id="calendar-container" style="grid-column: span 1;"></div>
-                    <div class="card" id="tasks-list-container" style="grid-column: span 2;"></div>
+                <div class="grid" style="grid-template-columns: 350px 1fr; gap: 2rem; align-items: flex-start;">
+                    <div class="card" id="calendar-container" style="padding: 1rem;"></div>
+                    <div class="card" id="tasks-list-container"></div>
                 </div>
             `;
             
-            routineCurrentDate = new Date(); // Reset to today when page loads
+            routineCurrentDate = new Date();
             await renderCalendar(routineCurrentDate.getFullYear(), routineCurrentDate.getMonth());
             selectDate(new Date().toISOString().split('T')[0]);
         }
@@ -2802,7 +2807,7 @@
             });
 
             if (error) {
-                container.innerHTML = '<div class="empty-state" style="color: var(--color-danger)">Erro ao carregar dados do calendário.</div>';
+                container.innerHTML = '<div class="empty-state" style="color: var(--color-danger)">Erro ao carregar dados.</div>';
                 console.error(error);
                 return;
             }
@@ -2812,7 +2817,7 @@
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
             const daysInMonth = lastDay.getDate();
-            const startDayOfWeek = firstDay.getDay(); // 0 = Sunday
+            const startDayOfWeek = firstDay.getDay();
 
             const monthName = firstDay.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
             
@@ -2836,16 +2841,21 @@
                 const isToday = dateString === new Date().toISOString().split('T')[0];
                 const status = statusMap.get(dateString);
 
+                let dayClass = 'calendar-day';
+                if (isToday) dayClass += ' today';
+                
                 let indicator = '';
                 if (status) {
-                    if (status.has_pending) {
-                        indicator = '<div class="task-indicator pending"></div>';
-                    } else if (status.all_completed) {
+                    if (status.all_completed) {
+                        dayClass += ' day-completed';
                         indicator = '<div class="task-indicator completed"><span class="material-icons">check</span></div>';
+                    } else if (status.has_pending) {
+                        dayClass += ' day-pending';
+                        indicator = '<div class="task-indicator pending"></div>';
                     }
                 }
 
-                html += `<div class="calendar-day ${isToday ? 'today' : ''}" data-date="${dateString}" onclick="selectDate('${dateString}')">
+                html += `<div class="${dayClass}" data-date="${dateString}" onclick="selectDate('${dateString}')">
                             <span>${day}</span>
                             ${indicator}
                          </div>`;
@@ -2863,7 +2873,7 @@
                 renderCalendar(routineCurrentDate.getFullYear(), routineCurrentDate.getMonth());
             };
         }
-        
+
         function selectDate(dateString) {
             document.querySelectorAll('.calendar-day.active').forEach(el => el.classList.remove('active'));
             const selectedDay = document.querySelector(`.calendar-day[data-date="${dateString}"]`);
@@ -2893,7 +2903,7 @@
                 return;
             }
 
-            const routines = tasks.reduce((acc, task) => {
+            const tasksByRoutine = tasks.reduce((acc, task) => {
                 if (!acc[task.routine_id]) {
                     acc[task.routine_id] = { title: task.routine_title, tasks: [] };
                 }
@@ -2901,7 +2911,9 @@
                 return acc;
             }, {});
 
-            let tasksHTML = Object.values(routines).map(routine => {
+            console.log(tasksByRoutine); // For debugging purposes
+
+            let tasksHTML = Object.values(tasksByRoutine).map(routine => {
                 return `
                     <div class="routine-group">
                         <h4>${routine.title}</h4>
@@ -2941,21 +2953,20 @@
                 
                 // Re-render calendar to update status indicator
                 await renderCalendar(routineCurrentDate.getFullYear(), routineCurrentDate.getMonth());
-                // Re-select the current day to maintain focus, important after re-render
+                
+                // Re-select the current day to maintain focus
                 const activeDate = document.querySelector('.calendar-day.active')?.dataset.date;
-                if(activeDate) {
+                if (activeDate) {
                     const newActiveDay = document.querySelector(`.calendar-day[data-date="${activeDate}"]`);
-                    if(newActiveDay) newActiveDay.classList.add('active');
+                    if (newActiveDay) newActiveDay.classList.add('active');
                 }
-
 
             } catch (e) {
                 showToast(e.message, 'danger');
                 checkboxElement.disabled = false;
-                checkboxElement.checked = false; // Revert on error
+                checkboxElement.checked = false; // Revert checkbox on error
             }
         }
-
 
         async function loadManageRoutinesPage() {
             const page = document.getElementById('manage-routines-page');
