@@ -381,13 +381,6 @@
         textarea.input-field { resize: vertical; min-height: 100px; }
 
         /* --- ROUTINES MODULE STYLES --- */
-        .task-list-item { display: flex; align-items: center; gap: 1rem; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; background-color: var(--color-background); }
-        .task-list-item.completed { text-decoration: line-through; color: var(--color-text-secondary); }
-        .task-list-item.completed .btn { background-color: var(--color-success); }
-        .task-list-item .task-info { flex-grow: 1; }
-        .task-list-item .task-info h4 { margin: 0 0 0.25rem 0; }
-        .task-list-item .task-info p { margin: 0; font-size: 0.9rem; color: var(--color-text-secondary); }
-        
         .manage-routines-layout { display: grid; grid-template-columns: 300px 1fr 300px; gap: 1.5rem; height: calc(100vh - 10rem); }
         .routines-column-card { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
         .routines-column-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
@@ -396,6 +389,27 @@
         .routines-list-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-radius: 8px; cursor: pointer; margin-bottom: 0.25rem; }
         .routines-list-item:hover { background-color: var(--color-background); }
         .routines-list-item.active { background-color: var(--color-info-bg); color: var(--color-info); font-weight: 600; }
+
+        /* --- ROUTINES CALENDAR STYLES --- */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .calendar-header h3 { margin: 0; text-transform: capitalize; }
+        .calendar-day, .calendar-weekday { display: flex; align-items: center; justify-content: center; height: 40px; text-align: center; position: relative;}
+        .calendar-weekday { font-weight: 600; color: var(--color-text-secondary); font-size: 0.8rem; }
+        .calendar-day:not(.empty) { cursor: pointer; border-radius: 50%; transition: background-color 0.2s, color 0.2s; }
+        .calendar-day:not(.empty):hover { background-color: var(--color-background); }
+        .calendar-day.today { font-weight: 700; border: 2px solid var(--color-border); }
+        .calendar-day.active { background-color: var(--color-brand-primary); color: white; border-color: var(--color-brand-primary); }
+        .task-indicator { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; border-radius: 50%; }
+        .task-indicator.pending { background-color: var(--color-warning); }
+        .task-indicator.completed { background-color: transparent; width: auto; height: auto; }
+        .task-indicator.completed .material-icons { font-size: 14px; color: var(--color-success); }
+        .active .task-indicator { display: none; }
+        .routine-group { margin-bottom: 1.5rem; }
+        .routine-group h4 { margin: 0 0 0.75rem 0; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); }
+        .task-item { padding: 0.5rem 0; }
+        .task-item.completed label { text-decoration: line-through; color: var(--color-text-secondary); }
+
     </style>
 </head>
 <body>
@@ -638,6 +652,8 @@
         let selectedFile = null;
         let currentRequestType = null; // Used for the new requests module
         let selectedAssignmentDates = [];
+        let routineCurrentDate = new Date();
+
 
         const root = document.getElementById('root');
         const themeToggleBtn = document.getElementById('theme-toggle');
@@ -2762,49 +2778,155 @@
             const page = document.getElementById('my-routines-page');
             page.innerHTML = `
                 <div class="page-header">
-                    <div><h1>Minhas Rotinas</h1><p>Suas tarefas diárias, semanais e mensais para hoje.</p></div>
+                    <div><h1>Minhas Rotinas</h1><p>Organize e acompanhe suas tarefas diárias.</p></div>
                 </div>
-                <div id="my-routines-container">
-                    <div class="empty-state">Carregando suas rotinas...</div>
-                </div>`;
+                <div class="grid grid-cols-3" style="gap: 2rem; align-items: flex-start;">
+                    <div class="card" id="calendar-container" style="grid-column: span 1;"></div>
+                    <div class="card" id="tasks-list-container" style="grid-column: span 2;"></div>
+                </div>
+            `;
+            
+            routineCurrentDate = new Date(); // Reset to today when page loads
+            await renderCalendar(routineCurrentDate.getFullYear(), routineCurrentDate.getMonth());
+            selectDate(new Date().toISOString().split('T')[0]);
+        }
 
-            const container = document.getElementById('my-routines-container');
+        async function renderCalendar(year, month) {
+            const container = document.getElementById('calendar-container');
+            if (!container) return;
+            container.innerHTML = '<div class="empty-state">Carregando calendário...</div>';
 
-            const { data: tasks, error } = await supabaseClient.rpc('get_user_tasks_for_date', { p_date: new Date().toISOString().split('T')[0] });
+            const { data: tasksStatus, error } = await supabaseClient.rpc('get_tasks_status_for_month', {
+                p_year: year,
+                p_month: month + 1
+            });
 
             if (error) {
-                container.innerHTML = `<div class="empty-state">Erro ao carregar suas rotinas.</div>`;
+                container.innerHTML = '<div class="empty-state" style="color: var(--color-danger)">Erro ao carregar dados do calendário.</div>';
+                console.error(error);
+                return;
+            }
+
+            const statusMap = new Map((tasksStatus || []).map(s => [s.date, { has_pending: s.has_pending, all_completed: s.all_completed }]));
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDayOfWeek = firstDay.getDay(); // 0 = Sunday
+
+            const monthName = firstDay.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+            
+            let html = `
+                <div class="calendar-header">
+                    <button class="btn btn-icon" id="prev-month-btn"><span class="material-icons">chevron_left</span></button>
+                    <h3>${monthName}</h3>
+                    <button class="btn btn-icon" id="next-month-btn"><span class="material-icons">chevron_right</span></button>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-weekday">D</div><div class="calendar-weekday">S</div><div class="calendar-weekday">T</div><div class="calendar-weekday">Q</div><div class="calendar-weekday">Q</div><div class="calendar-weekday">S</div><div class="calendar-weekday">S</div>
+            `;
+
+            for (let i = 0; i < startDayOfWeek; i++) {
+                html += `<div class="calendar-day empty"></div>`;
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dateString = date.toISOString().split('T')[0];
+                const isToday = dateString === new Date().toISOString().split('T')[0];
+                const status = statusMap.get(dateString);
+
+                let indicator = '';
+                if (status) {
+                    if (status.has_pending) {
+                        indicator = '<div class="task-indicator pending"></div>';
+                    } else if (status.all_completed) {
+                        indicator = '<div class="task-indicator completed"><span class="material-icons">check</span></div>';
+                    }
+                }
+
+                html += `<div class="calendar-day ${isToday ? 'today' : ''}" data-date="${dateString}" onclick="selectDate('${dateString}')">
+                            <span>${day}</span>
+                            ${indicator}
+                         </div>`;
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+
+            document.getElementById('prev-month-btn').onclick = () => {
+                routineCurrentDate.setMonth(routineCurrentDate.getMonth() - 1);
+                renderCalendar(routineCurrentDate.getFullYear(), routineCurrentDate.getMonth());
+            };
+            document.getElementById('next-month-btn').onclick = () => {
+                routineCurrentDate.setMonth(routineCurrentDate.getMonth() + 1);
+                renderCalendar(routineCurrentDate.getFullYear(), routineCurrentDate.getMonth());
+            };
+        }
+        
+        function selectDate(dateString) {
+            document.querySelectorAll('.calendar-day.active').forEach(el => el.classList.remove('active'));
+            const selectedDay = document.querySelector(`.calendar-day[data-date="${dateString}"]`);
+            if (selectedDay) {
+                selectedDay.classList.add('active');
+            }
+            fetchAndRenderTasks(dateString);
+        }
+
+        async function fetchAndRenderTasks(dateString) {
+            const container = document.getElementById('tasks-list-container');
+            if (!container) return;
+
+            const formattedDate = new Date(dateString + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            container.innerHTML = `<h3>Tarefas para ${formattedDate}</h3><div class="empty-state">Carregando tarefas...</div>`;
+            
+            const { data: tasks, error } = await supabaseClient.rpc('get_user_tasks_for_date', { p_date: dateString });
+
+            if (error) {
+                container.innerHTML = `<h3>Tarefas para ${formattedDate}</h3><div class="empty-state" style="color:var(--color-danger);">Erro ao carregar suas tarefas.</div>`;
                 console.error(error);
                 return;
             }
 
             if (!tasks || tasks.length === 0) {
-                container.innerHTML = `<div class="empty-state">Nenhuma tarefa atribuída a você para hoje.</div>`;
+                container.innerHTML = `<h3>Tarefas para ${formattedDate}</h3><div class="empty-state">Nenhuma tarefa atribuída para este dia.</div>`;
                 return;
             }
 
-            container.innerHTML = `<div class="card">${tasks.map(task => {
-                const isCompleted = !!task.completed_at;
-                const taskInstanceId = task.assignment_id; 
+            const routines = tasks.reduce((acc, task) => {
+                if (!acc[task.routine_id]) {
+                    acc[task.routine_id] = { title: task.routine_title, tasks: [] };
+                }
+                acc[task.routine_id].tasks.push(task);
+                return acc;
+            }, {});
 
+            let tasksHTML = Object.values(routines).map(routine => {
                 return `
-                    <div class="user-info-cell" style="padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; background-color: ${isCompleted ? 'var(--read-bg)' : 'var(--color-background)'}; opacity: ${isCompleted ? 0.6 : 1};">
-                        <div style="flex-grow: 1;">
-                            <div class="user-name" style="text-decoration: ${isCompleted ? 'line-through' : 'none'};">${task.task_title}</div>
-                            <div class="user-email">${task.routine_title}</div>
-                        </div>
-                        <button class="btn ${isCompleted ? 'btn-secondary' : 'btn-success'}" ${isCompleted ? 'disabled' : ''} onclick="completeTask(${taskInstanceId}, this)">
-                            ${isCompleted ? 'Concluída' : 'Concluir'}
-                        </button>
+                    <div class="routine-group">
+                        <h4>${routine.title}</h4>
+                        ${routine.tasks.map(task => {
+                            const isCompleted = !!task.completed_at;
+                            return `
+                            <div class="task-item ${isCompleted ? 'completed' : ''}">
+                                <label class="custom-checkbox">
+                                    <input type="checkbox" onchange="completeTask(${task.assignment_id}, this)" ${isCompleted ? 'checked disabled' : ''}>
+                                    <span class="checkbox-box"><span class="material-icons">check</span></span>
+                                    ${task.task_title}
+                                </label>
+                            </div>
+                            `;
+                        }).join('')}
                     </div>
                 `;
-            }).join('')}</div>`;
+            }).join('');
+            
+            container.innerHTML = `<h3>Tarefas para ${formattedDate}</h3>` + tasksHTML;
         }
 
-
-        async function completeTask(taskInstanceId, buttonElement) {
-            buttonElement.disabled = true;
-            buttonElement.textContent = 'Concluindo...';
+        async function completeTask(taskInstanceId, checkboxElement) {
+            checkboxElement.disabled = true;
+            const taskItem = checkboxElement.closest('.task-item');
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 const response = await fetch(N8N_COMPLETE_TASK_URL, {
@@ -2813,20 +2935,24 @@
                     body: JSON.stringify({ id: taskInstanceId })
                 });
                 if (!response.ok) throw new Error('Falha ao concluir tarefa.');
-                showToast('Tarefa concluída!', 'success');
                 
-                const taskContainer = buttonElement.parentElement;
-                taskContainer.style.opacity = 0.6;
-                taskContainer.style.backgroundColor = 'var(--read-bg)';
-                taskContainer.querySelector('.user-name').style.textDecoration = 'line-through';
-                buttonElement.textContent = 'Concluída';
-                buttonElement.classList.remove('btn-success');
-                buttonElement.classList.add('btn-secondary');
+                showToast('Tarefa concluída!', 'success');
+                if (taskItem) taskItem.classList.add('completed');
+                
+                // Re-render calendar to update status indicator
+                await renderCalendar(routineCurrentDate.getFullYear(), routineCurrentDate.getMonth());
+                // Re-select the current day to maintain focus, important after re-render
+                const activeDate = document.querySelector('.calendar-day.active')?.dataset.date;
+                if(activeDate) {
+                    const newActiveDay = document.querySelector(`.calendar-day[data-date="${activeDate}"]`);
+                    if(newActiveDay) newActiveDay.classList.add('active');
+                }
+
 
             } catch (e) {
                 showToast(e.message, 'danger');
-                buttonElement.disabled = false;
-                buttonElement.textContent = 'Concluir';
+                checkboxElement.disabled = false;
+                checkboxElement.checked = false; // Revert on error
             }
         }
 
