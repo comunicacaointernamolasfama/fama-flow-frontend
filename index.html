@@ -1361,35 +1361,6 @@
             addConditionalFieldListeners();
         }
 
-        function addConditionalFieldListeners() {
-            // Para Requisição de Contratação
-            window.toggleSubstituicaoFields = () => {
-                const fields = document.getElementById('substituicao-fields');
-                const isSubstituicao = document.querySelector('input[name="motivo_contratacao"][value="substituicao"]').checked;
-                fields.style.display = isSubstituicao ? 'block' : 'none';
-            };
-            window.toggleCandidatoInterno = () => {
-                const field = document.getElementById('candidato-interno-nome');
-                const isSim = document.querySelector('input[name="candidato_interno"][value="sim"]').checked;
-                field.style.display = isSim ? 'block' : 'none';
-            };
-            const urgenciaDataInput = document.querySelector('input[name="urgencia_data"]');
-            if(urgenciaDataInput) {
-                document.querySelectorAll('input[name="urgencia"]').forEach(radio => {
-                    radio.addEventListener('change', (e) => {
-                        urgenciaDataInput.style.display = e.target.value === 'ate_data' ? 'block' : 'none';
-                    });
-                });
-            }
-
-            // Para Requisição de Treinamento
-            window.toggleParticipantes = () => {
-                const group = document.getElementById('participantes-group');
-                const isEquipe = document.querySelector('input[name="participacao_tipo"][value="equipe"]').checked;
-                group.style.display = isEquipe ? 'block' : 'none';
-            };
-        }
-
         async function submitRequest(event) {
             event.preventDefault();
             const btn = event.target;
@@ -2600,35 +2571,6 @@
         themeToggleBtn.addEventListener('click', () => applyTheme(body.classList.contains('dark-mode') ? 'light' : 'dark'));
         function applyTheme(theme) { body.classList.toggle('dark-mode', theme === 'dark'); localStorage.setItem('theme', theme); }
 
-        function addConditionalFieldListeners() {
-            // Para Requisição de Contratação
-            window.toggleSubstituicaoFields = () => {
-                const fields = document.getElementById('substituicao-fields');
-                const isSubstituicao = document.querySelector('input[name="motivo_contratacao"][value="substituicao"]').checked;
-                fields.style.display = isSubstituicao ? 'block' : 'none';
-            };
-            window.toggleCandidatoInterno = () => {
-                const field = document.getElementById('candidato-interno-nome');
-                const isSim = document.querySelector('input[name="candidato_interno"][value="sim"]').checked;
-                field.style.display = isSim ? 'block' : 'none';
-            };
-            const urgenciaDataInput = document.querySelector('input[name="urgencia_data"]');
-            if(urgenciaDataInput) {
-                document.querySelectorAll('input[name="urgencia"]').forEach(radio => {
-                    radio.addEventListener('change', (e) => {
-                        urgenciaDataInput.style.display = e.target.value === 'ate_data' ? 'block' : 'none';
-                    });
-                });
-            }
-
-            // Para Requisição de Treinamento
-            window.toggleParticipantes = () => {
-                const group = document.getElementById('participantes-group');
-                const isEquipe = document.querySelector('input[name="participacao_tipo"][value="equipe"]').checked;
-                group.style.display = isEquipe ? 'block' : 'none';
-            };
-        }
-
         async function loadRankingsPage() {
             const fastestList = document.getElementById('fastest-responders-list');
             const pendingList = document.getElementById('most-pending-list');
@@ -2892,7 +2834,7 @@
             if (!tasksContainer || !titleElement) return;
             tasksContainer.innerHTML = `<div class="empty-state">Carregando tarefas...</div>`;
             
-            const dateObj = new Date(date + 'T12:00:00'); 
+            const dateObj = new Date(date + 'T12:00:00'); // Use T12:00:00 para evitar problemas de fuso horário
             const formattedDate = dateObj.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             titleElement.textContent = `Tarefas para ${formattedDate}`;
 
@@ -2909,6 +2851,7 @@
                 return;
             }
 
+            // Agrupa as tarefas por nome de rotina
             const tasksByRoutine = tasks.reduce((acc, task) => {
                 if (!acc[task.routine_title]) {
                     acc[task.routine_title] = [];
@@ -2917,11 +2860,13 @@
                 return acc;
             }, {});
 
+            // Renderiza cada grupo de rotina e TODAS as suas tarefas
             tasksContainer.innerHTML = Object.keys(tasksByRoutine).map(routineTitle => {
                 const routineTasks = tasksByRoutine[routineTitle];
                 const completedCount = routineTasks.filter(t => t.status === 'completed').length;
                 const totalCount = routineTasks.length;
 
+                // AQUI ESTÁ A CORREÇÃO: O .map() interno garante que TODAS as tarefas sejam renderizadas
                 const tasksHTML = routineTasks.map(task => {
                     const isCompleted = task.status === 'completed';
                     return `
@@ -2961,7 +2906,7 @@
                 showToast('Tarefa concluída!', 'success');
                 
                 const activeDate = document.querySelector('.calendar-day.active')?.dataset.date;
-                if(activeDate) {
+                if (activeDate) {
                    await renderCalendar(routineCurrentDate.getFullYear(), routineCurrentDate.getMonth());
                    const dayEl = document.querySelector(`.calendar-day[data-date="${activeDate}"]`);
                    if(dayEl) dayEl.classList.add('active');
@@ -3064,11 +3009,13 @@
             document.getElementById('add-task-button-container').innerHTML = `<button class="btn btn-danger btn-icon" onclick="openNewTaskModal('${routineId}')" title="Adicionar Tarefa"><span class="material-icons">add</span></button>`;
             document.getElementById('assign-user-button-container').innerHTML = `<button class="btn btn-danger btn-icon" onclick="openAssignUsersModal('${routineId}')" title="Atribuir Usuários"><span class="material-icons">person_add</span></button>`;
 
+            // Busca dados em paralelo com a sintaxe explícita para o relacionamento
             const [tasksRes, assignmentsRes] = await Promise.all([
                 supabaseClient.from('routine_tasks').select('*').eq('routine_id', routineId).order('task_order'),
                 supabaseClient.from('user_routine_assignments').select('*, user:user_id(full_name, department)').eq('routine_id', routineId)
             ]);
 
+            // Renderiza as tarefas
             if (tasksRes.error) {
                 tasksCol.innerHTML = `<div class="empty-state">Erro ao carregar tarefas.</div>`;
                 console.error("Erro ao buscar tarefas:", tasksRes.error);
@@ -3076,6 +3023,7 @@
                 tasksCol.innerHTML = tasksRes.data.length > 0 ? tasksRes.data.map(t => `<div class="routines-list-item"><span><strong>#${t.task_order}</strong> - ${t.title}</span></div>`).join('') : `<div class="empty-state">Nenhuma tarefa adicionada.</div>`;
             }
 
+            // Renderiza os usuários atribuídos
             if (assignmentsRes.error) {
                 assignmentsCol.innerHTML = `<div class="empty-state">Erro ao carregar atribuições.</div>`;
                 console.error("Erro ao buscar atribuições:", assignmentsRes.error);
@@ -3109,8 +3057,9 @@
             }
             
             try {
+                // Busca usuários já atribuídos e todos os usuários em paralelo
                 const [assignedRes, allUsersRes] = await Promise.all([
-                    supabaseClient.from('user_routine_assignments').select('user_id').eq('routine_id', routineId).limit(1000), 
+                    supabaseClient.from('user_routine_assignments').select('user_id').eq('routine_id', routineId).limit(1000), // Consider pagination for large user bases
                     supabaseClient.from('profiles').select('id, full_name, department').order('full_name')
                 ]);
 
@@ -3131,6 +3080,7 @@
                     `;
                 }).join('');
 
+                // Lógica para o checkbox "selecionar todos"
                 const selectAllCheckbox = document.getElementById('select-all-users-routine');
                 if (selectAllCheckbox) {
                     selectAllCheckbox.onchange = (e) => {
@@ -3172,15 +3122,16 @@
                 return;
             }
             selectedAssignmentDates.push(dateValue);
-            selectedAssignmentDates.sort();
+            selectedAssignmentDates.sort(); // Keep the list sorted
             renderSelectedDates();
-            dateInput.value = '';
+            dateInput.value = ''; // Clear input after adding
         }
 
         window.removeAssignmentDate = (dateToRemove) => {
             selectedAssignmentDates = selectedAssignmentDates.filter(date => date !== dateToRemove);
             renderSelectedDates();
         }
+
 
         async function addTaskToRoutine() {
             const routineId = document.getElementById('task-routine-id').value;
@@ -3247,6 +3198,7 @@
             }
         }
 
+        // Conectar os botões de salvar dos modais às funções de ação
         document.getElementById('btn-create-task')?.addEventListener('click', addTaskToRoutine);
         document.getElementById('btn-assign-users')?.addEventListener('click', assignRoutineToUsers);
 
