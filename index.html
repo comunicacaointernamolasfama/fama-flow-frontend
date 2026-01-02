@@ -2810,7 +2810,7 @@
                 const response = await fetch(N8N_COMPLETE_TASK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                    body: JSON.stringify({ assignment_id: taskInstanceId })
+                    body: JSON.stringify({ id: taskInstanceId })
                 });
                 if (!response.ok) throw new Error('Falha ao concluir tarefa.');
                 showToast('Tarefa concluída!', 'success');
