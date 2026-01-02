@@ -2966,8 +2966,6 @@
                     <span class="material-icons" style="color:var(--color-text-secondary); font-size: 18px;">chevron_right</span>
                 </div>
             `).join('');
-
-            document.getElementById('btn-create-routine').onclick = createRoutine;
         }
 
         function openNewRoutineModal() {
@@ -3200,6 +3198,7 @@
         // Conectar os botões de salvar dos modais às funções de ação
         document.getElementById('btn-create-task')?.addEventListener('click', addTaskToRoutine);
         document.getElementById('btn-assign-users')?.addEventListener('click', assignRoutineToUsers);
+        document.getElementById('btn-create-routine')?.addEventListener('click', createRoutine);
 
     </script>
 </body>
