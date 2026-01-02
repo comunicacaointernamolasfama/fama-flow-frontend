@@ -2163,7 +2163,6 @@
             const file = event.target.files[0]; if (!file) return;
             showToast(`Simulando upload da imagem: ${file.name}. Backend a ser implementado.`, 'info');
         }
-
         function initializeQuillEditor() {
             if (document.getElementById('editor-container') && !quillEditor) {
                 const toolbarOptions = [ ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['link'], [{ 'header': [1, 2, 3, false] }], ['clean'] ];
