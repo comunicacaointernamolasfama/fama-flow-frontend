@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         :root {
@@ -623,6 +624,43 @@
         </div>
     </div>
 
+    <!-- EDIT ROUTINE MODAL -->
+    <div id="edit-routine-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Editar Rotina</h3><span class="material-icons" style="cursor:pointer;" onclick="this.parentElement.parentElement.parentElement.classList.remove('visible')">close</span></div>
+            <div class="modal-body">
+                <form id="edit-routine-form">
+                    <input type="hidden" id="edit-routine-id">
+                    <div class="form-group"><label for="edit-routine-title">Título da Rotina</label><input type="text" id="edit-routine-title" class="input-field" required></div>
+                    <div class="form-group"><label for="edit-routine-description">Descrição</label><textarea id="edit-routine-description" class="input-field" rows="3"></textarea></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.parentElement.parentElement.parentElement.classList.remove('visible')">Cancelar</button>
+                <button class="btn btn-danger" id="btn-update-routine">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT TASK MODAL -->
+    <div id="edit-task-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Editar Tarefa</h3><span class="material-icons" style="cursor:pointer;" onclick="this.parentElement.parentElement.parentElement.classList.remove('visible')">close</span></div>
+            <div class="modal-body">
+                <form id="edit-task-form">
+                    <input type="hidden" id="edit-task-id">
+                    <div class="form-group"><label for="edit-task-title">Título da Tarefa</label><input type="text" id="edit-task-title" class="input-field" required></div>
+                    <div class="form-group"><label for="edit-task-order">Ordem da Tarefa (#)</label><input type="number" id="edit-task-order" class="input-field" required min="1"></div>
+                    <div class="form-group"><label for="edit-task-description">Descrição</label><textarea id="edit-task-description" class="input-field" rows="3"></textarea></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.parentElement.parentElement.parentElement.classList.remove('visible')">Cancelar</button>
+                <button class="btn btn-danger" id="btn-update-task">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
@@ -648,6 +686,12 @@
         const N8N_CREATE_ROUTINE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/criar-rotina';
         const N8N_ADD_TASK_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/adicionar-tarefa';
         const N8N_ASSIGN_ROUTINE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/atribuir-rotina';
+        const N8N_UPDATE_ROUTINE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/update-routine';
+        const N8N_DELETE_ROUTINE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/delete-routine';
+        const N8N_UPDATE_TASK_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/update-routine-task';
+        const N8N_DELETE_TASK_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/delete-routine-task';
+        const N8N_REORDER_TASKS_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/reorder-tasks';
+        const N8N_REMOVE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/remove-user-from-routine';
 
 
         let currentUserProfile = null;
@@ -2963,7 +3007,10 @@
             listContainer.innerHTML = routines.map(r => `
                 <div class="routines-list-item" data-routine-id="${r.id}" onclick="selectRoutine('${r.id}', this)">
                     <span>${r.title}</span>
-                    <span class="material-icons" style="color:var(--color-text-secondary); font-size: 18px;">chevron_right</span>
+                    <div class="routine-actions" style="margin-left:auto; display:flex;">
+                        <button class="btn btn-icon" title="Editar Rotina" onclick="event.stopPropagation(); openEditRoutineModal('${r.id}', '${r.title.replace(/'/g, "\\'")}', \`${(r.description || '').replace(/`/g, "\\`")}\`)"><span class="material-icons">edit</span></button>
+                        <button class="btn btn-icon" title="Excluir Rotina" onclick="event.stopPropagation(); deleteRoutineHandler('${r.id}', '${r.title.replace(/'/g, "\\'")}')"><span class="material-icons">delete</span></button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -3006,28 +3053,44 @@
             document.getElementById('add-task-button-container').innerHTML = `<button class="btn btn-danger btn-icon" onclick="openNewTaskModal('${routineId}')" title="Adicionar Tarefa"><span class="material-icons">add</span></button>`;
             document.getElementById('assign-user-button-container').innerHTML = `<button class="btn btn-danger btn-icon" onclick="openAssignUsersModal('${routineId}')" title="Atribuir Usuários"><span class="material-icons">person_add</span></button>`;
 
-            // Busca dados em paralelo com a sintaxe explícita para o relacionamento
             const [tasksRes, assignmentsRes] = await Promise.all([
                 supabaseClient.from('routine_tasks').select('*').eq('routine_id', routineId).order('task_order'),
-                supabaseClient.from('user_routine_assignments').select('*, user:user_id(full_name, department)').eq('routine_id', routineId)
+                supabaseClient.from('user_routine_assignments').select('*, user:user_id(id, full_name, department)').eq('routine_id', routineId)
             ]);
 
-            // Renderiza as tarefas
             if (tasksRes.error) {
                 tasksCol.innerHTML = `<div class="empty-state">Erro ao carregar tarefas.</div>`;
-                console.error("Erro ao buscar tarefas:", tasksRes.error);
             } else {
-                tasksCol.innerHTML = tasksRes.data.length > 0 ? tasksRes.data.map(t => `<div class="routines-list-item"><span><strong>#${t.task_order}</strong> - ${t.title}</span></div>`).join('') : `<div class="empty-state">Nenhuma tarefa adicionada.</div>`;
+                tasksCol.innerHTML = tasksRes.data.length > 0
+                    ? `<ul id="task-list-sortable" style="list-style:none; padding:0; margin:0;">${tasksRes.data.map(t => `
+                        <li class="routines-list-item" data-task-id="${t.id}" style="display:flex; align-items:center; gap:0.5rem;">
+                            <span class="material-icons drag-handle" style="cursor:grab; color:var(--color-text-secondary);">drag_handle</span>
+                            <span><strong>#${t.task_order}</strong> - ${t.title}</span>
+                            <div class="routine-actions" style="margin-left:auto; display:flex;">
+                                <button class="btn btn-icon" title="Editar Tarefa" onclick="event.stopPropagation(); openEditTaskModal('${t.id}', '${t.title.replace(/'/g, "\\'")}', \`${(t.description || '').replace(/`/g, "\\`")}\`, ${t.task_order})"><span class="material-icons">edit</span></button>
+                                <button class="btn btn-icon" title="Excluir Tarefa" onclick="event.stopPropagation(); deleteTaskHandler('${t.id}', '${t.title.replace(/'/g, "\\'")}')"><span class="material-icons">delete</span></button>
+                            </div>
+                        </li>`).join('')}</ul>`
+                    : `<div class="empty-state">Nenhuma tarefa adicionada.</div>`;
             }
 
-            // Renderiza os usuários atribuídos
             if (assignmentsRes.error) {
                 assignmentsCol.innerHTML = `<div class="empty-state">Erro ao carregar atribuições.</div>`;
-                console.error("Erro ao buscar atribuições:", assignmentsRes.error);
             } else {
-                const uniqueAssignments = Array.from(new Map(assignmentsRes.data.map(item => [item.user.full_name, item])).values());
-                assignmentsCol.innerHTML = uniqueAssignments.length > 0 ? uniqueAssignments.map(a => `<div class="routines-list-item"><span>${a.user.full_name}</span></div>`).join('') : `<div class="empty-state">Nenhum usuário atribuído.</div>`;
+                const uniqueUsers = Array.from(new Map(assignmentsRes.data.map(item => [item.user.id, item.user])).values());
+                assignmentsCol.innerHTML = uniqueUsers.length > 0 ? uniqueUsers.map(u => `
+                    <div class="routines-list-item">
+                        <div>
+                            <div style="font-weight: 500;">${u.full_name}</div>
+                            <div style="font-size: 0.8rem; color: var(--color-text-secondary);">${u.department || 'N/A'}</div>
+                        </div>
+                        <div class="routine-actions" style="margin-left:auto; display:flex;">
+                            <button class="btn btn-icon" title="Remover Usuário" onclick="event.stopPropagation(); removeUserHandler('${u.id}', '${routineId}', '${u.full_name.replace(/'/g, "\\'")}')"><span class="material-icons">person_remove</span></button>
+                        </div>
+                    </div>`).join('') : `<div class="empty-state">Nenhum usuário atribuído.</div>`;
             }
+
+            initializeSortable(routineId);
         }
 
         function openNewTaskModal(routineId) {
@@ -3129,6 +3192,164 @@
             renderSelectedDates();
         }
 
+        function openEditRoutineModal(routineId, title, description) {
+            document.getElementById('edit-routine-id').value = routineId;
+            document.getElementById('edit-routine-title').value = title;
+            document.getElementById('edit-routine-description').value = description;
+            document.getElementById('edit-routine-modal').classList.add('visible');
+        }
+
+        function openEditTaskModal(taskId, title, description, order) {
+            document.getElementById('edit-task-id').value = taskId;
+            document.getElementById('edit-task-title').value = title;
+            document.getElementById('edit-task-description').value = description;
+            document.getElementById('edit-task-order').value = order;
+            document.getElementById('edit-task-modal').classList.add('visible');
+        }
+
+        async function updateRoutineHandler() {
+            const routineId = document.getElementById('edit-routine-id').value;
+            const title = document.getElementById('edit-routine-title').value;
+            const description = document.getElementById('edit-routine-description').value;
+            const btn = document.getElementById('btn-update-routine');
+            btn.disabled = true;
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                const response = await fetch(N8N_UPDATE_ROUTINE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}`},
+                    body: JSON.stringify({ p_routine_id: routineId, p_title: title, p_description: description })
+                });
+                if (!response.ok) throw new Error('Falha ao atualizar rotina.');
+                showToast('Rotina atualizada!', 'success');
+                document.getElementById('edit-routine-modal').classList.remove('visible');
+                loadManageRoutinesPage();
+            } catch (e) { showToast(e.message, 'danger'); } finally { btn.disabled = false; }
+        }
+
+        function deleteRoutineHandler(routineId, routineTitle) {
+            showConfirmation(
+                "Excluir Rotina?",
+                `Tem certeza que deseja excluir a rotina "${routineTitle}"? Todas as suas tarefas e atribuições serão permanentemente removidas.`,
+                async () => {
+                    try {
+                        const { data: { session } } = await supabaseClient.auth.getSession();
+                        const response = await fetch(N8N_DELETE_ROUTINE_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}`},
+                            body: JSON.stringify({ p_routine_id: routineId })
+                        });
+                        if (!response.ok) throw new Error('Falha ao excluir rotina.');
+                        showToast('Rotina excluída com sucesso!', 'success');
+                        loadManageRoutinesPage();
+                    } catch (e) { showToast(e.message, 'danger'); }
+                }
+            );
+        }
+
+        async function updateTaskHandler() {
+            const taskId = document.getElementById('edit-task-id').value;
+            const title = document.getElementById('edit-task-title').value;
+            const description = document.getElementById('edit-task-description').value;
+            const order = document.getElementById('edit-task-order').value;
+            const btn = document.getElementById('btn-update-task');
+            btn.disabled = true;
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                const response = await fetch(N8N_UPDATE_TASK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}`},
+                    body: JSON.stringify({ p_task_id: taskId, p_title: title, p_description: description, p_task_order: parseInt(order) })
+                });
+                if (!response.ok) throw new Error('Falha ao atualizar tarefa.');
+                showToast('Tarefa atualizada!', 'success');
+                document.getElementById('edit-task-modal').classList.remove('visible');
+                const activeRoutine = document.querySelector('#routines-list-col1 .routines-list-item.active');
+                if (activeRoutine) {
+                    selectRoutine(activeRoutine.dataset.routineId, activeRoutine);
+                }
+            } catch (e) { showToast(e.message, 'danger'); } finally { btn.disabled = false; }
+        }
+
+        function deleteTaskHandler(taskId, taskTitle) {
+            showConfirmation(
+                "Excluir Tarefa?",
+                `Tem certeza que deseja excluir a tarefa "${taskTitle}"?`,
+                async () => {
+                    try {
+                        const { data: { session } } = await supabaseClient.auth.getSession();
+                        const response = await fetch(N8N_DELETE_TASK_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}`},
+                            body: JSON.stringify({ p_task_id: taskId })
+                        });
+                        if (!response.ok) throw new Error('Falha ao excluir tarefa.');
+                        showToast('Tarefa excluída com sucesso!', 'success');
+                        const activeRoutine = document.querySelector('#routines-list-col1 .routines-list-item.active');
+                        if (activeRoutine) {
+                            selectRoutine(activeRoutine.dataset.routineId, activeRoutine);
+                        }
+                    } catch (e) { showToast(e.message, 'danger'); }
+                }
+            );
+        }
+
+        function removeUserHandler(userId, routineId, userName) {
+            showConfirmation(
+                "Remover Usuário?",
+                `Tem certeza que deseja remover ${userName} desta rotina? Suas tarefas futuras serão canceladas.`,
+                async () => {
+                    try {
+                        const { data: { session } } = await supabaseClient.auth.getSession();
+                        const response = await fetch(N8N_REMOVE_USER_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}`},
+                            body: JSON.stringify({ p_user_id: userId, p_routine_id: routineId })
+                        });
+                        if (!response.ok) throw new Error('Falha ao remover usuário.');
+                        showToast('Usuário removido da rotina!', 'success');
+                        const activeRoutine = document.querySelector('#routines-list-col1 .routines-list-item.active');
+                        if (activeRoutine) {
+                            selectRoutine(activeRoutine.dataset.routineId, activeRoutine);
+                        }
+                    } catch (e) { showToast(e.message, 'danger'); }
+                }
+            );
+        }
+
+        function initializeSortable(routineId) {
+            const list = document.getElementById('task-list-sortable');
+            if (!list) return;
+
+            Sortable.create(list, {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: async function (evt) {
+                    const taskIdsOrdered = Array.from(list.children).map(item => item.dataset.taskId);
+                    
+                    Array.from(list.children).forEach((item, index) => {
+                        const orderSpan = item.querySelector('span:nth-of-type(2) > strong');
+                        if (orderSpan) orderSpan.textContent = `#${index + 1}`;
+                    });
+
+                    try {
+                        const { data: { session } } = await supabaseClient.auth.getSession();
+                        const response = await fetch(N8N_REORDER_TASKS_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}`},
+                            body: JSON.stringify({ p_routine_id: routineId, p_task_ids_ordered: taskIdsOrdered })
+                        });
+                        if (!response.ok) throw new Error('Falha ao reordenar tarefas.');
+                        showToast('Ordem das tarefas atualizada!', 'success');
+                    } catch (e) {
+                        showToast(e.message, 'danger');
+                        const activeRoutine = document.querySelector('#routines-list-col1 .routines-list-item.active');
+                        if (activeRoutine) selectRoutine(activeRoutine.dataset.routineId, activeRoutine);
+                    }
+                }
+            });
+        }
+
 
         async function addTaskToRoutine() {
             const routineId = document.getElementById('task-routine-id').value;
@@ -3199,6 +3420,8 @@
         document.getElementById('btn-create-task')?.addEventListener('click', addTaskToRoutine);
         document.getElementById('btn-assign-users')?.addEventListener('click', assignRoutineToUsers);
         document.getElementById('btn-create-routine')?.addEventListener('click', createRoutine);
+        document.getElementById('btn-update-routine')?.addEventListener('click', updateRoutineHandler);
+        document.getElementById('btn-update-task')?.addEventListener('click', updateTaskHandler);
 
     </script>
 </body>
