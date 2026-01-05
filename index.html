@@ -410,9 +410,7 @@
         .day-pending:not(.active) { font-weight: 600; }
         .active .task-indicator { display: none; }
         #tasks-list-container h3 { margin-top: 0; }
-        .routine-group { margin-bottom: 1.5rem; }
         .routine-group:last-child { margin-bottom: 0; }
-        .routine-group h4 { margin: 0 0 0.75rem 0; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); font-size: 1rem; }
         .task-item { padding: 0.5rem 0; }
         .task-item.completed label { text-decoration: line-through; color: var(--color-text-secondary); }
 
@@ -3158,6 +3156,7 @@
             selectedAssignmentDates = [];
             renderSelectedDates();
             modal.classList.add('visible');
+            document.getElementById('add-date-btn').onclick = addAssignmentDate;
 
             const { data: assignableUsers, error } = await supabaseClient.rpc('get_assignable_users');
 
