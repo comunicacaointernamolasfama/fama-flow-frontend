@@ -3512,6 +3512,7 @@
             }
 
             btn.disabled = true;
+            btn.textContent = 'Salvando...';
 
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
@@ -3524,17 +3525,26 @@
                         dates: selectedAssignmentDates
                     })
                 });
+
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.message || 'Falha ao atribuir rotina.');
                 }
+
                 showToast('Atribuições salvas!', 'success');
                 document.getElementById('assign-users-modal').classList.remove('visible');
-                selectRoutine(routineId, document.querySelector(`.routines-list-item[data-routine-id="${routineId}"]`));
+
+                // LÓGICA DE RECARGA CORRIGIDA
+                const activeRoutineElement = document.querySelector(`.routines-list-item[data-routine-id="${routineId}"]`);
+                if (activeRoutineElement) {
+                    await selectRoutine(routineId, activeRoutineElement);
+                }
+                
             } catch (e) { 
                 showToast(e.message, 'danger'); 
             } finally { 
-                btn.disabled = false; 
+                btn.disabled = false;
+                btn.textContent = 'Salvar Atribuições';
             }
         }
 
