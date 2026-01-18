@@ -141,6 +141,89 @@
         .action-buttons .btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
         .action-buttons .btn:hover { background-color: var(--color-background); color: var(--color-text-primary); }
         
+        /* --- ORGANOGRAMA STYLES (NEW) --- */
+        .org-tree, .org-tree ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+        .org-tree {
+            padding: 1em;
+            text-align: center;
+        }
+        .org-tree ul {
+            padding-top: 1em;
+            display: flex;
+            justify-content: center;
+        }
+        .org-tree li {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1em;
+            position: relative;
+        }
+        .org-tree li::before, .org-tree li::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 50%;
+            height: 1em;
+            border-top: 2px solid var(--color-border);
+        }
+        .org-tree li::before {
+            left: 0;
+            border-right: 2px solid var(--color-border);
+        }
+        .org-tree li::after {
+            right: 0;
+            border-left: 2px solid var(--color-border);
+        }
+        .org-tree li:only-child::before, .org-tree li:only-child::after {
+            display: none;
+        }
+        .org-tree li:first-child::before, .org-tree li:last-child::after {
+            border: 0 none;
+        }
+        .org-tree li:last-child::before {
+            border-right: 2px solid var(--color-border);
+            border-radius: 0 0.6em 0 0;
+        }
+        .org-tree li:first-child::after {
+            border-radius: 0.6em 0 0 0;
+        }
+        .org-tree > ul > li::before, .org-tree > ul > li::after {
+            display: none;
+        }
+        .org-node {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            background-color: var(--color-surface);
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow);
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 180px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .org-node:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+            border-color: var(--color-info);
+        }
+        .org-node h4 {
+            margin: 0.5rem 0 0.25rem;
+            font-size: 1rem;
+        }
+        .org-node p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+        }
+
         /* --- PROFILE PAGE REFACTOR --- */
         #profile-page .page-header { margin-bottom: 1rem; }
         .profile-header-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-bottom: 2rem; }
@@ -728,6 +811,7 @@
                         <li><a href="#" class="nav-link" data-page="my-routines-page"><span class="material-icons">checklist</span> Minhas Rotinas</a></li>
                         <li><a href="#" class="nav-link" data-page="channels-page"><span class="material-icons">tag</span> Canais</a></li>
                         <li><a href="#" class="nav-link" data-page="team-page"><span class="material-icons">people</span> Equipe</a></li>
+                        <li><a href="#" class="nav-link" data-page="organograma-page"><span class="material-icons">account_tree</span> Organograma</a></li>
                         <li><a href="#" class="nav-link" data-page="rankings-page"><span class="material-icons">leaderboard</span> Performance e Rankings</a></li>
                         <li><a href="#" class="nav-link" data-page="mural-page"><span class="material-icons">campaign</span> Mural Cultural</a></li>
                         <li><a href="#" class="nav-link" data-page="kb-page"><span class="material-icons">school</span> Base de Conhecimento</a></li>
@@ -756,6 +840,7 @@
                         <div class="form-group" style="margin:0;"><label for="team-filter-role">Filtrar por Cargo</label><select id="team-filter-role" class="input-field"></select></div>
                     </div>
                 <div id="team-list-content">Carregando equipe...</div></div>
+                <div id="organograma-page" class="page-content"></div>
                 <div id="channels-page" class="page-content"><div class="page-header"><h1>Canais</h1></div><div class="empty-state">Funcionalidade em desenvolvimento.</div></div>
                 <div id="rankings-page" class="page-content">
                     <div class="page-header">
@@ -997,7 +1082,7 @@
             
             if (pageId === 'mural-page' && currentUserProfile && (currentUserProfile.role === 'Admin' || currentUserProfile.role === 'RH')) {
                 fabPost.classList.remove('hidden');
-            } else if (!['conversation-view-page', 'mural-page', 'requests-page'].includes(pageId)) {
+            } else if (!['conversation-view-page', 'mural-page', 'requests-page', 'organograma-page'].includes(pageId)) {
                 fabMessage.classList.remove('hidden');
             }
 
@@ -1015,6 +1100,7 @@
             if (pageId === 'request-management-page') loadRequestManagementPage();
             if (pageId === 'my-routines-page') loadMyRoutinesPage();
             if (pageId === 'manage-routines-page') loadManageRoutinesPage();
+            if (pageId === 'organograma-page') loadOrganogramaPage();
         }
 
         async function loadAllDynamicData() { 
@@ -1043,6 +1129,74 @@
             const { data, error } = await supabaseClient.from('profiles').select('id, full_name, score, department, role'); 
             if(error) console.error("Erro ao buscar usuários para pesquisa:", error); 
             else allUsers = data; 
+        }
+
+        // --- ORGANOGRAMA LOGIC ---
+        async function loadOrganogramaPage() {
+            const container = document.getElementById('organograma-page');
+            container.innerHTML = `
+                <div class="page-header">
+                    <h1>Organograma Vivo</h1>
+                    <p>Estrutura hierárquica da empresa.</p>
+                </div>
+                <div class="card" style="overflow-x: auto;">
+                    <div class="empty-state">Carregando organograma...</div>
+                </div>
+            `;
+            
+            try {
+                const { data: orgData, error } = await supabaseClient.rpc('get_org_chart_data');
+                
+                if (error) {
+                    throw error;
+                }
+
+                if (!orgData || orgData.length === 0) {
+                    container.querySelector('.card').innerHTML = `<div class="empty-state">Nenhum dado encontrado para o organograma.</div>`;
+                    return;
+                }
+
+                let treeHTML = `<div class="org-tree"><ul>`;
+                orgData.forEach(rootNode => {
+                    treeHTML += renderOrgNode(rootNode);
+                });
+                treeHTML += `</ul></div>`;
+                
+                container.querySelector('.card').innerHTML = treeHTML;
+
+            } catch (e) {
+                console.error("Erro ao carregar organograma:", e);
+                container.querySelector('.card').innerHTML = `<div class="empty-state" style="color: var(--color-danger);">Falha ao carregar o organograma.</div>`;
+            }
+        }
+
+        function renderOrgNode(node) {
+            if (!node) return '';
+            
+            const avatarInitial = node.full_name ? node.full_name.charAt(0).toUpperCase() : '?';
+            const role = node.role || 'Colaborador';
+            const dept = node.department || '';
+
+            let childrenHTML = '';
+            if (node.children && node.children.length > 0) {
+                childrenHTML += `<ul>`;
+                node.children.forEach(child => {
+                    childrenHTML += renderOrgNode(child);
+                });
+                childrenHTML += `</ul>`;
+            }
+
+            return `
+                <li>
+                    <div class="org-node" onclick="showPage('profile-page', '${node.id}')">
+                        <div class="user-avatar" style="width: 48px; height: 48px; font-size: 1.5rem; margin-bottom: 0.5rem;">${avatarInitial}</div>
+                        <h4>${node.full_name}</h4>
+                        <p>${role}</p>
+                        <p style="font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 2px;">${dept}</p>
+                    </div>
+                    ${childrenHTML}
+                </li>
+            `;
         }
 
         // --- REQUESTS MODULE LOGIC ---
@@ -2633,7 +2787,8 @@
             const fullName = document.getElementById('full_name').value;
             const department = document.getElementById('department').value;
             const role = document.getElementById('role').value;
-            const managerId = document.getElementById('manager_id').value;
+            const managerIdValue = document.getElementById('manager_id').value;
+            const managerId = managerIdValue === "" ? null : managerIdValue;
             const email = document.getElementById('user_email').value;
             const password = document.getElementById('user_password').value;
             
@@ -2650,7 +2805,7 @@
                         full_name: fullName, 
                         department: department, 
                         role: role, 
-                        manager_id: managerId || null 
+                        manager_id: managerId 
                     };
                     const response = await fetch(N8N_UPDATE_USER_URL, { 
                         method: 'POST', 
@@ -2667,7 +2822,7 @@
                         full_name: fullName, 
                         department: department, 
                         role: role,
-                        manager_id: managerId || null
+                        manager_id: managerId
                     };
                     const response = await fetch(N8N_CREATE_USER_URL, { 
                         method: 'POST', 
