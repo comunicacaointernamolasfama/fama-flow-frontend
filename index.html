@@ -890,6 +890,7 @@
         const N8N_UPDATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/update-user';
         const N8N_DELETE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/delete-user';
         const N8N_SEND_MESSAGE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/21446ed7-79bd-4a14-b954-ab729bb61f26';
+        const N8N_SEND_REPLY_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/send-reply'; // <<-- NOVO WEBHOOK
         const N8N_MARK_AS_READ_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/mark-as-read';
         const N8N_TOGGLE_ARCHIVE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/toggle-archive';
         const N8N_RESOLVE_TICKET_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/resolve-ticket';
@@ -961,7 +962,7 @@
                 <div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral do seu desempenho</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Abertos</h3><p id="urgent-tickets-count">0</p></div></div></div></div>
                 <div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button><button class="tab-link" data-tab="archived-content">Arquivados</button></div><button id="refresh-messages-btn" class="refresh-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div><div id="archived-content" class="tab-content"></div></div></div>
                 <div id="requests-page" class="page-content"><div class="page-header"><div><h1>Requisições</h1><p>Gerencie solicitações de RH e administrativas.</p></div><div class="page-header-actions"><button id="btn-new-request" class="btn btn-danger"><span class="material-icons">add</span> Nova Requisição</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th style="width: 25%;">Tipo</th><th style="width: 25%;">Solicitante</th><th style="width: 20%;">Data</th><th style="width: 15%;">Status</th><th style="width: 15%;">Ações</th></tr></thead><tbody id="request-table-body"></tbody></table></div></div>
-                <div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"></div><div class="card"><div id="conversation-messages">Carregando conversa...</div><div id="reply-form-wrapper"><div id="reply-attachment-preview"></div><form id="reply-form"><input type="file" id="reply-attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('reply-attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div>
+                <div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"></div><div class="card"><div id="conversation-messages">Carregando conversa...</div><div id="reply-form-wrapper"><div id="reply-attachment-preview"></div><form id="reply-form" data-conversation-id=""><input type="file" id="reply-attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('reply-attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div>
                 <div id="team-page" class="page-content"><div class="page-header"><h1>Equipe</h1><p>Veja os perfis e performance dos seus colegas.</p></div>
                     <div class="card team-filters">
                         <div class="form-group" style="margin:0;"><label for="team-search-name">Buscar por Nome</label><input type="text" id="team-search-name" class="input-field" placeholder="Digite um nome..."></div>
@@ -1108,6 +1109,9 @@
                     }
                 }); 
             });
+
+            // NOVO LISTENER PARA O FORMULÁRIO DE RESPOSTA
+            document.getElementById('reply-form').onsubmit = handleReply;
 
 
             document.querySelectorAll('.urgency-selector .btn').forEach(button => { button.addEventListener('click', (e) => { e.preventDefault(); document.querySelectorAll('.urgency-selector .btn').forEach(btn => { btn.classList.remove('btn-success', 'btn-warning', 'btn-danger', 'active'); btn.classList.add('btn-secondary'); }); const clickedButton = e.currentTarget; clickedButton.classList.remove('btn-secondary'); clickedButton.classList.add('active'); const priority = clickedButton.dataset.priority; if (priority === 'normal') clickedButton.classList.add('btn-success'); else if (priority === 'important') clickedButton.classList.add('btn-warning'); else if (priority === 'urgent') clickedButton.classList.add('btn-danger'); }); });
@@ -2692,6 +2696,64 @@
                 sendButton.disabled = false; sendButton.innerHTML = 'Enviar';
             }
         }
+
+        // --- NOVA FUNÇÃO HANDLE REPLY ---
+        async function handleReply(e) {
+            e.preventDefault();
+            const replyInput = document.getElementById('reply-input');
+            const replyContent = replyInput.value.trim();
+            
+            if (!replyContent) return;
+
+            const conversationId = document.getElementById('reply-form').dataset.conversationId;
+            const replyButton = e.submitter; 
+            
+            if (!conversationId || !currentUserProfile) {
+                showToast('Erro: ID da conversa ou perfil não encontrado.', 'danger');
+                return;
+            }
+
+            replyButton.disabled = true;
+            const originalText = replyButton.innerHTML;
+            replyButton.innerHTML = 'Enviando...';
+            
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) throw new Error('Sessão expirada.');
+
+                const payload = {
+                    conversation_id: conversationId,
+                    content: replyContent,
+                };
+
+                const response = await fetch(N8N_SEND_REPLY_URL, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Falha ao enviar resposta.');
+                }
+                
+                showToast('Resposta enviada!', 'success');
+                replyInput.value = '';
+                
+                await openConversation(null, conversationId);
+                
+            } catch (error) {
+                console.error('Erro ao responder:', error);
+                showToast('Erro ao enviar: ' + error.message, 'danger');
+            } finally {
+                replyButton.disabled = false;
+                replyButton.innerHTML = originalText;
+            }
+        }
+        // --- FIM DA NOVA FUNÇÃO HANDLE REPLY ---
         
         function cleanParticipantList(namesString, senderName = null) {
             if (!namesString || !currentUserProfile) return '';
@@ -2830,11 +2892,13 @@
             );
         }
 
-        async function openConversation(rowElement) {
-            const conversationId = rowElement.dataset.conversationId;
+        // ALTERAÇÃO NA ASSINATURA DA FUNÇÃO openConversation
+        async function openConversation(rowElement, conversationIdOverride = null) {
+            const conversationId = conversationIdOverride || rowElement?.dataset.conversationId;
+
             if (!conversationId) { showToast('ID da conversa não encontrado.', 'danger'); return; }
 
-            if (rowElement.classList.contains('row-unread')) {
+            if (rowElement && rowElement.classList.contains('row-unread')) {
                 rowElement.classList.remove('row-unread'); 
                 rowElement.classList.add('row-read');
 
@@ -2853,6 +2917,10 @@
             showPage('conversation-view-page');
             document.getElementById('conversation-header').innerHTML = '<div class="empty-state">Carregando...</div>';
             document.getElementById('conversation-messages').innerHTML = '<div class="empty-state">Carregando mensagens...</div>';
+            
+            // NOVO PASSO: Garante que o ID da conversa esteja no formulário de resposta
+            const replyForm = document.getElementById('reply-form');
+            replyForm.dataset.conversationId = conversationId;
 
             const [messagesRes, attachmentsRes, convDataRes] = await Promise.all([
                 supabaseClient.from('conversation_messages_view').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true }),
@@ -2945,10 +3013,7 @@
             
             messagesContainer.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
 
-            document.getElementById('reply-form').onsubmit = (e) => {
-                e.preventDefault();
-                showToast('Respostas ainda não implementadas nesta tela.', 'info');
-            };
+            // Remover o listener de teste anterior, já substituído no setupEventListeners
         }
 
         async function loadUsersForAdmin() {
@@ -3888,7 +3953,7 @@
                 const response = await fetch(N8N_ADD_TASK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}`},
-                    body: JSON.stringify({ routine_id: routineId, title, description, task_order: parseInt(taskOrder) })
+					body: JSON.stringify({ routine_id: routineId, title, description, task_order: parseInt(taskOrder) })
                 });
                 if (!response.ok) throw new Error('Falha ao adicionar tarefa.');
                 showToast('Tarefa adicionada!', 'success');
