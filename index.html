@@ -224,6 +224,39 @@
             color: var(--color-text-secondary);
         }
 
+        /* --- ORGANOGRAMA CONTEXT MENU (NEW) --- */
+        .org-context-menu {
+            position: fixed;
+            z-index: 5000;
+            background-color: var(--color-surface);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 1px solid var(--color-border);
+            min-width: 180px;
+            overflow: hidden;
+            padding: 0.5rem 0;
+        }
+        .org-context-menu ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .org-context-menu li {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+        }
+        .org-context-menu li:hover {
+            background-color: var(--color-background);
+        }
+        .org-context-menu .material-icons {
+            font-size: 18px;
+            color: var(--color-text-secondary);
+        }
+
         /* --- PROFILE PAGE REFACTOR --- */
         #profile-page .page-header { margin-bottom: 1rem; }
         .profile-header-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-bottom: 2rem; }
@@ -888,6 +921,7 @@
         let currentRequestType = null; // Used for the new requests module
         let selectedAssignmentDates = [];
         let routineCurrentDate = new Date();
+        let currentMenu = null;
 
 
         const root = document.getElementById('root');
@@ -1316,7 +1350,6 @@
         function renderOrgNode(node) {
             if (!node) return '';
             
-            // CORRECTION APPLIED HERE
             const name = node.name;
             const role = node.title || 'Colaborador';
             const dept = node.department;
@@ -1333,7 +1366,7 @@
 
             return `
                 <li>
-                    <div class="org-node" onclick="showPage('profile-page', '${node.id}')">
+                    <div class="org-node" onclick="openOrgMenu(event, '${node.id}', '${node.name.replace(/'/g, "\\'")}')">
                         <div class="user-avatar" style="width: 48px; height: 48px; font-size: 1.5rem; margin-bottom: 0.5rem;">${initial}</div>
                         <h4>${name}</h4>
                         <p>${role}</p>
@@ -1343,6 +1376,63 @@
                 </li>
             `;
         }
+
+        function openOrgMenu(event, userId, userName) {
+            event.stopPropagation();
+            if (currentMenu) {
+                currentMenu.remove();
+            }
+            const menu = document.createElement('div');
+            menu.className = 'org-context-menu';
+            menu.innerHTML = `
+                <ul>
+                    <li onclick="handleOrgMenuAction('view', '${userId}')"><span class="material-icons">visibility</span> Ver Perfil</li>
+                    <li onclick="handleOrgMenuAction('edit', '${userId}')"><span class="material-icons">edit</span> Editar Colaborador</li>
+                </ul>
+            `;
+            document.body.appendChild(menu);
+            currentMenu = menu;
+            const { clientX: mouseX, clientY: mouseY } = event;
+            const { innerWidth, innerHeight } = window;
+            const menuRect = menu.getBoundingClientRect();
+            let top = mouseY;
+            let left = mouseX;
+            if (mouseX + menuRect.width > innerWidth) { left = mouseX - menuRect.width; }
+            if (mouseY + menuRect.height > innerHeight) { top = mouseY - menuRect.height; }
+            menu.style.top = `${top}px`;
+            menu.style.left = `${left}px`;
+            document.addEventListener('click', closeOrgMenuListener, { once: true });
+        }
+
+        function closeOrgMenuListener(event) {
+            if (currentMenu && !currentMenu.contains(event.target)) {
+                currentMenu.remove();
+                currentMenu = null;
+            }
+        }
+
+        function handleOrgMenuAction(action, userId) {
+            if (currentMenu) {
+                currentMenu.remove();
+                currentMenu = null;
+            }
+            if (action === 'view') {
+                showPage('profile-page', userId);
+            } else if (action === 'edit') {
+                openUserModalForEdit(userId);
+            }
+        }
+
+        async function openUserModalForEdit(userId) {
+            const { data: fullUserData, error } = await supabaseClient.from('users_with_email').select('*').eq('id', userId).single();
+            if (fullUserData) {
+                openUserModal(fullUserData);
+            } else {
+                console.error("Could not fetch full user data for editing:", error);
+                showToast("Não foi possível carregar os dados do usuário para edição.", "danger");
+            }
+        }
+
 
         // --- REQUESTS MODULE LOGIC ---
 
@@ -2981,6 +3071,13 @@
                 closeUserModal();
                 await fetchAllUsersForSearch();
                 loadUsersForAdmin();
+
+                const organogramaPage = document.getElementById('organograma-page');
+                if (organogramaPage && organogramaPage.classList.contains('active')) {
+                    const currentFilter = document.getElementById('org-filter-dept')?.value || '';
+                    loadOrganogramaPage(currentFilter);
+                }
+
             } catch (error) {
                 console.error(error);
                 showToast(error.message, 'danger');
