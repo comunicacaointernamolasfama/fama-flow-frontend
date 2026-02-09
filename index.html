@@ -508,6 +508,65 @@
         .task-item.completed .task-title-span { text-decoration: line-through; color: var(--color-text-secondary); }
         .task-description-span { font-size: 0.85rem; color: var(--color-text-secondary); }
         .task-due-time { font-weight: 600; margin-left: 0.5rem; font-size: 0.8rem; }
+
+        /* --- RESPONSIVIDADE (FEATURE 1) --- */
+        @media (max-width: 768px) {
+            body {
+                overflow-x: hidden;
+            }
+            #mobile-menu-toggle {
+                display: flex !important;
+                position: fixed;
+                top: 0.5rem;
+                left: 0.5rem;
+                z-index: 4001;
+                background-color: var(--color-surface);
+                border: 1px solid var(--color-border);
+                box-shadow: var(--shadow);
+            }
+            .sidebar {
+                width: 100%;
+                height: 100vh;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+                z-index: 4000;
+                padding-top: 5rem;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            main.content {
+                margin-left: 0;
+                padding: 1rem 1rem;
+                margin-top: 3rem;
+            }
+            .grid-cols-2, .grid-cols-3 {
+                grid-template-columns: 1fr;
+                display: block;
+            }
+            .grid > .card {
+                margin-bottom: 1rem;
+            }
+            #new-message-popup {
+                width: 100vw;
+                height: 100vh;
+                top: 0;
+                right: 0;
+                border-radius: 0;
+                max-width: 100vw;
+                max-height: 100vh;
+            }
+            .popup-header {
+                flex-shrink: 0;
+            }
+            #new-message-form {
+                height: auto;
+                flex-grow: 1;
+            }
+            #conversation-view-page .card {
+                height: calc(100vh - 8rem);
+            }
+        }
     </style>
 </head>
 <body>
@@ -799,7 +858,7 @@
         const root = document.getElementById('root');
         const themeToggleBtn = document.getElementById('theme-toggle');
 
-        const authHTML = `<div class="login-wrapper visible" id="auth-wrapper"><div id="auth-container" class="login-container"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo"><p class="login-subtitle">Comunicação interna Molas Fama</p><form id="login-form"><div class="input-group"><input type="email" id="email" class="input-field" placeholder="Email" required></div><div class="input-group"><input type="password" id="password" class="input-field" placeholder="Senha" required></div><button type="submit" class="btn-primary" style="width: 100%;">Entrar</button></form></div></div>`;
+        const authHTML = `<div class="login-wrapper visible" id="auth-wrapper"><div id="auth-container" class="login-container"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo"><p class="login-subtitle">Sistema de Governança Fama</p><form id="login-form"><div class="input-group"><input type="email" id="email" class="input-field" placeholder="Email" required></div><div class="input-group"><input type="password" id="password" class="input-field" placeholder="Senha" required></div><button type="submit" class="btn-primary" style="width: 100%;">Entrar</button></form></div></div>`;
         const appHTML = `<div id="app-container">
             <aside class="sidebar">
                 <div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div>
@@ -829,7 +888,8 @@
                 </div>
             </aside>
             <main class="content">
-                <div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral da sua comunicação interna</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Abertos</h3><p id="urgent-tickets-count">0</p></div></div></div></div>
+                <button id="mobile-menu-toggle" class="btn btn-icon" style="position: absolute; top: 1.5rem; left: 1.5rem; z-index: 100; display: none;"><span class="material-icons">menu</span></button>
+                <div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral do seu desempenho e governança Fama</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Abertos</h3><p id="urgent-tickets-count">0</p></div></div></div></div>
                 <div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button><button class="tab-link" data-tab="archived-content">Arquivados</button></div><button id="refresh-messages-btn" class="refresh-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div><div id="archived-content" class="tab-content"></div></div></div>
                 <div id="requests-page" class="page-content"><div class="page-header"><div><h1>Requisições</h1><p>Gerencie solicitações de RH e administrativas.</p></div><div class="page-header-actions"><button id="btn-new-request" class="btn btn-danger"><span class="material-icons">add</span> Nova Requisição</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th style="width: 25%;">Tipo</th><th style="width: 25%;">Solicitante</th><th style="width: 20%;">Data</th><th style="width: 15%;">Status</th><th style="width: 15%;">Ações</th></tr></thead><tbody id="request-table-body"></tbody></table></div></div>
                 <div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"></div><div class="card"><div id="conversation-messages">Carregando conversa...</div><div id="reply-form-wrapper"><div id="reply-attachment-preview"></div><form id="reply-form"><input type="file" id="reply-attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('reply-attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div>
@@ -946,7 +1006,28 @@
             
             document.getElementById('post-media-file').addEventListener('change', handlePostMediaPreview);
 
-            document.querySelectorAll('.nav-link[data-page]').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); showPage(e.currentTarget.dataset.page); }); });
+            const sidebar = document.querySelector('.sidebar');
+
+            document.querySelectorAll('.nav-link[data-page]').forEach(link => { 
+                link.addEventListener('click', (e) => { 
+                    e.preventDefault(); 
+                    showPage(e.currentTarget.dataset.page); 
+                    
+                    // Lógica para fechar o menu após o clique (se for mobile)
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('open');
+                    }
+                }); 
+            });
+
+            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+            
+            if (mobileMenuToggle && sidebar) {
+                mobileMenuToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                });
+            }
+
             document.querySelectorAll('.urgency-selector .btn').forEach(button => { button.addEventListener('click', (e) => { e.preventDefault(); document.querySelectorAll('.urgency-selector .btn').forEach(btn => { btn.classList.remove('btn-success', 'btn-warning', 'btn-danger', 'active'); btn.classList.add('btn-secondary'); }); const clickedButton = e.currentTarget; clickedButton.classList.remove('btn-secondary'); clickedButton.classList.add('active'); const priority = clickedButton.dataset.priority; if (priority === 'normal') clickedButton.classList.add('btn-success'); else if (priority === 'important') clickedButton.classList.add('btn-warning'); else if (priority === 'urgent') clickedButton.classList.add('btn-danger'); }); });
             const recipientInput = document.getElementById('destinatario-input');
             if (recipientInput) { recipientInput.addEventListener('input', handleRecipientSearch); recipientInput.addEventListener('keydown', handleRecipientBackspace); }
@@ -2007,15 +2088,16 @@
             const roleFilter = document.getElementById('team-filter-role').value;
 
             const filteredUsers = users.filter(user => {
+                const isCurrentUser = user.id === currentUserProfile.id;
                 const nameMatch = user.full_name && user.full_name.toLowerCase().includes(nameFilter);
                 const deptMatch = !deptFilter || user.department === deptFilter;
                 const roleMatch = !roleFilter || user.role === roleFilter;
-                return nameMatch && deptMatch && roleMatch;
+                return !isCurrentUser && nameMatch && deptMatch && roleMatch;
             });
 
             const myDept = currentUserProfile.department;
-            const myTeam = filteredUsers.filter(u => u.department === myDept && u.id !== currentUserProfile.id);
-            const others = filteredUsers.filter(u => u.department !== myDept && u.id !== currentUserProfile.id);
+            const myTeam = filteredUsers.filter(u => u.department === myDept);
+            const others = filteredUsers.filter(u => u.department !== myDept);
 
             const generateCardHTML = (user) => {
                 let avatarHTML = '';
@@ -3436,6 +3518,8 @@
         function renderSelectedDates() {
             const listContainer = document.getElementById('selected-dates-list');
             if (!listContainer) return;
+
+            selectedAssignmentDates.sort(); // Garante que as datas estão ordenadas antes de renderizar
 
             listContainer.innerHTML = selectedAssignmentDates.map(date => {
                 const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('pt-BR');
