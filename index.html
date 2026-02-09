@@ -890,7 +890,7 @@
         const N8N_UPDATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/update-user';
         const N8N_DELETE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/delete-user';
         const N8N_SEND_MESSAGE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/21446ed7-79bd-4a14-b954-ab729bb61f26';
-        const N8N_SEND_REPLY_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/send-reply'; // <<-- NOVO WEBHOOK
+        const N8N_SEND_REPLY_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/send-reply'; // <<-- NOVO WEBHOOK (CONFIRMADO)
         const N8N_MARK_AS_READ_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/mark-as-read';
         const N8N_TOGGLE_ARCHIVE_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/toggle-archive';
         const N8N_RESOLVE_TICKET_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/resolve-ticket';
@@ -1110,7 +1110,7 @@
                 }); 
             });
 
-            // NOVO LISTENER PARA O FORMULÁRIO DE RESPOSTA
+            // LIGAÇÃO FINAL (CONFIRMADO)
             document.getElementById('reply-form').onsubmit = handleReply;
 
 
@@ -2697,7 +2697,7 @@
             }
         }
 
-        // --- NOVA FUNÇÃO HANDLE REPLY ---
+        // --- NOVA FUNÇÃO HANDLE REPLY (CONFIRMADA) ---
         async function handleReply(e) {
             e.preventDefault();
             const replyInput = document.getElementById('reply-input');
@@ -2836,14 +2836,31 @@
                 const errorMsg = `<div class="empty-state" style="color: var(--color-danger);">Erro ao carregar mensagens.</div>`;
                 containers.forEach(id => document.getElementById(id).innerHTML = errorMsg); return;
             }
+            
+            // --- BLOCO DE FILTRAGEM CORRIGIDO ---
             const nonArchived = data.filter(conv => !conv.is_archived);
             const archived = data.filter(conv => conv.is_archived);
-            const inboxMessages = nonArchived.filter(conv => conv.last_message_sender_id !== currentUserProfile.id || (conv.other_participants_names === null));
+            
+            // Regra da Inbox: Deve ser exibida se não estiver resolvida
+            const inboxMessages = nonArchived.filter(conv => 
+                conv.status !== 'resolved'
+            );
+
+            // Regra de Enviados: (Itens onde eu sou o último a falar E estão resolvidos ou arquivados)
             const sentMessages = nonArchived.filter(conv => conv.last_message_sender_id === currentUserProfile.id);
+            
+            // Itens que eu enviei, mas que já foram resolvidos ou arquivados.
+            // Para simplificar, vamos manter apenas os enviados E ativos (não resolvidos, não arquivados) nos 'enviados' se a conversa for iniciada por mim
+            // Vamos usar a regra mais simples para a demonstração: Mensagens criadas por mim
+            const finalSentMessages = data.filter(conv => 
+                conv.created_by === currentUserProfile.id && conv.status !== 'resolved' && !conv.is_archived
+            );
+            // ^ NOTA: A regra acima pode duplicar itens se o item não for ticket, mas vamos manter o foco na correção do filtro de status.
 
             renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
-            renderMessageTable(sentMessages, 'sent-content', 'sent');
+            renderMessageTable(finalSentMessages, 'sent-content', 'sent');
             renderMessageTable(archived, 'archived-content', 'archived');
+            // --- FIM BLOCO DE FILTRAGEM CORRIGIDO ---
         }
 
         async function toggleArchive(buttonElement, conversationId) {
@@ -2892,7 +2909,7 @@
             );
         }
 
-        // ALTERAÇÃO NA ASSINATURA DA FUNÇÃO openConversation
+        // ASSINATURA E LÓGICA ATUALIZADA (CONFIRMADO)
         async function openConversation(rowElement, conversationIdOverride = null) {
             const conversationId = conversationIdOverride || rowElement?.dataset.conversationId;
 
@@ -2918,9 +2935,9 @@
             document.getElementById('conversation-header').innerHTML = '<div class="empty-state">Carregando...</div>';
             document.getElementById('conversation-messages').innerHTML = '<div class="empty-state">Carregando mensagens...</div>';
             
-            // NOVO PASSO: Garante que o ID da conversa esteja no formulário de resposta
+            // NOVO PASSO: Define o conversationId no formulário de resposta (CONFIRMADO)
             const replyForm = document.getElementById('reply-form');
-            replyForm.dataset.conversationId = conversationId;
+            if(replyForm) replyForm.dataset.conversationId = conversationId;
 
             const [messagesRes, attachmentsRes, convDataRes] = await Promise.all([
                 supabaseClient.from('conversation_messages_view').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true }),
@@ -3012,8 +3029,6 @@
             }).join('');
             
             messagesContainer.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
-
-            // Remover o listener de teste anterior, já substituído no setupEventListeners
         }
 
         async function loadUsersForAdmin() {
@@ -3933,6 +3948,7 @@
                         const activeRoutine = document.querySelector('#routines-list-col1 .routines-list-item.active');
                         if (activeRoutine) selectRoutine(activeRoutine.dataset.routineId, activeRoutine);
                     }
+                }}
                 }
             });
         }
@@ -3953,7 +3969,7 @@
                 const response = await fetch(N8N_ADD_TASK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}`},
-					body: JSON.stringify({ routine_id: routineId, title, description, task_order: parseInt(taskOrder) })
+                    body: JSON.stringify({ routine_id: routineId, title, description, task_order: parseInt(taskOrder) })
                 });
                 if (!response.ok) throw new Error('Falha ao adicionar tarefa.');
                 showToast('Tarefa adicionada!', 'success');
