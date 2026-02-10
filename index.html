@@ -118,7 +118,6 @@
         .read-receipt.delivered .material-icons { color: var(--color-text-secondary); opacity: 0.6; }
         .refresh-btn { background: none; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; line-height: 1; }
         .refresh-btn:hover { background-color: var(--color-background); }
-        .refresh-btn .material-icons { color: var(--color-text-secondary); transition: transform 0.3s; }
         .refresh-btn.loading .material-icons { animation: spin 1s linear infinite; }
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--color-border); }
@@ -139,90 +138,81 @@
         .action-buttons .btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
         .action-buttons .btn:hover { background-color: var(--color-background); color: var(--color-text-primary); }
         
-        /* --- ORGANOGRAMA STYLES (NEW) --- */
+        /* --- ORGANOGRAMA STYLES (RESTAURADO) --- */
         .org-tree-wrapper {
-            padding: 1em;
-            text-align: center;
-            transform-origin: top center;
-            transform: scale(1); /* Padrão */
+            width: 100%;
+            overflow: auto;
+            padding: 2rem 0;
+            display: flex;
+            justify-content: center;
+            background: var(--color-background);
+            position: relative;
         }
         .org-tree, .org-tree ul {
-            list-style-type: none;
-            margin: 0;
+            display: flex;
+            justify-content: center;
+            list-style: none;
             padding: 0;
+            margin: 0;
             position: relative;
         }
         .org-tree ul {
-            padding-top: 1em;
-            display: flex;
-            justify-content: center;
+            padding-top: 20px;
         }
         .org-tree li {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 1em;
+            text-align: center;
             position: relative;
+            padding: 20px 5px 0 5px;
+            transition: all 0.5s;
         }
         .org-tree li::before, .org-tree li::after {
             content: '';
-            position: absolute;
-            top: 0;
-            width: 50%;
-            height: 1em;
+            position: absolute; top: 0; right: 50%;
             border-top: 2px solid var(--color-border);
-        }
-        .org-tree li::before {
-            left: 0;
-            border-right: 2px solid var(--color-border);
+            width: 50%; height: 20px;
         }
         .org-tree li::after {
-            right: 0;
+            right: auto; left: 50%;
             border-left: 2px solid var(--color-border);
         }
-        .org-tree li:only-child::before, .org-tree li:only-child::after {
+        .org-tree li:only-child::after, .org-tree li:only-child::before {
             display: none;
         }
+        .org-tree li:only-child { padding-top: 0; }
         .org-tree li:first-child::before, .org-tree li:last-child::after {
             border: 0 none;
         }
         .org-tree li:last-child::before {
             border-right: 2px solid var(--color-border);
-            border-radius: 0 0.6em 0 0;
+            border-radius: 0 5px 0 0;
         }
         .org-tree li:first-child::after {
-            border-radius: 0.6em 0 0 0;
+            border-radius: 5px 0 0 0;
         }
-        .org-tree > ul > li::before, .org-tree > ul > li::after {
-            display: none;
+        .org-tree ul ul::before {
+            content: '';
+            position: absolute; top: 0; left: 50%;
+            border-left: 2px solid var(--color-border);
+            width: 0; height: 20px;
         }
         .org-node {
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            background-color: var(--color-surface);
             border: 1px solid var(--color-border);
+            padding: 10px 15px;
+            display: inline-block;
+            border-radius: 8px;
+            background: var(--color-surface);
+            min-width: 160px;
             box-shadow: var(--shadow);
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            min-width: 180px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            z-index: 10;
         }
         .org-node:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
-            border-color: var(--color-info);
+            border-color: var(--color-brand-primary);
+            transform: translateY(-2px);
         }
-        .org-node h4 {
-            margin: 0.5rem 0 0.25rem;
-            font-size: 1rem;
-        }
-        .org-node p {
-            margin: 0;
-            font-size: 0.85rem;
-            color: var(--color-text-secondary);
-        }
+        .org-node h4 { margin: 5px 0; font-size: 0.95rem; }
+        .org-node p { margin: 0; font-size: 0.8rem; color: var(--color-text-secondary); }
 
         /* --- ORGANOGRAMA CONTEXT MENU (NEW) --- */
         .org-context-menu {
@@ -635,22 +625,20 @@
             justify-content: center;
         }
 
-        /* --- REGRAS DE TELA CHEIA (ADICIONAR AO FIM DO CSS) --- */
-        body.fullscreen .sidebar {
-            display: none !important; /* Oculta o menu */
-        }
+        /* --- FULLSCREEN FIXES (RESTAURADO) --- */
+        body.fullscreen .sidebar { display: none !important; }
         body.fullscreen main.content {
             margin-left: 0 !important;
-            padding: 1rem !important; /* Reduz o padding para maximizar a área */
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden; /* Remove o scroll principal */
+            padding: 0 !important;
+            width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; z-index: 9999;
+            background: var(--color-background);
+            overflow: auto;
         }
-        body.fullscreen #organograma-tree-container {
-            height: calc(100vh - 100px); /* Ajusta a altura da árvore para caber na tela */
-            max-height: none;
+        body.fullscreen .org-tree-wrapper {
+            min-height: 100vh;
+            padding: 4rem 2rem;
         }
-
     </style>
 </head>
 <body>
@@ -1318,17 +1306,14 @@
             else allUsers = data; 
         }
 
-        // --- ORGANOGRAMA LOGIC ---
+        // --- ORGANOGRAMA LOGIC (CORRECTED) ---
         async function loadOrganogramaPage(departmentFilter = '') {
             const container = document.getElementById('organograma-tree-container');
             if (!container) return;
 
             container.innerHTML = `<div class="empty-state">Carregando organograma...</div>`;
 
-            // 1. Popula o Dropdown de Filtro (Reutilizando a lista de todos os usuários 'allUsers')
             const selectElement = document.getElementById('org-filter-dept');
-            
-            // Garante que allUsers está carregado
             if (allUsers.length === 0) await fetchAllUsersForSearch();
             
             if (selectElement && selectElement.options.length <= 1) {
@@ -1341,32 +1326,27 @@
                 });
             }
             
-            // 2. Define o filtro e atualiza o dropdown
             if (selectElement) selectElement.value = departmentFilter;
             
             try {
-                // 3. Chama a RPC com o filtro (p_department_filter)
                 const { data: orgData, error } = await supabaseClient.rpc('get_org_chart_data', {
                     p_department_filter: departmentFilter || null 
                 });
                 
                 if (error) throw error;
 
-                // 4. SUBSTITUIÇÃO DO BLOCO DE RENDERIZAÇÃO DA ÁRVORE (BLOCO 2 JS)
                 if (!orgData || orgData.length === 0) {
-                    container.innerHTML = `<div class="empty-state">Nenhum dado encontrado para o organograma ${departmentFilter ? 'nesta área' : 'geral'}.</div>`;
+                    container.innerHTML = `<div class="empty-state">Nenhum dado encontrado para o organograma.</div>`;
                     return;
                 }
 
-                // 4. Renderiza a Árvore dentro do wrapper e adiciona o botão Fullscreen
-                let treeHTML = `<div class="org-tree-wrapper"><ul>`;
+                const expandButton = `<button class="btn btn-icon" onclick="toggleFullscreenOrg()" title="Tela Cheia" style="position: absolute; top: 10px; right: 10px; z-index: 100;"><span class="material-icons">fullscreen</span></button>`;
+
+                let treeHTML = `<div class="org-tree-wrapper"><div class="org-tree"><ul>`;
                 orgData.forEach(rootNode => {
                     treeHTML += renderOrgNode(rootNode);
                 });
-                treeHTML += `</ul></div>`;
-
-                // Adiciona o botão de Tela Cheia no container da árvore (ajustando a posição)
-                const expandButton = `<button class="btn btn-icon" onclick="toggleFullscreenOrg()" title="Tela Cheia" style="position: absolute; top: 10px; right: 10px; z-index: 100;"><span class="material-icons">fullscreen</span></button>`;
+                treeHTML += `</ul></div></div>`;
 
                 container.innerHTML = expandButton + treeHTML;
 
@@ -1382,24 +1362,19 @@
             const name = node.name;
             const role = node.title || 'Colaborador';
             const dept = node.department;
-            const initial = node.name ? node.name.charAt(0).toUpperCase() : '?';
 
             let childrenHTML = '';
             if (node.children && node.children.length > 0) {
                 childrenHTML += `<ul>`;
-                node.children.forEach(child => {
-                    childrenHTML += renderOrgNode(child);
-                });
+                node.children.forEach(child => childrenHTML += renderOrgNode(child));
                 childrenHTML += `</ul>`;
             }
 
             return `
                 <li>
                     <div class="org-node" onclick="openOrgMenu(event, '${node.id}', '${node.name.replace(/'/g, "\\'")}')">
-                        <div class="user-avatar" style="width: 48px; height: 48px; font-size: 1.5rem; margin-bottom: 0.5rem;">${initial}</div>
                         <h4>${name}</h4>
                         <p>${role}</p>
-                        <p style="font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 2px;">${dept}</p>
                     </div>
                     ${childrenHTML}
                 </li>
@@ -1462,7 +1437,6 @@
             }
         }
         
-        // BLOCO 3 JS ADICIONADO
         function toggleFullscreenOrg() {
             const body = document.body;
             const isFullscreen = body.classList.toggle('fullscreen');
@@ -1476,19 +1450,8 @@
                 icon.textContent = 'fullscreen';
                 expandButton.title = 'Tela Cheia';
             }
-
-            // A Sidebar deve ser ocultada/re-exibida pelo CSS, mas garantimos que o display do Sidebar é flex no modo normal.
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar) {
-                // No modo fullscreen, o CSS se encarrega. No modo normal, garantimos que ela esteja visível para desktop.
-                if (!isFullscreen && window.innerWidth > 768) {
-                     sidebar.style.display = 'flex';
-                } else if (isFullscreen) {
-                     sidebar.style.display = 'none'; // Força o display none no JS para compatibilidade
-                }
-            }
         }
-        // FIM BLOCO 3 JS
+        // --- END OF ORGANOGRAMA LOGIC ---
 
         // --- REQUESTS MODULE LOGIC ---
 
