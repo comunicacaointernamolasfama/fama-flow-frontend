@@ -915,6 +915,9 @@
         const N8N_DELETE_TASK_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/delete-routine-task';
         const N8N_REORDER_TASKS_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/reorder-tasks';
         const N8N_REMOVE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/remove-user-from-routine';
+        // NEW WEBHOOK URLS FOR TRAVEL
+        const N8N_CREATE_TRAVEL_REQUEST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-travel-request';
+        const N8N_UPDATE_TRAVEL_REQUEST_STATUS_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/update-travel-request-status';
 
 
         let currentUserProfile = null;
@@ -1047,6 +1050,31 @@
                                 </tr>
                             </thead>
                             <tbody id="request-management-table-body">
+                                <tr><td colspan="5" class="empty-state">Carregando requisições...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- NEW TRAVEL MANAGEMENT PAGE -->
+                <div id="travel-request-management-page" class="page-content">
+                    <div class="page-header">
+                        <div>
+                            <h1>Gerenciamento de Requisições de Viagem</h1>
+                            <p>Analise e gerencie todas as solicitações de viagem.</p>
+                        </div>
+                    </div>
+                    <div class="card" style="padding:0;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">Solicitante</th>
+                                    <th style="width: 30%;">Título</th>
+                                    <th style="width: 20%;">Período</th>
+                                    <th style="width: 15%;">Status</th>
+                                    <th style="width: 15%;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="travel-request-management-table-body">
                                 <tr><td colspan="5" class="empty-state">Carregando requisições...</td></tr>
                             </tbody>
                         </table>
@@ -1195,12 +1223,10 @@
             document.getElementById('dashboard-title').textContent = `Dashboard de ${currentUserProfile.full_name.split(' ')[0]}`;
 
             const adminMenuUl = document.querySelector('#admin-section .nav-menu');
-            // Dentro da função showApp()
             if (adminMenuUl && currentUserProfile.permissions) {
                 let menuHTML = '';
                 const permissions = currentUserProfile.permissions;
 
-                // A seção de admin só aparece se o usuário tiver PELO MENOS UMA permissão de gerenciamento
                 if (permissions.includes('manage_users') || permissions.includes('manage_requests') || permissions.includes('manage_routines')) {
                     
                     if (permissions.includes('manage_users')) {
@@ -1209,6 +1235,8 @@
                     }
                     if (permissions.includes('manage_requests')) {
                         menuHTML += `<li><a href="#" class="nav-link" data-page="request-management-page"><span class="material-icons">rule_folder</span> Gerenciar Requisições</a></li>`;
+                        // NEW: Add the travel management link, controlled by the same permission
+                        menuHTML += `<li><a href="#" class="nav-link" data-page="travel-request-management-page"><span class="material-icons">flight_takeoff</span> Gerenciar Viagens</a></li>`;
                     }
                     if (permissions.includes('manage_routines')) {
                         menuHTML += `<li><a href="#" class="nav-link" data-page="manage-routines-page"><span class="material-icons">rule</span> Gerenciar Rotinas</a></li>`;
@@ -1273,6 +1301,7 @@
             if (pageId === 'mural-page') loadMuralPage();
             if (pageId === 'rankings-page') loadRankingsPage();
             if (pageId === 'request-management-page') loadRequestManagementPage();
+            if (pageId === 'travel-request-management-page') loadTravelRequestManagementPage(); // NEW
             if (pageId === 'my-routines-page') loadMyRoutinesPage();
             if (pageId === 'manage-routines-page') loadManageRoutinesPage();
             if (pageId === 'organograma-page') loadOrganogramaPage();
@@ -1477,7 +1506,8 @@
                 'termination': 'Desligamento',
                 'promotion': 'Promoção Interna',
                 'overtime': 'Horas Extras',
-                'training': 'Treinamento'
+                'training': 'Treinamento',
+                'travel': 'Viagem' // NEW
             };
 
             tableBody.innerHTML = data.map(req => {
@@ -1516,6 +1546,12 @@
 
                 if (error || !request) {
                     throw new Error('Não foi possível carregar os detalhes da requisição.');
+                }
+                
+                // NEW: If it's a travel request, use the specific details modal
+                if (request.type === 'travel') {
+                    await openTravelRequestDetailsModal(requestId);
+                    return; // Stop execution here
                 }
                 
                 modalTitle.textContent = 'Detalhes da Requisição';
@@ -1598,6 +1634,11 @@
                         <span class="material-icons">school</span>
                         <h3>Solicitar Treinamento</h3>
                     </div>
+                    <!-- NEW TRAVEL CARD -->
+                    <div class="type-card" data-type="travel">
+                        <span class="material-icons">flight_takeoff</span>
+                        <h3>Requisição de Viagem</h3>
+                    </div>
                 </div>
             `;
 
@@ -1627,6 +1668,29 @@
             const backButtonHTML = `<button class="btn btn-icon" onclick="openRequestModal()" title="Voltar" style="position: absolute; left: 1.5rem; top: 1rem;"><span class="material-icons">arrow_back</span></button>`;
 
             switch (type) {
+                case 'travel': // NEW CASE
+                    title = 'Requisição de Viagem';
+                    formHTML = `
+                        <h3 class="form-section-title">1. Informações da Viagem</h3>
+                        <div class="form-group"><label for="req-travel-title">Título da Viagem*</label><input type="text" id="req-travel-title" name="titulo" class="input-field" required></div>
+                        <div class="form-group"><label for="req-travel-destination">Destino / Local*</label><input type="text" id="req-travel-destination" name="local" class="input-field" required></div>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group"><label for="req-travel-start-date">Data Saída*</label><input type="date" id="req-travel-start-date" name="data_saida" class="input-field" required></div>
+                            <div class="form-group"><label for="req-travel-end-date">Data Retorno*</label><input type="date" id="req-travel-end-date" name="data_retorno" class="input-field" required></div>
+                        </div>
+                        <div class="form-group"><label for="req-travel-participants">Participantes* (nomes separados por vírgula)</label><input type="text" id="req-travel-participants" name="participantes_nomes" class="input-field" required></div>
+                        
+                        <h3 class="form-section-title">2. Detalhes Adicionais</h3>
+                        <div class="form-group"><label>Tipo de Transporte Preferencial</label><div class="radio-group"><label><input type="radio" name="tipo_transporte" value="carro" checked> Carro</label><label><input type="radio" name="tipo_transporte" value="aviao"> Avião</label></div></div>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group"><label for="req-travel-distance">Distância (km, apenas ida)</label><input type="number" id="req-travel-distance" name="distancia_km" class="input-field" placeholder="Se for de carro"></div>
+                            <div class="form-group"><label for="req-travel-registration-cost">Inscrição de Evento/Curso (R$)</label><input type="number" id="req-travel-registration-cost" name="custo_inscricao" class="input-field" placeholder="Se aplicável"></div>
+                        </div>
+
+                        <h3 class="form-section-title">3. Justificativa*</h3>
+                        <div class="form-group"><textarea name="justificativa" class="input-field" rows="3" required></textarea></div>
+                    `;
+                    break;
                 case 'new_hire':
                     title = 'Requisição de Contratação de Pessoal';
                     formHTML = `
@@ -1858,24 +1922,38 @@
             btn.disabled = true;
             btn.innerHTML = 'Enviando...';
 
-            const formData = new FormData(form);
-            const dataObject = {};
-            formData.forEach((value, key) => { dataObject[key] = value; });
-
             try {
                 const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
                 if (sessionError || !session) throw new Error("Sessão inválida. Faça login novamente.");
                 
-                const response = await fetch(N8N_CREATE_REQUEST_URL, {
+                const formData = new FormData(form);
+                const dataObject = {};
+                formData.forEach((value, key) => { dataObject[key] = value; });
+                
+                let webhookUrl = N8N_CREATE_REQUEST_URL;
+                let payload = {
+                    type: currentRequestType,
+                    data: dataObject
+                };
+
+                // NEW: Handle travel request submission separately
+                if (currentRequestType === 'travel') {
+                    webhookUrl = N8N_CREATE_TRAVEL_REQUEST_URL;
+                    payload = {
+                        ...dataObject,
+                        solicitante_nome: currentUserProfile.full_name,
+                        cargo: currentUserProfile.role,
+                        setor: currentUserProfile.department
+                    };
+                }
+
+                const response = await fetch(webhookUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${session.access_token}`
                     },
-                    body: JSON.stringify({
-                        type: currentRequestType,
-                        data: dataObject
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) {
@@ -3353,8 +3431,11 @@
                 tableBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color: var(--color-danger)">Falha ao carregar.</td></tr>`;
                 return;
             }
+            
+            // Exclude travel requests from this generic page
+            const filteredData = data.filter(req => req.type !== 'travel');
 
-            if (!data || data.length === 0) {
+            if (!filteredData || filteredData.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhuma requisição encontrada.</td></tr>`;
                 return;
             }
@@ -3370,7 +3451,7 @@
                 rejected: 'Recusado'
             };
 
-            tableBody.innerHTML = data.map(req => {
+            tableBody.innerHTML = filteredData.map(req => {
                 const typeLabel = requestTypeLabels[req.type] || req.type.replace(/_/g, ' ');
                 const date = new Date(req.created_at).toLocaleDateString('pt-BR');
                 const statusLabel = statusLabels[req.status] || req.status;
@@ -3396,7 +3477,156 @@
                 `;
             }).join('');
         }
+        
+        // --- NEW FUNCTIONS FOR TRAVEL REQUESTS ---
+        async function loadTravelRequestManagementPage() {
+            const tableBody = document.getElementById('travel-request-management-table-body');
+            tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Carregando requisições de viagem...</td></tr>`;
 
+            const { data, error } = await supabaseClient.rpc('get_all_requests_for_viewing');
+
+            if (error) {
+                console.error("Erro ao buscar requisições de viagem:", error);
+                tableBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color: var(--color-danger)">Falha ao carregar.</td></tr>`;
+                return;
+            }
+
+            const travelRequests = data.filter(req => req.type === 'travel');
+
+            if (travelRequests.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhuma requisição de viagem encontrada.</td></tr>`;
+                return;
+            }
+
+            const statusLabels = { pending: 'Pendente', approved: 'Aprovado', rejected: 'Recusado' };
+
+            tableBody.innerHTML = travelRequests.map(req => {
+                const statusLabel = statusLabels[req.status] || req.status;
+                const startDate = req.data.data_saida ? new Date(req.data.data_saida + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
+                const endDate = req.data.data_retorno ? new Date(req.data.data_retorno + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
+                return `
+                    <tr>
+                        <td>${req.requester_name || 'N/A'}</td>
+                        <td>${req.data.titulo || 'Sem Título'}</td>
+                        <td>${startDate} - ${endDate}</td>
+                        <td><span class="status-tag status-${req.status}">${statusLabel}</span></td>
+                        <td>
+                            <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;" onclick="openTravelRequestDetailsModal('${req.id}')">Ver Análise</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function openTravelRequestDetailsModal(requestId) {
+            const modal = document.getElementById('request-modal');
+            const modalTitle = document.getElementById('request-modal-title');
+            const modalBody = document.getElementById('request-modal-body');
+            const modalFooter = document.getElementById('request-modal-footer');
+
+            modalTitle.textContent = 'Carregando Análise de Viagem...';
+            modalBody.innerHTML = '<div class="empty-state">Buscando dados e custos...</div>';
+            modalFooter.innerHTML = '';
+            modal.classList.add('visible');
+
+            try {
+                const { data: request, error } = await supabaseClient.from('requests').select('*').eq('id', requestId).single();
+
+                if (error || !request) {
+                    throw new Error('Não foi possível carregar os detalhes da requisição.');
+                }
+                
+                const reqData = request.data || {};
+                const custosCarro = reqData.custos_carro || {};
+                const custosAviao = reqData.custos_aviao || {};
+                const cenarioVantajoso = reqData.cenario_vantajoso || null;
+                const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+                const isCarroVantajoso = cenarioVantajoso === 'carro' ? `style="border: 2px solid var(--color-success);"` : '';
+                const isAviaoVantajoso = cenarioVantajoso === 'aviao' ? `style="border: 2px solid var(--color-success);"` : '';
+
+                modalTitle.textContent = 'Análise de Requisição de Viagem';
+                modalBody.innerHTML = `
+                    <div class="card" style="margin:0; box-shadow:none; border:none; padding:0;">
+                        <h3 class="form-section-title">Informações Gerais</h3>
+                        <p><strong>Título:</strong> ${reqData.titulo}</p>
+                        <p><strong>Destino:</strong> ${reqData.local}</p>
+                        <p><strong>Período:</strong> ${new Date(reqData.data_saida + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(reqData.data_retorno + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
+                        <p><strong>Participantes:</strong> ${reqData.participantes_nomes}</p>
+                        <p><strong>Justificativa:</strong> ${reqData.justificativa}</p>
+                        
+                        <h3 class="form-section-title">Análise Comparativa de Custos</h3>
+                        <div class="grid grid-cols-2">
+                            <div class="card" ${isCarroVantajoso}>
+                                <h4 style="display:flex; align-items:center; gap:0.5rem;"><span class="material-icons">directions_car</span> Cenário: Carro</h4>
+                                <ul style="list-style:none; padding:0; margin:0; font-size:0.9rem;">
+                                    <li style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom: 1px dashed var(--color-border);"><span>Transporte:</span> <strong>${formatCurrency(custosCarro.transporte)}</strong></li>
+                                    <li style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom: 1px dashed var(--color-border);"><span>Hospedagem:</span> <strong>${formatCurrency(custosCarro.hospedagem)}</strong></li>
+                                    <li style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom: 1px dashed var(--color-border);"><span>Alimentação:</span> <strong>${formatCurrency(custosCarro.alimentacao)}</strong></li>
+                                    <li style="display:flex; justify-content:space-between; padding:0.75rem 0; font-size: 1.1rem;"><span>TOTAL:</span> <strong style="color:var(--color-brand-primary);">${formatCurrency(custosCarro.total)}</strong></li>
+                                </ul>
+                            </div>
+                             <div class="card" ${isAviaoVantajoso}>
+                                <h4 style="display:flex; align-items:center; gap:0.5rem;"><span class="material-icons">flight</span> Cenário: Avião</h4>
+                                <ul style="list-style:none; padding:0; margin:0; font-size:0.9rem;">
+                                    <li style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom: 1px dashed var(--color-border);"><span>Transporte:</span> <strong>${formatCurrency(custosAviao.transporte)}</strong></li>
+                                    <li style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom: 1px dashed var(--color-border);"><span>Hospedagem:</span> <strong>${formatCurrency(custosAviao.hospedagem)}</strong></li>
+                                    <li style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom: 1px dashed var(--color-border);"><span>Alimentação:</span> <strong>${formatCurrency(custosAviao.alimentacao)}</strong></li>
+                                    <li style="display:flex; justify-content:space-between; padding:0.75rem 0; font-size: 1.1rem;"><span>TOTAL:</span> <strong style="color:var(--color-brand-primary);">${formatCurrency(custosAviao.total)}</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                if (request.status === 'pending') {
+                    modalFooter.innerHTML = `
+                        <button class="btn btn-secondary" onclick="closeRequestModal()">Fechar</button>
+                        <button class="btn btn-danger" onclick="updateTravelRequestStatus('${requestId}', 'rejected')"><span class="material-icons">cancel</span> Recusar</button>
+                        <button class="btn btn-success" onclick="updateTravelRequestStatus('${requestId}', 'approved')"><span class="material-icons">check_circle</span> Aprovar</button>
+                    `;
+                } else {
+                     modalFooter.innerHTML = `<button class="btn btn-secondary" onclick="closeRequestModal()">Fechar</button>`;
+                }
+
+            } catch (error) {
+                 console.error(error);
+                modalBody.innerHTML = `<div class="empty-state" style="color:var(--color-danger);">${error.message}</div>`;
+                modalFooter.innerHTML = `<button class="btn btn-secondary" onclick="closeRequestModal()">Fechar</button>`;
+            }
+        }
+        
+        async function updateTravelRequestStatus(requestId, newStatus) {
+            const btnClass = newStatus === 'approved' ? '.btn-success' : '.btn-danger';
+            const btn = document.querySelector(`#request-modal-footer ${btnClass}`);
+            if(btn) btn.disabled = true;
+
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) throw new Error("Sessão inválida.");
+                
+                const response = await fetch(N8N_UPDATE_TRAVEL_REQUEST_STATUS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                    body: JSON.stringify({ request_id: requestId, new_status: newStatus })
+                });
+
+                if (!response.ok) throw new Error(`Falha ao ${newStatus === 'approved' ? 'aprovar' : 'recusar'}.`);
+
+                showToast(`Requisição marcada como ${newStatus === 'approved' ? 'Aprovada' : 'Recusada'}!`, 'success');
+                closeRequestModal();
+                loadTravelRequestManagementPage();
+
+            } catch (error) {
+                console.error("Erro ao atualizar status da viagem:", error);
+                showToast(error.message, "danger");
+                if(btn) btn.disabled = false;
+            }
+        }
+
+        // --- END OF NEW FUNCTIONS ---
+
+        // --- ROUTINES MODULE LOGIC ---
         async function loadMyRoutinesPage() {
             const page = document.getElementById('my-routines-page');
             page.innerHTML = `
