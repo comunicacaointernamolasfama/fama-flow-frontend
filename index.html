@@ -920,7 +920,7 @@
         const N8N_REMOVE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/remove-user-from-routine';
         // NEW WEBHOOK URLS FOR TRAVEL
         const N8N_CREATE_TRAVEL_REQUEST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-travel-request';
-        const N8N_SUBMIT_TRAVEL_DECISION_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/submit-travel-decision';
+        const N8N_REGISTER_DECISION_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/submit-travel-decision';
 
 
         let currentUserProfile = null;
@@ -928,10 +928,11 @@
         let allUsers = [];
         let selectedRecipients = [];
         let selectedFile = null;
-        let currentRequestType = null; // Used for the new requests module
+        let currentRequestType = null;
         let selectedAssignmentDates = [];
         let routineCurrentDate = new Date();
         let currentMenu = null;
+        let currentEditingRequest = null; // <- NOVA VARIÁVEL GLOBAL
 
 
         const root = document.getElementById('root');
@@ -1659,6 +1660,7 @@
         function closeRequestModal() {
             document.getElementById('request-modal').classList.remove('visible');
             currentRequestType = null;
+            currentEditingRequest = null; // Limpa a variável global ao fechar
         }
 
         function renderRequestForm(type) {
@@ -3524,6 +3526,8 @@
                 const { data: request, error } = await supabaseClient.from('requests').select('*').eq('id', requestId).single();
                 if (error || !request) throw new Error('Não foi possível carregar os detalhes da requisição.');
 
+                currentEditingRequest = request; // <-- GUARDA A REQUISIÇÃO ATUAL GLOBALMENTE
+
                 const reqData = request.data || {};
                 const cCarro = reqData.cenario_carro || {};
                 const cAviao = reqData.cenario_aviao || {};
@@ -3563,9 +3567,10 @@
                     </div>
                 `;
                 
+                // O BOTÃO DE DECISÃO AGORA CHAMA UMA NOVA FUNÇÃO
                 modalFooter.innerHTML = `
                     <button class="btn btn-secondary" onclick="closeRequestModal()">Fechar</button>
-                    <button class="btn btn-danger" onclick='renderTravelDecisionForm(${JSON.stringify(request)})'>Registrar Decisão</button>
+                    <button class="btn btn-danger" onclick="openDecisionModal()">Registrar Decisão</button>
                 `;
 
             } catch (error) {
@@ -3575,95 +3580,104 @@
             }
         }
 
-        function renderTravelDecisionForm(request) {
+        function openDecisionModal() {
+            if (!currentEditingRequest) return;
+
+            const modalTitle = document.getElementById('request-modal-title');
             const modalBody = document.getElementById('request-modal-body');
             const modalFooter = document.getElementById('request-modal-footer');
-            const cCarro = request.data.cenario_carro || {};
-            const cAviao = request.data.cenario_aviao || {};
-
-            modalBody.innerHTML = `
-                <form id="edit-travel-form" style="padding: 1rem;">
-                    <h4 class="form-section-title">Ajustar Custos - Cenário Carro</h4>
-                    <div class="grid grid-cols-2">
-                        <div class="form-group"><label>Transporte (R$)</label><input type="number" step="0.01" class="input-field" name="carro_transporte" value="${cCarro.transporte || 0}"></div>
-                        <div class="form-group"><label>Hospedagem (R$)</label><input type="number" step="0.01" class="input-field" name="carro_hospedagem" value="${cCarro.hospedagem || 0}"></div>
-                        <div class="form-group"><label>Alimentação (R$)</label><input type="number" step="0.01" class="input-field" name="carro_alimentacao" value="${cCarro.alimentacao || 0}"></div>
-                        <div class="form-group"><label>Inscrição (R$)</label><input type="number" step="0.01" class="input-field" name="carro_inscricao" value="${cCarro.inscricao || 0}"></div>
-                    </div>
-
-                    <h4 class="form-section-title">Ajustar Custos - Cenário Avião</h4>
-                    <div class="grid grid-cols-2">
-                        <div class="form-group"><label>Transporte (R$)</label><input type="number" step="0.01" class="input-field" name="aviao_transporte" value="${cAviao.transporte || 0}"></div>
-                        <div class="form-group"><label>Hospedagem (R$)</label><input type="number" step="0.01" class="input-field" name="aviao_hospedagem" value="${cAviao.hospedagem || 0}"></div>
-                        <div class="form-group"><label>Alimentação (R$)</label><input type="number" step="0.01" class="input-field" name="aviao_alimentacao" value="${cAviao.alimentacao || 0}"></div>
-                        <div class="form-group"><label>Inscrição (R$)</label><input type="number" step="0.01" class="input-field" name="aviao_inscricao" value="${cAviao.inscricao || 0}"></div>
-                    </div>
-
-                    <h4 class="form-section-title">Observações da Gestão</h4>
-                    <div class="form-group">
-                        <textarea name="observacoes_gestor" class="input-field" rows="3" placeholder="Adicione observações sobre a decisão..."></textarea>
-                    </div>
-                </form>
-            `;
             
+            const reqData = currentEditingRequest.data;
+
+            modalTitle.textContent = `Ajuste e Decisão Final: ${reqData.titulo}`;
+            modalBody.innerHTML = `
+            <div style="padding: 1rem;">
+                <div class="form-group">
+                    <h4 class="form-section-title">Ajustar Custos - Cenário Carro</h4>
+                    <div class="grid grid-cols-2" style="align-items: center;">
+                        <label>Transporte (R$)</label><input type="number" step="0.01" id="edit-car-transport" class="input-field" value="${reqData.cenario_carro.transporte}">
+                        <label>Hospedagem (R$)</label><input type="number" step="0.01" id="edit-car-hospedagem" class="input-field" value="${reqData.cenario_carro.hospedagem}">
+                        <label>Alimentação (R$)</label><input type="number" step="0.01" id="edit-car-alimentacao" class="input-field" value="${reqData.cenario_carro.alimentacao}">
+                        <label>Inscrição (R$)</label><input type="number" step="0.01" id="edit-car-inscricao" class="input-field" value="${reqData.cenario_carro.inscricao}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <h4 class="form-section-title">Ajustar Custos - Cenário Avião</h4>
+                    <div class="grid grid-cols-2" style="align-items: center;">
+                        <label>Transporte (R$)</label><input type="number" step="0.01" id="edit-plane-transport" class="input-field" value="${reqData.cenario_aviao.transporte}">
+                        <label>Hospedagem (R$)</label><input type="number" step="0.01" id="edit-plane-hospedagem" class="input-field" value="${reqData.cenario_aviao.hospedagem}">
+                        <label>Alimentação (R$)</label><input type="number" step="0.01" id="edit-plane-alimentacao" class="input-field" value="${reqData.cenario_aviao.alimentacao}">
+                        <label>Inscrição (R$)</label><input type="number" step="0.01" id="edit-plane-inscricao" class="input-field" value="${reqData.cenario_aviao.inscricao}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <h4 class="form-section-title">Observações da Gestão</h4>
+                    <textarea id="decision-notes" class="input-field" rows="3" placeholder="Adicione observações sobre a decisão..."></textarea>
+                </div>
+            </div>
+            `;
+
             modalFooter.innerHTML = `
-                <button class="btn btn-secondary" onclick="openTravelRequestDetailsModal('${request.id}')">Cancelar</button>
-                <button class="btn btn-danger" onclick="submitTravelDecision('${request.id}', 'rejected_definitively')">Recusar Definitivamente</button>
-                <button class="btn btn-success" onclick="submitTravelDecision('${request.id}', 'approved_definitively')">Aprovar Definitivamente</button>
+                <button class="btn btn-secondary" onclick="openTravelRequestDetailsModal(currentEditingRequest.id)">Cancelar</button>
+                <button class="btn btn-danger" onclick="submitTravelDecision('rejected_by_director')">Recusar Definitivamente</button>
+                <button class="btn btn-success" onclick="submitTravelDecision('approved_by_director')">Aprovar Definitivamente</button>
             `;
         }
+        
+        async function submitTravelDecision(decision) {
+            if (!currentEditingRequest) return;
 
-        async function submitTravelDecision(requestId, finalStatus) {
-            const form = document.getElementById('edit-travel-form');
-            if (!form) return;
+            // 1. RECOLETAR OS DADOS (INCLUINDO OS EDITADOS)
+            let updatedData = JSON.parse(JSON.stringify(currentEditingRequest.data)); // Clona o objeto original profundamente
 
-            const buttons = document.querySelectorAll('#request-modal-footer button');
-            buttons.forEach(btn => btn.disabled = true);
+            // Atualiza com os valores editados dos cenários
+            updatedData.cenario_carro.transporte = document.getElementById('edit-car-transport').value;
+            updatedData.cenario_carro.hospedagem = document.getElementById('edit-car-hospedagem').value;
+            updatedData.cenario_carro.alimentacao = document.getElementById('edit-car-alimentacao').value;
+            updatedData.cenario_carro.inscricao = document.getElementById('edit-car-inscricao').value;
             
+            updatedData.cenario_aviao.transporte = document.getElementById('edit-plane-transport').value;
+            updatedData.cenario_aviao.hospedagem = document.getElementById('edit-plane-hospedagem').value;
+            updatedData.cenario_aviao.alimentacao = document.getElementById('edit-plane-alimentacao').value;
+            updatedData.cenario_aviao.inscricao = document.getElementById('edit-plane-inscricao').value;
+
+            // Adiciona observações e a decisão final ao objeto de dados
+            updatedData.decision_notes = document.getElementById('decision-notes').value;
+            updatedData.final_decision = decision;
+            updatedData.decided_by = currentUserProfile.full_name;
+            updatedData.decided_at = new Date().toISOString();
+
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) throw new Error("Sessão inválida.");
 
-                const formData = new FormData(form);
-                const updatedData = {
-                    cenario_carro: {
-                        transporte: formData.get('carro_transporte'),
-                        hospedagem: formData.get('carro_hospedagem'),
-                        alimentacao: formData.get('carro_alimentacao'),
-                        inscricao: formData.get('carro_inscricao'),
-                    },
-                    cenario_aviao: {
-                        transporte: formData.get('aviao_transporte'),
-                        hospedagem: formData.get('aviao_hospedagem'),
-                        alimentacao: formData.get('aviao_alimentacao'),
-                        inscricao: formData.get('aviao_inscricao'),
-                    },
-                    observacoes_gestor: formData.get('observacoes_gestor')
+                // 2. MONTAR O CORPO DA REQUISIÇÃO CORRETAMENTE
+                const bodyPayload = {
+                    request_id: currentEditingRequest.id, // <-- ENVIA O ID
+                    decision: decision, // <-- ENVIA A DECISÃO
+                    updated_data: JSON.stringify(updatedData) // <-- ENVIA OS DADOS ATUALIZADOS
                 };
 
-                const response = await fetch(N8N_SUBMIT_TRAVEL_DECISION_URL, {
+                const response = await fetch(N8N_REGISTER_DECISION_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                    body: JSON.stringify({
-                        request_id: requestId,
-                        final_status: finalStatus,
-                        updated_data: updatedData
-                    })
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify(bodyPayload)
                 });
 
-                if (!response.ok) throw new Error(`Falha ao submeter decisão.`);
-
-                showToast(`Decisão registrada com sucesso!`, 'success');
+                if (!response.ok) throw new Error('Falha ao registrar decisão.');
+                
+                showToast('Decisão registrada com sucesso!', 'success');
                 closeRequestModal();
                 loadTravelRequestManagementPage();
 
             } catch (error) {
-                console.error("Erro ao registrar decisão:", error);
-                showToast(error.message, "danger");
-                buttons.forEach(btn => btn.disabled = false);
+                showToast(`Erro: ${error.message}`, 'danger');
             }
         }
-        
+
         // --- ROUTINES MODULE LOGIC ---
         async function loadMyRoutinesPage() {
             const page = document.getElementById('my-routines-page');
@@ -3755,10 +3769,6 @@
 
             document.getElementById('prev-month-btn').onclick = () => {
                 routineCurrentDate.setMonth(routineCurrentDate.getMonth() - 1);
-                renderCalendar(routineCurrentDate.getFullYear(), routineCurrentDate.getMonth());
-            };
-            document.getElementById('next-month-btn').onclick = () => {
-                routineCurrentDate.setMonth(routineCurrentDate.getMonth() + 1);
                 renderCalendar(routineCurrentDate.getFullYear(), routineCurrentDate.getMonth());
             };
         }
