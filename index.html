@@ -885,11 +885,14 @@
     </div>
 
     <script>
-        // --- N8N WEBHOOK URLs (BLOCO 1 CORRIGIDO) ---
         const SUPABASE_URL = 'https://flegnghsopbrulnnpuvz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsZWduZ2hzb3BicnVsbm5wdXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NDc2MjMsImV4cCI6MjA3ODMyMzYyM30.oZN5gJyNemgYT8nKsXwK9y8cYY_SjLR-sfMqZeaOdQ4';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
+        // --- LOGO URLS ---
+        const LOGO_LIGHT_URL = 'https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png';
+        const LOGO_DARK_URL = 'https://ctfamadobrasil.com.br/wp-content/uploads/2025/12/Gemini_Generated_Image_v8cib8v8cib8v8ci-removebg-preview.png';
+
         // --- N8N WEBHOOK URLs ---
         const N8N_CREATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-user';
         const N8N_UPDATE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/update-user';
@@ -917,7 +920,7 @@
         const N8N_REMOVE_USER_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/remove-user-from-routine';
         // NEW WEBHOOK URLS FOR TRAVEL
         const N8N_CREATE_TRAVEL_REQUEST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-travel-request';
-        const N8N_UPDATE_TRAVEL_REQUEST_STATUS_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/update-travel-request-status';
+        const N8N_SUBMIT_TRAVEL_DECISION_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/submit-travel-decision';
 
 
         let currentUserProfile = null;
@@ -934,10 +937,10 @@
         const root = document.getElementById('root');
         const themeToggleBtn = document.getElementById('theme-toggle');
 
-        const authHTML = `<div class="login-wrapper visible" id="auth-wrapper"><div id="auth-container" class="login-container"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="login-logo"><p class="login-subtitle">Sistema de Governança Fama</p><form id="login-form"><div class="input-group"><input type="email" id="email" class="input-field" placeholder="Email" required></div><div class="input-group"><input type="password" id="password" class="input-field" placeholder="Senha" required></div><button type="submit" class="btn-primary" style="width: 100%;">Entrar</button></form></div></div>`;
+        const authHTML = `<div class="login-wrapper visible" id="auth-wrapper"><div id="auth-container" class="login-container"><img src="${LOGO_LIGHT_URL}" alt="Logo Fama" class="login-logo"><p class="login-subtitle">Sistema de Governança Fama</p><form id="login-form"><div class="input-group"><input type="email" id="email" class="input-field" placeholder="Email" required></div><div class="input-group"><input type="password" id="password" class="input-field" placeholder="Senha" required></div><button type="submit" class="btn-primary" style="width: 100%;">Entrar</button></form></div></div>`;
         const appHTML = `<div id="app-container">
             <aside class="sidebar">
-                <div class="sidebar-header"><img src="https://ctfamadobrasil.com.br/wp-content/uploads/2025/09/logo.png" alt="Logo Fama" class="sidebar-logo"></div>
+                <div class="sidebar-header"><img src="${LOGO_LIGHT_URL}" alt="Logo Fama" class="sidebar-logo"></div>
                 <div class="sidebar-scroll-area">
                     <ul class="nav-menu">
                         <li><a href="#" class="nav-link" data-page="dashboard-page"><span class="material-icons">dashboard</span> Dashboard</a></li>
@@ -966,9 +969,7 @@
             <main class="content">
                 <button id="mobile-menu-toggle" class="btn btn-icon" title="Menu"><span class="material-icons">menu</span></button>
                 <div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral do seu desempenho</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Abertos</h3><p id="urgent-tickets-count">0</p></div></div></div></div>
-                <!-- BLOCO 2 CORRIGIDO NO HTML -->
                 <div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button><button class="tab-link" data-tab="tickets-content">Chamados</button><button class="tab-link" data-tab="archived-content">Arquivados</button></div><button id="refresh-messages-btn" class="refresh-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div><div id="tickets-content" class="tab-content"></div><div id="archived-content" class="tab-content"></div></div></div>
-                <!-- FIM BLOCO 2 CORRIGIDO -->
                 <div id="requests-page" class="page-content"><div class="page-header"><div><h1>Requisições</h1><p>Gerencie solicitações de RH e administrativas.</p></div><div class="page-header-actions"><button id="btn-new-request" class="btn btn-danger"><span class="material-icons">add</span> Nova Requisição</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th style="width: 25%;">Tipo</th><th style="width: 25%;">Solicitante</th><th style="width: 20%;">Data</th><th style="width: 15%;">Status</th><th style="width: 15%;">Ações</th></tr></thead><tbody id="request-table-body"></tbody></table></div></div>
                 <div id="conversation-view-page" class="page-content"><div class="page-header" id="conversation-header"></div><div class="card"><div id="conversation-messages">Carregando conversa...</div><div id="reply-form-wrapper"><div id="reply-attachment-preview"></div><form id="reply-form" data-conversation-id=""><input type="file" id="reply-attachment-input" style="display: none;"><button type="button" class="btn btn-icon" onclick="document.getElementById('reply-attachment-input').click()" title="Anexar arquivo"><span class="material-icons">attachment</span></button><input type="text" id="reply-input" class="input-field" placeholder="Digite sua resposta..." required><button type="submit" class="btn btn-danger">Enviar</button></form></div></div></div>
                 <div id="team-page" class="page-content"><div class="page-header"><h1>Equipe</h1><p>Veja os perfis e performance dos seus colegas.</p></div>
@@ -1108,8 +1109,8 @@
             }
         }
         
-        function renderAuthLayout() { root.innerHTML = authHTML; document.getElementById('login-form').addEventListener('submit', handleLogin); }
-        function renderAppLayout() { root.innerHTML = appHTML; setupEventListeners(); showApp(); }
+        function renderAuthLayout() { root.innerHTML = authHTML; updateLogos(); document.getElementById('login-form').addEventListener('submit', handleLogin); }
+        function renderAppLayout() { root.innerHTML = appHTML; updateLogos(); setupEventListeners(); showApp(); }
 
         function setupEventListeners() {
             document.getElementById('logout-button').addEventListener('click', handleLogout);
@@ -1131,7 +1132,6 @@
                 });
             }
 
-            // Altere o listener de navegação (já existente) para fechar a sidebar no mobile:
             document.querySelectorAll('.nav-link[data-page]').forEach(link => { 
                 link.addEventListener('click', (e) => { 
                     e.preventDefault(); 
@@ -1143,7 +1143,6 @@
                 }); 
             });
 
-            // BLOCO 5 CORRIGIDO
             const replyForm = document.getElementById('reply-form');
             if (replyForm) {
                 replyForm.onsubmit = handleReply;
@@ -1235,7 +1234,6 @@
                     }
                     if (permissions.includes('manage_requests')) {
                         menuHTML += `<li><a href="#" class="nav-link" data-page="request-management-page"><span class="material-icons">rule_folder</span> Gerenciar Requisições</a></li>`;
-                        // NEW: Add the travel management link, controlled by the same permission
                         menuHTML += `<li><a href="#" class="nav-link" data-page="travel-request-management-page"><span class="material-icons">flight_takeoff</span> Gerenciar Viagens</a></li>`;
                     }
                     if (permissions.includes('manage_routines')) {
@@ -1301,7 +1299,7 @@
             if (pageId === 'mural-page') loadMuralPage();
             if (pageId === 'rankings-page') loadRankingsPage();
             if (pageId === 'request-management-page') loadRequestManagementPage();
-            if (pageId === 'travel-request-management-page') loadTravelRequestManagementPage(); // NEW
+            if (pageId === 'travel-request-management-page') loadTravelRequestManagementPage();
             if (pageId === 'my-routines-page') loadMyRoutinesPage();
             if (pageId === 'manage-routines-page') loadManageRoutinesPage();
             if (pageId === 'organograma-page') loadOrganogramaPage();
@@ -1335,7 +1333,6 @@
             else allUsers = data; 
         }
 
-        // --- ORGANOGRAMA LOGIC (CORRECTED) ---
         async function loadOrganogramaPage(departmentFilter = '') {
             const container = document.getElementById('organograma-tree-container');
             if (!container) return;
@@ -1480,7 +1477,6 @@
                 expandButton.title = 'Tela Cheia';
             }
         }
-        // --- END OF ORGANOGRAMA LOGIC ---
 
         // --- REQUESTS MODULE LOGIC ---
 
@@ -1500,27 +1496,38 @@
                 tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhuma requisição encontrada.</td></tr>`;
                 return;
             }
-
+            
             const requestTypeLabels = {
-                'new_hire': 'Contratação',
-                'termination': 'Desligamento',
-                'promotion': 'Promoção Interna',
-                'overtime': 'Horas Extras',
-                'training': 'Treinamento',
-                'travel': 'Viagem' // NEW
+                'new_hire': 'Contratação', 'termination': 'Desligamento', 'promotion': 'Promoção Interna',
+                'overtime': 'Horas Extras', 'training': 'Treinamento', 'travel': 'Viagem'
+            };
+            
+            const travelStatusLabels = {
+                'pending_review': 'Aguardando Análise', 'approved_by_director': 'Aprovado (Diretor)',
+                'rejected_by_director': 'Recusado (Diretor)', 'pending_final_approval': 'Aprovação Final Pendente',
+                'approved_definitively': 'Aprovada', 'rejected_definitively': 'Recusada'
             };
 
             tableBody.innerHTML = data.map(req => {
+                let statusLabel, statusClass;
+
+                if (req.type === 'travel') {
+                    statusLabel = travelStatusLabels[req.status] || req.status.replace(/_/g, ' ');
+                    statusClass = (req.status === 'pending_review' || req.status === 'pending_final_approval') ? 'status-pending' : `status-${req.status.includes('approved') ? 'approved' : 'rejected'}`;
+                } else {
+                    statusLabel = req.status === 'pending' ? 'Pendente' : (req.status === 'approved' ? 'Aprovada' : 'Recusada');
+                    statusClass = `status-${req.status}`;
+                }
+                
                 const typeLabel = requestTypeLabels[req.type] || req.type;
                 const date = new Date(req.created_at).toLocaleDateString('pt-BR');
-                const statusLabel = req.status === 'pending' ? 'Pendente' : (req.status === 'approved' ? 'Aprovada' : 'Recusada');
 
                 return `
                     <tr>
                         <td><strong>${typeLabel}</strong></td>
                         <td>${currentUserProfile.full_name}</td>
                         <td>${date}</td>
-                        <td><span class="status-tag status-${req.status}">${statusLabel}</span></td>
+                        <td><span class="status-tag ${statusClass}">${statusLabel}</span></td>
                         <td><button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;" onclick="openRequestDetailsModal('${req.id}')">Ver Detalhes</button></td>
                     </tr>
                 `;
@@ -1548,10 +1555,9 @@
                     throw new Error('Não foi possível carregar os detalhes da requisição.');
                 }
                 
-                // NEW: If it's a travel request, use the specific details modal
                 if (request.type === 'travel') {
                     await openTravelRequestDetailsModal(requestId);
-                    return; // Stop execution here
+                    return; 
                 }
                 
                 modalTitle.textContent = 'Detalhes da Requisição';
@@ -1634,7 +1640,6 @@
                         <span class="material-icons">school</span>
                         <h3>Solicitar Treinamento</h3>
                     </div>
-                    <!-- NEW TRAVEL CARD -->
                     <div class="type-card" data-type="travel">
                         <span class="material-icons">flight_takeoff</span>
                         <h3>Requisição de Viagem</h3>
@@ -1668,7 +1673,7 @@
             const backButtonHTML = `<button class="btn btn-icon" onclick="openRequestModal()" title="Voltar" style="position: absolute; left: 1.5rem; top: 1rem;"><span class="material-icons">arrow_back</span></button>`;
 
             switch (type) {
-                case 'travel': // NEW CASE
+                case 'travel': 
                     title = 'Requisição de Viagem';
                     formHTML = `
                         <h3 class="form-section-title">1. Informações da Viagem</h3>
@@ -1936,7 +1941,6 @@
                     data: dataObject
                 };
 
-                // NEW: Handle travel request submission separately
                 if (currentRequestType === 'travel') {
                     webhookUrl = N8N_CREATE_TRAVEL_REQUEST_URL;
                     payload = {
@@ -1963,7 +1967,7 @@
 
                 showToast("Requisição enviada com sucesso!", "success");
                 closeRequestModal();
-                loadRequests(); // Atualiza a lista de requisições do usuário
+                loadRequests(); 
 
             } catch (error) {
                 console.error("Erro ao enviar requisição:", error);
@@ -1973,8 +1977,7 @@
                 btn.innerHTML = 'Enviar Requisição';
             }
         }
-
-        // Funções condicionais para formulários (adicionadas para evitar erros de referência se não existirem no DOM)
+        
         function toggleSubstituicaoFields() {
             const isSubstituicao = document.querySelector('input[name="motivo_contratacao"]:checked')?.value === 'substituicao';
             const fields = document.getElementById('substituicao-fields');
@@ -2013,9 +2016,7 @@
                 toggleUrgenciaInput();
             }
         }
-                
-        // --- MURAL CULTURAL LOGIC ---
-                
+                        
         function openNewPostModal() {
             document.getElementById('new-post-modal').classList.add('visible');
             selectMediaType('text');
@@ -2240,10 +2241,8 @@
             
             const isLiked = btn.classList.contains('liked');
 
-            // Optimistic UI update
             btn.classList.toggle('liked');
 
-            // Backend call
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) throw new Error("Sessão inválida");
@@ -2254,14 +2253,12 @@
                     body: JSON.stringify({ post_id: postId })
                 }).catch(e => {
                     console.error("Erro na chamada de rede para curtir:", e);
-                    // Revert UI on network error
                     btn.classList.toggle('liked');
                 });
 
             } catch (e) {
                 console.error("Falha ao curtir:", e);
                 showToast("Erro ao processar curtida", "danger");
-                // Revert UI on other errors
                 btn.classList.toggle('liked');
             }
         }
@@ -2294,7 +2291,7 @@
             }
 
             if (comments.length === 0) {
-                list.innerHTML = ''; // No message if empty, looks cleaner
+                list.innerHTML = ''; 
                 return;
             }
 
@@ -2314,7 +2311,6 @@
             const content = input.value.trim();
             if (!content) return;
 
-            // Optimistic Append
             const list = document.getElementById(`comments-list-${postId}`);
             const tempId = `temp-${Date.now()}`;
             const tempHTML = `
@@ -2335,13 +2331,12 @@
                 
                 if(!res.ok) throw new Error("Falha ao enviar comentário.");
 
-                // On success, remove optimistic comment and reload to get real one
                 document.getElementById(tempId)?.remove();
                 loadComments(postId);
 
             } catch (e) {
                 showToast("Erro ao enviar comentário", "danger");
-                document.getElementById(tempId)?.remove(); // Remove optimistic on error too
+                document.getElementById(tempId)?.remove(); 
             }
         }
         
@@ -2357,8 +2352,6 @@
             document.getElementById('lightbox-overlay').classList.remove('visible');
         }
         
-        // --- EXISTING UTILS ---
-
         async function loadTeamPage() {
             const container = document.getElementById('team-list-content');
             container.innerHTML = `<div class="empty-state">Carregando equipe...</div>`;
@@ -2445,7 +2438,6 @@
             const depts = [...new Set(users.map(u => u.department).filter(Boolean))].sort();
             const roles = [...new Set(users.map(u => u.role).filter(Boolean))].sort();
             
-            // Evita repopular os dropdowns a cada filtro
             if(deptSelect.options.length <= 1) {
                 deptSelect.innerHTML = '<option value="">Todos os Setores</option>';
                 depts.forEach(d => {
@@ -2830,7 +2822,6 @@
             }
         }
 
-        // BLOCO 4 CORRIGIDO - handleReply e cleanParticipantList
         async function handleReply(e) {
             e.preventDefault();
             const replyInput = document.getElementById('reply-input');
@@ -2872,7 +2863,6 @@
                 showToast('Resposta enviada!', 'success');
                 replyInput.value = '';
                 
-                // Recarrega a conversa e a lista de mensagens
                 await openConversation(null, conversationId);
                 await loadMessages();
                 
@@ -2895,7 +2885,6 @@
             });
             return filtered.join(', ');
         }
-        // FIM BLOCO 4 CORRIGIDO
 
         function renderMessageTable(conversations, containerId, type) {
             const container = document.getElementById(containerId);
@@ -2906,25 +2895,20 @@
                 const preview = conv.last_message_content ? conv.last_message_content.replace(/<[^>]*>?/gm, ' ') : '';
                 const timestamp = conv.last_message_created_at ? new Date(conv.last_message_created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
                 
-                // --- BLOCO CORRIGIDO (CÁLCULO DO WHO) ---
                 let who = '';
                 const cleanNames = cleanParticipantList(conv.other_participants_names, conv.last_message_sender_name);
 
                 if (type === 'sent') {
-                    // Na aba 'Enviados', mostre a lista de destinatários/co-participantes
                     who = cleanNames || conv.other_participants_names || 'Destinatário Desconhecido';
                 } else if (type === 'inbox') {
-                    // Na Inbox, mostre quem enviou a última mensagem (quem espera a resposta)
                     who = conv.last_message_sender_name || 'Desconhecido';
                 } else { 
-                    // Arquivados e Chamados (usa o last_message_sender_name para ser consistente)
                     if (conv.last_message_sender_id === currentUserProfile.id) {
                         who = `Para: ${cleanNames}`;
                     } else {
                         who = conv.last_message_sender_name;
                     }
                 }
-                // --- FIM DO BLOCO CORRIGIDO ---
 
                 let priorityTag = '';
                 if (conv.priority === 'urgent') priorityTag = `<span class="tag-fino tag-urgent">Urgente</span>`;
@@ -2960,10 +2944,8 @@
             container.innerHTML = `<table class="data-table-fino"><tbody>${tableRows}</tbody></table>`;
         }
 
-        // BLOCO 3 CORRIGIDO
         async function loadMessages() {
             if (!currentUserProfile) return;
-            // Adiciona tickets-content ao array de containers para limpeza e carregamento
             const containers = ['inbox-content', 'sent-content', 'tickets-content', 'archived-content']; 
             containers.forEach(id => document.getElementById(id).innerHTML = '<div class="empty-state">Carregando...</div>');
             
@@ -2978,24 +2960,18 @@
             const nonArchived = data.filter(conv => !conv.is_archived);
             const archived = data.filter(conv => conv.is_archived);
             
-            // 1. INBOX: Conversas abertas onde a última mensagem NÃO veio de mim (exige ação).
             const inboxMessages = nonArchived.filter(conv => 
                 conv.status !== 'resolved' && conv.last_message_sender_id !== currentUserProfile.id
             );
 
-            // 2. CHAMADOS: Todos os tickets (abertos ou resolvidos).
             const ticketMessages = data.filter(conv => conv.type === 'ticket');
-
-            // 3. ENVIADOS: Itens que eu iniciei/sou o último a falar E que não estão na Inbox (monitoramento/histórico).
-            // Filtra o restante dos não arquivados que não entraram na inbox.
             const sentMessages = nonArchived.filter(conv => !inboxMessages.some(i => i.id === conv.id));
 
             renderMessageTable(inboxMessages, 'inbox-content', 'inbox');
             renderMessageTable(sentMessages, 'sent-content', 'sent');
-            renderMessageTable(ticketMessages, 'tickets-content', 'tickets'); // Nova Aba
+            renderMessageTable(ticketMessages, 'tickets-content', 'tickets');
             renderMessageTable(archived, 'archived-content', 'archived');
         }
-        // FIM BLOCO 3 CORRIGIDO
 
         async function toggleArchive(buttonElement, conversationId) {
             const row = buttonElement.closest('tr');
@@ -3043,7 +3019,6 @@
             );
         }
 
-        // CORREÇÃO DA ASSINATURA E LÓGICA DO CONVERSATION ID
         async function openConversation(rowElement, conversationIdOverride = null) {
             const conversationId = conversationIdOverride || rowElement?.dataset.conversationId;
 
@@ -3069,7 +3044,6 @@
             document.getElementById('conversation-header').innerHTML = '<div class="empty-state">Carregando...</div>';
             document.getElementById('conversation-messages').innerHTML = '<div class="empty-state">Carregando mensagens...</div>';
             
-            // NOVO PASSO: Garante que o ID da conversa esteja no formulário de resposta
             const replyForm = document.getElementById('reply-form');
             if (replyForm) {
                 replyForm.dataset.conversationId = conversationId;
@@ -3323,7 +3297,20 @@
         
         const body = document.body;
         themeToggleBtn.addEventListener('click', () => applyTheme(body.classList.contains('dark-mode') ? 'light' : 'dark'));
-        function applyTheme(theme) { body.classList.toggle('dark-mode', theme === 'dark'); localStorage.setItem('theme', theme); }
+        
+        function applyTheme(theme) {
+            body.classList.toggle('dark-mode', theme === 'dark');
+            localStorage.setItem('theme', theme);
+            updateLogos();
+        }
+
+        function updateLogos() {
+            const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            const logoSrc = theme === 'dark' ? LOGO_DARK_URL : LOGO_LIGHT_URL;
+            document.querySelectorAll('.sidebar-logo, .login-logo').forEach(img => {
+                if (img) img.src = logoSrc;
+            });
+        }
 
         async function loadRankingsPage() {
             const fastestList = document.getElementById('fastest-responders-list');
@@ -3432,7 +3419,6 @@
                 return;
             }
             
-            // Exclude travel requests from this generic page
             const filteredData = data.filter(req => req.type !== 'travel');
 
             if (!filteredData || filteredData.length === 0) {
@@ -3478,7 +3464,6 @@
             }).join('');
         }
         
-        // --- NEW FUNCTIONS FOR TRAVEL REQUESTS ---
         async function loadTravelRequestManagementPage() {
             const tableBody = document.getElementById('travel-request-management-table-body');
             tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Carregando requisições de viagem...</td></tr>`;
@@ -3497,11 +3482,16 @@
                 tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhuma requisição de viagem encontrada.</td></tr>`;
                 return;
             }
-
-            const statusLabels = { pending: 'Pendente', approved: 'Aprovado', rejected: 'Recusado' };
+            
+            const travelStatusLabels = {
+                'pending_review': 'Aguardando Análise', 'approved_by_director': 'Aprovado (Diretor)',
+                'rejected_by_director': 'Recusado (Diretor)', 'pending_final_approval': 'Aprovação Final Pendente',
+                'approved_definitively': 'Aprovada', 'rejected_definitively': 'Recusada'
+            };
 
             tableBody.innerHTML = travelRequests.map(req => {
-                const statusLabel = statusLabels[req.status] || req.status;
+                const statusLabel = travelStatusLabels[req.status] || req.status.replace(/_/g, ' ');
+                const statusClass = (req.status === 'pending_review' || req.status === 'pending_final_approval') ? 'status-pending' : `status-${req.status.includes('approved') ? 'approved' : 'rejected'}`;
                 const startDate = req.data.data_saida ? new Date(req.data.data_saida + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
                 const endDate = req.data.data_retorno ? new Date(req.data.data_retorno + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
                 return `
@@ -3509,7 +3499,7 @@
                         <td>${req.requester_name || 'N/A'}</td>
                         <td>${req.data.titulo || 'Sem Título'}</td>
                         <td>${startDate} - ${endDate}</td>
-                        <td><span class="status-tag status-${req.status}">${statusLabel}</span></td>
+                        <td><span class="status-tag ${statusClass}">${statusLabel}</span></td>
                         <td>
                             <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;" onclick="openTravelRequestDetailsModal('${req.id}')">Ver Análise</button>
                         </td>
@@ -3523,6 +3513,7 @@
             const modalTitle = document.getElementById('request-modal-title');
             const modalBody = document.getElementById('request-modal-body');
             const modalFooter = document.getElementById('request-modal-footer');
+            const formatCurrency = (value) => `R$ ${parseFloat(value || 0).toFixed(2).replace('.', ',')}`;
 
             modalTitle.textContent = 'Carregando Análise de Viagem...';
             modalBody.innerHTML = '<div class="empty-state">Buscando dados e custos...</div>';
@@ -3531,100 +3522,148 @@
 
             try {
                 const { data: request, error } = await supabaseClient.from('requests').select('*').eq('id', requestId).single();
+                if (error || !request) throw new Error('Não foi possível carregar os detalhes da requisição.');
 
-                if (error || !request) {
-                    throw new Error('Não foi possível carregar os detalhes da requisição.');
-                }
+                const reqData = request.data || {};
+                const cCarro = reqData.cenario_carro || {};
+                const cAviao = reqData.cenario_aviao || {};
+
+                modalTitle.textContent = `Análise de Viagem: ${reqData.titulo || 'Sem Título'}`;
                 
-                const reqData = request.data; // O objeto JSON com todos os dados
-                const custos = reqData.custos_calculados || {}; // O sub-objeto com os custos
-
-                // ---- INÍCIO DO CÓDIGO CORRIGIDO ----
-                const modalTitle = document.getElementById('request-modal-title');
-                const modalBody = document.getElementById('request-modal-body');
-                const modalFooter = document.getElementById('request-modal-footer');
-
-                modalTitle.textContent = `Análise de Requisição de Viagem #${request.id.toString().substring(0, 4)}`;
-
                 modalBody.innerHTML = `
                     <div style="padding: 1rem;">
-                        <h4>Informações Gerais</h4>
+                        <h4 class="form-section-title">Informações Gerais</h4>
                         <p><strong>Solicitante:</strong> ${reqData.solicitante || 'N/A'}</p>
-                        <p><strong>Título:</strong> ${reqData.titulo || 'N/A'}</p>
                         <p><strong>Destino:</strong> ${reqData.local || 'N/A'}</p>
                         <p><strong>Período:</strong> ${new Date(reqData.data_saida + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(reqData.data_retorno + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
                         <p><strong>Participantes:</strong> ${reqData.participantes_nomes || 'N/A'}</p>
                         <p><strong>Justificativa:</strong> ${reqData.justificativa || 'Não informada'}</p>
 
-                        <h4 style="margin-top: 2rem;">Análise Comparativa de Custos</h4>
+                        <h4 class="form-section-title" style="margin-top: 2rem;">Análise Comparativa de Custos</h4>
                         <div class="grid grid-cols-2">
                             <div class="card" style="padding: 1rem;">
                                 <h5 class="card-title" style="margin-bottom:1rem; font-size:1rem;"><span class="material-icons">directions_car</span> Cenário: Carro</h5>
-                                <p><strong>Transporte:</strong> R$ ${parseFloat(custos.transporte_combustivel || 0).toFixed(2)}</p>
-                                <p><strong>Hospedagem:</strong> R$ 0,00</p> <!-- Valor de hospedagem ainda não implementado -->
-                                <p><strong>Alimentação:</strong> R$ ${parseFloat(custos.alimentacao_total || 0).toFixed(2)}</p>
-                                <p><strong>Inscrição:</strong> R$ ${parseFloat(custos.inscricao || 0).toFixed(2)}</p>
-                                <hr>
-                                <p><strong>TOTAL:</strong> R$ ${(parseFloat(custos.transporte_combustivel || 0) + parseFloat(custos.alimentacao_total || 0) + parseFloat(custos.inscricao || 0)).toFixed(2)}</p>
+                                <p><strong>Transporte:</strong> ${formatCurrency(cCarro.transporte)}</p>
+                                <p><strong>Hospedagem:</strong> ${formatCurrency(cCarro.hospedagem)}</p>
+                                <p><strong>Alimentação:</strong> ${formatCurrency(cCarro.alimentacao)}</p>
+                                <p><strong>Inscrição:</strong> ${formatCurrency(cCarro.inscricao)}</p>
+                                <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
+                                <p><strong>TOTAL: ${formatCurrency(cCarro.total)}</strong></p>
                             </div>
                             <div class="card" style="padding: 1rem;">
                                 <h5 class="card-title" style="margin-bottom:1rem; font-size:1rem;"><span class="material-icons">flight_takeoff</span> Cenário: Avião</h5>
-                                <p><strong>Transporte:</strong> R$ 0,00</p>
-                                <p><strong>Hospedagem:</strong> R$ 0,00</p>
-                                <p><strong>Alimentação:</strong> R$ ${parseFloat(custos.alimentacao_total || 0).toFixed(2)}</p>
-                                 <p><strong>Inscrição:</strong> R$ ${parseFloat(custos.inscricao || 0).toFixed(2)}</p>
-                                <hr>
-                                <p><strong>TOTAL:</strong> R$ ${(parseFloat(custos.alimentacao_total || 0) + parseFloat(custos.inscricao || 0)).toFixed(2)}</p>
+                                <p><strong>Transporte:</strong> ${formatCurrency(cAviao.transporte)}</p>
+                                <p><strong>Hospedagem:</strong> ${formatCurrency(cAviao.hospedagem)}</p>
+                                <p><strong>Alimentação:</strong> ${formatCurrency(cAviao.alimentacao)}</p>
+                                <p><strong>Inscrição:</strong> ${formatCurrency(cAviao.inscricao)}</p>
+                                <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
+                                <p><strong>TOTAL: ${formatCurrency(cAviao.total)}</strong></p>
                             </div>
                         </div>
                     </div>
                 `;
-
+                
                 modalFooter.innerHTML = `
                     <button class="btn btn-secondary" onclick="closeRequestModal()">Fechar</button>
-                    <button class="btn btn-danger">Registrar Decisão</button>
+                    <button class="btn btn-danger" onclick='renderTravelDecisionForm(${JSON.stringify(request)})'>Registrar Decisão</button>
                 `;
 
-                document.getElementById('request-modal').classList.add('visible');
-                // ---- FIM DO CÓDIGO CORRIGIDO ----
-                
             } catch (error) {
-                 console.error(error);
+                console.error(error);
                 modalBody.innerHTML = `<div class="empty-state" style="color:var(--color-danger);">${error.message}</div>`;
                 modalFooter.innerHTML = `<button class="btn btn-secondary" onclick="closeRequestModal()">Fechar</button>`;
             }
         }
-        
-        async function updateTravelRequestStatus(requestId, newStatus) {
-            const btnClass = newStatus === 'approved' ? '.btn-success' : '.btn-danger';
-            const btn = document.querySelector(`#request-modal-footer ${btnClass}`);
-            if(btn) btn.disabled = true;
 
+        function renderTravelDecisionForm(request) {
+            const modalBody = document.getElementById('request-modal-body');
+            const modalFooter = document.getElementById('request-modal-footer');
+            const cCarro = request.data.cenario_carro || {};
+            const cAviao = request.data.cenario_aviao || {};
+
+            modalBody.innerHTML = `
+                <form id="edit-travel-form" style="padding: 1rem;">
+                    <h4 class="form-section-title">Ajustar Custos - Cenário Carro</h4>
+                    <div class="grid grid-cols-2">
+                        <div class="form-group"><label>Transporte (R$)</label><input type="number" step="0.01" class="input-field" name="carro_transporte" value="${cCarro.transporte || 0}"></div>
+                        <div class="form-group"><label>Hospedagem (R$)</label><input type="number" step="0.01" class="input-field" name="carro_hospedagem" value="${cCarro.hospedagem || 0}"></div>
+                        <div class="form-group"><label>Alimentação (R$)</label><input type="number" step="0.01" class="input-field" name="carro_alimentacao" value="${cCarro.alimentacao || 0}"></div>
+                        <div class="form-group"><label>Inscrição (R$)</label><input type="number" step="0.01" class="input-field" name="carro_inscricao" value="${cCarro.inscricao || 0}"></div>
+                    </div>
+
+                    <h4 class="form-section-title">Ajustar Custos - Cenário Avião</h4>
+                    <div class="grid grid-cols-2">
+                        <div class="form-group"><label>Transporte (R$)</label><input type="number" step="0.01" class="input-field" name="aviao_transporte" value="${cAviao.transporte || 0}"></div>
+                        <div class="form-group"><label>Hospedagem (R$)</label><input type="number" step="0.01" class="input-field" name="aviao_hospedagem" value="${cAviao.hospedagem || 0}"></div>
+                        <div class="form-group"><label>Alimentação (R$)</label><input type="number" step="0.01" class="input-field" name="aviao_alimentacao" value="${cAviao.alimentacao || 0}"></div>
+                        <div class="form-group"><label>Inscrição (R$)</label><input type="number" step="0.01" class="input-field" name="aviao_inscricao" value="${cAviao.inscricao || 0}"></div>
+                    </div>
+
+                    <h4 class="form-section-title">Observações da Gestão</h4>
+                    <div class="form-group">
+                        <textarea name="observacoes_gestor" class="input-field" rows="3" placeholder="Adicione observações sobre a decisão..."></textarea>
+                    </div>
+                </form>
+            `;
+            
+            modalFooter.innerHTML = `
+                <button class="btn btn-secondary" onclick="openTravelRequestDetailsModal('${request.id}')">Cancelar</button>
+                <button class="btn btn-danger" onclick="submitTravelDecision('${request.id}', 'rejected_definitively')">Recusar Definitivamente</button>
+                <button class="btn btn-success" onclick="submitTravelDecision('${request.id}', 'approved_definitively')">Aprovar Definitivamente</button>
+            `;
+        }
+
+        async function submitTravelDecision(requestId, finalStatus) {
+            const form = document.getElementById('edit-travel-form');
+            if (!form) return;
+
+            const buttons = document.querySelectorAll('#request-modal-footer button');
+            buttons.forEach(btn => btn.disabled = true);
+            
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) throw new Error("Sessão inválida.");
-                
-                const response = await fetch(N8N_UPDATE_TRAVEL_REQUEST_STATUS_URL, {
+
+                const formData = new FormData(form);
+                const updatedData = {
+                    cenario_carro: {
+                        transporte: formData.get('carro_transporte'),
+                        hospedagem: formData.get('carro_hospedagem'),
+                        alimentacao: formData.get('carro_alimentacao'),
+                        inscricao: formData.get('carro_inscricao'),
+                    },
+                    cenario_aviao: {
+                        transporte: formData.get('aviao_transporte'),
+                        hospedagem: formData.get('aviao_hospedagem'),
+                        alimentacao: formData.get('aviao_alimentacao'),
+                        inscricao: formData.get('aviao_inscricao'),
+                    },
+                    observacoes_gestor: formData.get('observacoes_gestor')
+                };
+
+                const response = await fetch(N8N_SUBMIT_TRAVEL_DECISION_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-                    body: JSON.stringify({ request_id: requestId, new_status: newStatus })
+                    body: JSON.stringify({
+                        request_id: requestId,
+                        final_status: finalStatus,
+                        updated_data: updatedData
+                    })
                 });
 
-                if (!response.ok) throw new Error(`Falha ao ${newStatus === 'approved' ? 'aprovar' : 'recusar'}.`);
+                if (!response.ok) throw new Error(`Falha ao submeter decisão.`);
 
-                showToast(`Requisição marcada como ${newStatus === 'approved' ? 'Aprovada' : 'Recusada'}!`, 'success');
+                showToast(`Decisão registrada com sucesso!`, 'success');
                 closeRequestModal();
                 loadTravelRequestManagementPage();
 
             } catch (error) {
-                console.error("Erro ao atualizar status da viagem:", error);
+                console.error("Erro ao registrar decisão:", error);
                 showToast(error.message, "danger");
-                if(btn) btn.disabled = false;
+                buttons.forEach(btn => btn.disabled = false);
             }
         }
-
-        // --- END OF NEW FUNCTIONS ---
-
+        
         // --- ROUTINES MODULE LOGIC ---
         async function loadMyRoutinesPage() {
             const page = document.getElementById('my-routines-page');
@@ -3821,7 +3860,6 @@
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) throw new Error('Sessão inválida.');
 
-                // Garante que estamos usando a URL correta do workflow
                 const N8N_TOGGLE_TASK_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/toggle-task-status';
 
                 const response = await fetch(N8N_TOGGLE_TASK_URL, {
@@ -3856,7 +3894,7 @@
 
             } catch (e) {
                 showToast(e.message, 'danger');
-                checkboxElement.checked = !isCompleted; // Desfaz a ação na tela se der erro
+                checkboxElement.checked = !isCompleted; 
             } finally {
                 checkboxElement.disabled = false;
             }
@@ -4045,7 +4083,7 @@
             const listContainer = document.getElementById('selected-dates-list');
             if (!listContainer) return;
 
-            selectedAssignmentDates.sort(); // Garante que as datas estão ordenadas antes de renderizar
+            selectedAssignmentDates.sort(); 
 
             listContainer.innerHTML = selectedAssignmentDates.map(date => {
                 const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('pt-BR');
@@ -4071,9 +4109,9 @@
                 return;
             }
             selectedAssignmentDates.push(dateValue);
-            selectedAssignmentDates.sort(); // Keep the list sorted
+            selectedAssignmentDates.sort(); 
             renderSelectedDates();
-            dateInput.value = ''; // Clear input after adding
+            dateInput.value = ''; 
         }
 
         window.removeAssignmentDate = (dateToRemove) => {
@@ -4300,8 +4338,7 @@
 
                 showToast('Atribuições salvas!', 'success');
                 document.getElementById('assign-users-modal').classList.remove('visible');
-
-                // LÓGICA DE RECARGA CORRIGIDA
+                
                 const activeRoutineElement = document.querySelector(`.routines-list-item[data-routine-id="${routineId}"]`);
                 if (activeRoutineElement) {
                     await selectRoutine(routineId, activeRoutineElement);
@@ -4315,7 +4352,6 @@
             }
         }
 
-        // Conectar os botões de salvar dos modais às funções de ação
         document.getElementById('btn-create-task')?.addEventListener('click', addTaskToRoutine);
         document.getElementById('btn-assign-users')?.addEventListener('click', assignRoutineToUsers);
         document.getElementById('btn-create-routine')?.addEventListener('click', createRoutine);
