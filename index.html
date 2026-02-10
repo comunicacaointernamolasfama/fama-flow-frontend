@@ -3536,59 +3536,58 @@
                     throw new Error('Não foi possível carregar os detalhes da requisição.');
                 }
                 
-                const reqData = request.data || {};
-                const custosCarro = reqData.custos_carro || {};
-                const custosAviao = reqData.custos_aviao || {};
-                const cenarioVantajoso = reqData.cenario_vantajoso || null;
-                const formatCurrency = (value) => (value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const reqData = request.data; // O objeto JSON com todos os dados
+                const custos = reqData.custos_calculados || {}; // O sub-objeto com os custos
 
-                const isCarroVantajoso = cenarioVantajoso === 'carro' ? `style="border: 2px solid var(--color-success);"` : '';
-                const isAviaoVantajoso = cenarioVantajoso === 'aviao' ? `style="border: 2px solid var(--color-success);"` : '';
+                // ---- INÍCIO DO CÓDIGO CORRIGIDO ----
+                const modalTitle = document.getElementById('request-modal-title');
+                const modalBody = document.getElementById('request-modal-body');
+                const modalFooter = document.getElementById('request-modal-footer');
 
-                modalTitle.textContent = 'Análise de Requisição de Viagem';
+                modalTitle.textContent = `Análise de Requisição de Viagem #${request.id.toString().substring(0, 4)}`;
+
                 modalBody.innerHTML = `
-                    <div class="card" style="margin:0; box-shadow:none; border:none; padding:0;">
-                        <h3 class="form-section-title">Informações Gerais</h3>
-                        <p><strong>Título:</strong> ${reqData.titulo}</p>
-                        <p><strong>Destino:</strong> ${reqData.local}</p>
+                    <div style="padding: 1rem;">
+                        <h4>Informações Gerais</h4>
+                        <p><strong>Solicitante:</strong> ${reqData.solicitante || 'N/A'}</p>
+                        <p><strong>Título:</strong> ${reqData.titulo || 'N/A'}</p>
+                        <p><strong>Destino:</strong> ${reqData.local || 'N/A'}</p>
                         <p><strong>Período:</strong> ${new Date(reqData.data_saida + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(reqData.data_retorno + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
-                        <p><strong>Participantes:</strong> ${reqData.participantes_nomes}</p>
-                        <p><strong>Justificativa:</strong> ${reqData.justificativa}</p>
-                        
-                        <h3 class="form-section-title">Análise Comparativa de Custos</h3>
+                        <p><strong>Participantes:</strong> ${reqData.participantes_nomes || 'N/A'}</p>
+                        <p><strong>Justificativa:</strong> ${reqData.justificativa || 'Não informada'}</p>
+
+                        <h4 style="margin-top: 2rem;">Análise Comparativa de Custos</h4>
                         <div class="grid grid-cols-2">
-                            <div class="card" ${isCarroVantajoso}>
-                                <h4 style="display:flex; align-items:center; gap:0.5rem;"><span class="material-icons">directions_car</span> Cenário: Carro</h4>
-                                <ul style="list-style:none; padding:0; margin:0; font-size:0.9rem;">
-                                    <li style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom: 1px dashed var(--color-border);"><span>Transporte:</span> <strong>${formatCurrency(custosCarro.transporte)}</strong></li>
-                                    <li style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom: 1px dashed var(--color-border);"><span>Hospedagem:</span> <strong>${formatCurrency(custosCarro.hospedagem)}</strong></li>
-                                    <li style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom: 1px dashed var(--color-border);"><span>Alimentação:</span> <strong>${formatCurrency(custosCarro.alimentacao)}</strong></li>
-                                    <li style="display:flex; justify-content:space-between; padding:0.75rem 0; font-size: 1.1rem;"><span>TOTAL:</span> <strong style="color:var(--color-brand-primary);">${formatCurrency(custosCarro.total)}</strong></li>
-                                </ul>
+                            <div class="card" style="padding: 1rem;">
+                                <h5 class="card-title" style="margin-bottom:1rem; font-size:1rem;"><span class="material-icons">directions_car</span> Cenário: Carro</h5>
+                                <p><strong>Transporte:</strong> R$ ${parseFloat(custos.transporte_combustivel || 0).toFixed(2)}</p>
+                                <p><strong>Hospedagem:</strong> R$ 0,00</p> <!-- Valor de hospedagem ainda não implementado -->
+                                <p><strong>Alimentação:</strong> R$ ${parseFloat(custos.alimentacao_total || 0).toFixed(2)}</p>
+                                <p><strong>Inscrição:</strong> R$ ${parseFloat(custos.inscricao || 0).toFixed(2)}</p>
+                                <hr>
+                                <p><strong>TOTAL:</strong> R$ ${(parseFloat(custos.transporte_combustivel || 0) + parseFloat(custos.alimentacao_total || 0) + parseFloat(custos.inscricao || 0)).toFixed(2)}</p>
                             </div>
-                             <div class="card" ${isAviaoVantajoso}>
-                                <h4 style="display:flex; align-items:center; gap:0.5rem;"><span class="material-icons">flight</span> Cenário: Avião</h4>
-                                <ul style="list-style:none; padding:0; margin:0; font-size:0.9rem;">
-                                    <li style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom: 1px dashed var(--color-border);"><span>Transporte:</span> <strong>${formatCurrency(custosAviao.transporte)}</strong></li>
-                                    <li style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom: 1px dashed var(--color-border);"><span>Hospedagem:</span> <strong>${formatCurrency(custosAviao.hospedagem)}</strong></li>
-                                    <li style="display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom: 1px dashed var(--color-border);"><span>Alimentação:</span> <strong>${formatCurrency(custosAviao.alimentacao)}</strong></li>
-                                    <li style="display:flex; justify-content:space-between; padding:0.75rem 0; font-size: 1.1rem;"><span>TOTAL:</span> <strong style="color:var(--color-brand-primary);">${formatCurrency(custosAviao.total)}</strong></li>
-                                </ul>
+                            <div class="card" style="padding: 1rem;">
+                                <h5 class="card-title" style="margin-bottom:1rem; font-size:1rem;"><span class="material-icons">flight_takeoff</span> Cenário: Avião</h5>
+                                <p><strong>Transporte:</strong> R$ 0,00</p>
+                                <p><strong>Hospedagem:</strong> R$ 0,00</p>
+                                <p><strong>Alimentação:</strong> R$ ${parseFloat(custos.alimentacao_total || 0).toFixed(2)}</p>
+                                 <p><strong>Inscrição:</strong> R$ ${parseFloat(custos.inscricao || 0).toFixed(2)}</p>
+                                <hr>
+                                <p><strong>TOTAL:</strong> R$ ${(parseFloat(custos.alimentacao_total || 0) + parseFloat(custos.inscricao || 0)).toFixed(2)}</p>
                             </div>
                         </div>
                     </div>
                 `;
-                
-                if (request.status === 'pending') {
-                    modalFooter.innerHTML = `
-                        <button class="btn btn-secondary" onclick="closeRequestModal()">Fechar</button>
-                        <button class="btn btn-danger" onclick="updateTravelRequestStatus('${requestId}', 'rejected')"><span class="material-icons">cancel</span> Recusar</button>
-                        <button class="btn btn-success" onclick="updateTravelRequestStatus('${requestId}', 'approved')"><span class="material-icons">check_circle</span> Aprovar</button>
-                    `;
-                } else {
-                     modalFooter.innerHTML = `<button class="btn btn-secondary" onclick="closeRequestModal()">Fechar</button>`;
-                }
 
+                modalFooter.innerHTML = `
+                    <button class="btn btn-secondary" onclick="closeRequestModal()">Fechar</button>
+                    <button class="btn btn-danger">Registrar Decisão</button>
+                `;
+
+                document.getElementById('request-modal').classList.add('visible');
+                // ---- FIM DO CÓDIGO CORRIGIDO ----
+                
             } catch (error) {
                  console.error(error);
                 modalBody.innerHTML = `<div class="empty-state" style="color:var(--color-danger);">${error.message}</div>`;
