@@ -921,6 +921,7 @@
         // NEW WEBHOOK URLS FOR TRAVEL
         const N8N_CREATE_TRAVEL_REQUEST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/create-travel-request';
         const N8N_REGISTER_DECISION_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/submit-travel-decision';
+        const N8N_CANCEL_TRAVEL_REQUEST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/cancel-travel-request';
 
 
         let currentUserProfile = null;
@@ -1524,16 +1525,62 @@
                 const typeLabel = requestTypeLabels[req.type] || req.type;
                 const date = new Date(req.created_at).toLocaleDateString('pt-BR');
 
+                // Lógica para Botões de Ação
+                let actionsHTML = `<button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;" onclick="openRequestDetailsModal('${req.id}')">Ver Detalhes</button>`;
+                
+                // FEATURE: BOTÃO CANCELAR PARA VIAGENS APROVADAS
+                if (req.type === 'travel' && req.status === 'approved_by_director') {
+                    actionsHTML += `<button class="btn btn-warning" style="padding: 0.4rem 0.8rem; margin-left: 0.5rem;" onclick="promptCancellation('${req.id}')">Cancelar</button>`;
+                }
+
                 return `
                     <tr>
                         <td><strong>${typeLabel}</strong></td>
                         <td>${currentUserProfile.full_name}</td>
                         <td>${date}</td>
                         <td><span class="status-tag ${statusClass}">${statusLabel}</span></td>
-                        <td><button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;" onclick="openRequestDetailsModal('${req.id}')">Ver Detalhes</button></td>
+                        <td>${actionsHTML}</td>
                     </tr>
                 `;
             }).join('');
+        }
+
+        // NOVAS FUNÇÕES DE CANCELAMENTO
+        function promptCancellation(requestId) {
+            const reason = prompt("Por favor, digite o motivo do cancelamento:");
+            if (reason !== null && reason.trim() !== "") {
+                submitCancellation(requestId, reason);
+            } else if (reason !== null) {
+                alert("O motivo do cancelamento é obrigatório.");
+            }
+        }
+
+        async function submitCancellation(requestId, reason) {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) throw new Error("Sessão inválida.");
+
+                const response = await fetch(N8N_CANCEL_TRAVEL_REQUEST_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({ 
+                        request_id: requestId, 
+                        reason: reason 
+                    })
+                });
+
+                if (!response.ok) throw new Error('Falha ao processar o cancelamento.');
+
+                showToast("Requisição de viagem cancelada com sucesso!", "success");
+                loadRequests(); 
+
+            } catch (error) {
+                console.error("Erro ao cancelar viagem:", error);
+                showToast(error.message, "danger");
+            }
         }
 
         async function openRequestDetailsModal(requestId) {
@@ -3897,9 +3944,7 @@
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) throw new Error('Sessão inválida.');
 
-                const N8N_TOGGLE_TASK_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/toggle-task-status';
-
-                const response = await fetch(N8N_TOGGLE_TASK_URL, {
+                const response = await fetch(N8N_COMPLETE_TASK_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
