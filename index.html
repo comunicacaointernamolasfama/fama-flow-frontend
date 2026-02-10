@@ -1070,14 +1070,15 @@
                             <thead>
                                 <tr>
                                     <th style="width: 20%;">Solicitante</th>
-                                    <th style="width: 30%;">Título</th>
-                                    <th style="width: 20%;">Período</th>
-                                    <th style="width: 15%;">Status</th>
-                                    <th style="width: 15%;">Ações</th>
+                                    <th style="width: 25%;">Título</th>
+                                    <th style="width: 20%;">Destino</th>
+                                    <th style="width: 15%;">Período</th>
+                                    <th style="width: 10%;">Status</th>
+                                    <th style="width: 10%;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="travel-request-management-table-body">
-                                <tr><td colspan="5" class="empty-state">Carregando requisições...</td></tr>
+                                <tr><td colspan="6" class="empty-state">Carregando requisições...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1685,10 +1686,21 @@
                             <div class="form-group"><label for="req-travel-start-date">Data Saída*</label><input type="date" id="req-travel-start-date" name="data_saida" class="input-field" required></div>
                             <div class="form-group"><label for="req-travel-end-date">Data Retorno*</label><input type="date" id="req-travel-end-date" name="data_retorno" class="input-field" required></div>
                         </div>
+                        <div class="grid grid-cols-2">
+                            <div class="form-group"><label for="req-travel-start-time">Horário Sugestivo de Saída</label><input type="time" id="req-travel-start-time" name="hora_saida" class="input-field"></div>
+                            <div class="form-group"><label for="req-travel-end-time">Horário Sugestivo de Retorno</label><input type="time" id="req-travel-end-time" name="hora_retorno" class="input-field"></div>
+                        </div>
                         <div class="form-group"><label for="req-travel-participants">Participantes* (nomes separados por vírgula)</label><input type="text" id="req-travel-participants" name="participantes_nomes" class="input-field" required></div>
                         
                         <h3 class="form-section-title">2. Detalhes Adicionais</h3>
-                        <div class="form-group"><label>Tipo de Transporte Preferencial</label><div class="radio-group"><label><input type="radio" name="tipo_transporte" value="carro" checked> Carro</label><label><input type="radio" name="tipo_transporte" value="aviao"> Avião</label></div></div>
+                        <div class="form-group">
+                            <label>Tipo de Transporte Preferencial</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="tipo_transporte" value="carro" checked> Carro</label>
+                                <label><input type="radio" name="tipo_transporte" value="aviao"> Avião</label>
+                                <label><input type="radio" name="tipo_transporte" value="onibus"> Ônibus</label>
+                            </div>
+                        </div>
                         <div class="grid grid-cols-2">
                             <div class="form-group"><label for="req-travel-distance">Distância (km, apenas ida)</label><input type="number" id="req-travel-distance" name="distancia_km" class="input-field" placeholder="Se for de carro"></div>
                             <div class="form-group"><label for="req-travel-registration-cost">Inscrição de Evento/Curso (R$)</label><input type="number" id="req-travel-registration-cost" name="custo_inscricao" class="input-field" placeholder="Se aplicável"></div>
@@ -3468,20 +3480,20 @@
         
         async function loadTravelRequestManagementPage() {
             const tableBody = document.getElementById('travel-request-management-table-body');
-            tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Carregando requisições de viagem...</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" class="empty-state">Carregando requisições de viagem...</td></tr>`;
 
             const { data, error } = await supabaseClient.rpc('get_all_requests_for_viewing');
 
             if (error) {
                 console.error("Erro ao buscar requisições de viagem:", error);
-                tableBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color: var(--color-danger)">Falha ao carregar.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color: var(--color-danger)">Falha ao carregar.</td></tr>`;
                 return;
             }
 
             const travelRequests = data.filter(req => req.type === 'travel');
 
             if (travelRequests.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" class="empty-state">Nenhuma requisição de viagem encontrada.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="6" class="empty-state">Nenhuma requisição de viagem encontrada.</td></tr>`;
                 return;
             }
             
@@ -3500,6 +3512,7 @@
                     <tr>
                         <td>${req.requester_name || 'N/A'}</td>
                         <td>${req.data.titulo || 'Sem Título'}</td>
+                        <td>${req.data.local || 'N/A'}</td>
                         <td>${startDate} - ${endDate}</td>
                         <td><span class="status-tag ${statusClass}">${statusLabel}</span></td>
                         <td>
@@ -3531,6 +3544,7 @@
                 const reqData = request.data || {};
                 const cCarro = reqData.cenario_carro || {};
                 const cAviao = reqData.cenario_aviao || {};
+                const cOnibus = reqData.cenario_onibus || {};
 
                 modalTitle.textContent = `Análise de Viagem: ${reqData.titulo || 'Sem Título'}`;
                 
@@ -3544,7 +3558,7 @@
                         <p><strong>Justificativa:</strong> ${reqData.justificativa || 'Não informada'}</p>
 
                         <h4 class="form-section-title" style="margin-top: 2rem;">Análise Comparativa de Custos</h4>
-                        <div class="grid grid-cols-2">
+                        <div class="grid grid-cols-3">
                             <div class="card" style="padding: 1rem;">
                                 <h5 class="card-title" style="margin-bottom:1rem; font-size:1rem;"><span class="material-icons">directions_car</span> Cenário: Carro</h5>
                                 <p><strong>Transporte:</strong> ${formatCurrency(cCarro.transporte)}</p>
@@ -3556,18 +3570,27 @@
                             </div>
                             <div class="card" style="padding: 1rem;">
                                 <h5 class="card-title" style="margin-bottom:1rem; font-size:1rem;"><span class="material-icons">flight_takeoff</span> Cenário: Avião</h5>
-                                <p><strong>Transporte:</strong> ${formatCurrency(cAviao.transporte)}</p>
+                                <p><strong>Passagem Aérea:</strong> ${formatCurrency(cAviao.transporte_passagem)}</p>
+                                <p><strong>Traslado/Desloc.:</strong> ${formatCurrency(0)}</p>
                                 <p><strong>Hospedagem:</strong> ${formatCurrency(cAviao.hospedagem)}</p>
                                 <p><strong>Alimentação:</strong> ${formatCurrency(cAviao.alimentacao)}</p>
                                 <p><strong>Inscrição:</strong> ${formatCurrency(cAviao.inscricao)}</p>
                                 <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
                                 <p><strong>TOTAL: ${formatCurrency(cAviao.total)}</strong></p>
                             </div>
+                            <div class="card" style="padding: 1rem;">
+                                <h5 class="card-title" style="margin-bottom:1rem; font-size:1rem;"><span class="material-icons">directions_bus</span> Cenário: Ônibus</h5>
+                                <p><strong>Transporte:</strong> ${formatCurrency(cOnibus.transporte)}</p>
+                                <p><strong>Hospedagem:</strong> ${formatCurrency(cOnibus.hospedagem)}</p>
+                                <p><strong>Alimentação:</strong> ${formatCurrency(cOnibus.alimentacao)}</p>
+                                <p><strong>Inscrição:</strong> ${formatCurrency(cOnibus.inscricao)}</p>
+                                <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
+                                <p><strong>TOTAL: ${formatCurrency(cOnibus.total)}</strong></p>
+                            </div>
                         </div>
                     </div>
                 `;
                 
-                // O BOTÃO DE DECISÃO AGORA CHAMA UMA NOVA FUNÇÃO
                 modalFooter.innerHTML = `
                     <button class="btn btn-secondary" onclick="closeRequestModal()">Fechar</button>
                     <button class="btn btn-danger" onclick="openDecisionModal()">Registrar Decisão</button>
@@ -3611,8 +3634,8 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <h4 class="form-section-title">Observações da Gestão</h4>
-                    <textarea id="decision-notes" class="input-field" rows="3" placeholder="Adicione observações sobre a decisão..."></textarea>
+                     <h4 class="form-section-title">Observações da Gestão</h4>
+                     <textarea id="decision-notes" class="input-field" rows="3" placeholder="Adicione observações sobre a decisão..."></textarea>
                 </div>
             </div>
             `;
@@ -3646,7 +3669,7 @@
             updatedData.final_decision = decision;
             updatedData.decided_by = currentUserProfile.full_name;
             updatedData.decided_at = new Date().toISOString();
-
+            
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) throw new Error("Sessão inválida.");
@@ -3769,6 +3792,10 @@
 
             document.getElementById('prev-month-btn').onclick = () => {
                 routineCurrentDate.setMonth(routineCurrentDate.getMonth() - 1);
+                renderCalendar(routineCurrentDate.getFullYear(), routineCurrentDate.getMonth());
+            };
+            document.getElementById('next-month-btn').onclick = () => {
+                routineCurrentDate.setMonth(routineCurrentDate.getMonth() + 1);
                 renderCalendar(routineCurrentDate.getFullYear(), routineCurrentDate.getMonth());
             };
         }
