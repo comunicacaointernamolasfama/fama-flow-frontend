@@ -119,8 +119,6 @@
         .refresh-btn { background: none; border: none; cursor: pointer; padding: 0.5rem; border-radius: 50%; line-height: 1; }
         .refresh-btn:hover { background-color: var(--color-background); }
         .refresh-btn .material-icons { color: var(--color-text-secondary); transition: transform 0.3s; }
-        .refresh-btn:hover .material-icons { color: var(--color-text-primary); }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .refresh-btn.loading .material-icons { animation: spin 1s linear infinite; }
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--color-border); }
@@ -142,15 +140,17 @@
         .action-buttons .btn:hover { background-color: var(--color-background); color: var(--color-text-primary); }
         
         /* --- ORGANOGRAMA STYLES (NEW) --- */
+        .org-tree-wrapper {
+            padding: 1em;
+            text-align: center;
+            transform-origin: top center;
+            transform: scale(1); /* Padrão */
+        }
         .org-tree, .org-tree ul {
             list-style-type: none;
             margin: 0;
             padding: 0;
             position: relative;
-        }
-        .org-tree {
-            padding: 1em;
-            text-align: center;
         }
         .org-tree ul {
             padding-top: 1em;
@@ -312,7 +312,7 @@
         .team-section-title .material-icons { color: var(--color-text-secondary); }
         
         .team-user-card { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
-        .team-user-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.08); border-color: var(--color-info); }
+        .team-user-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--color-info); }
         
         .team-avatar-img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 2px solid var(--color-border); }
         .team-user-card .user-avatar { width: 64px; height: 64px; font-size: 1.5rem; margin-bottom: 1rem; } /* Fallback */
@@ -633,6 +633,22 @@
             height: 40px; 
             align-items: center;
             justify-content: center;
+        }
+
+        /* --- REGRAS DE TELA CHEIA (ADICIONAR AO FIM DO CSS) --- */
+        body.fullscreen .sidebar {
+            display: none !important; /* Oculta o menu */
+        }
+        body.fullscreen main.content {
+            margin-left: 0 !important;
+            padding: 1rem !important; /* Reduz o padding para maximizar a área */
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden; /* Remove o scroll principal */
+        }
+        body.fullscreen #organograma-tree-container {
+            height: calc(100vh - 100px); /* Ajusta a altura da árvore para caber na tela */
+            max-height: none;
         }
 
     </style>
@@ -959,7 +975,7 @@
             <main class="content">
                 <button id="mobile-menu-toggle" class="btn btn-icon" title="Menu"><span class="material-icons">menu</span></button>
                 <div id="dashboard-page" class="page-content"><div class="page-header"><div><h1 id="dashboard-title">Dashboard</h1><p>Visão geral do seu desempenho</p></div></div><div class="grid grid-cols-2"><div class="card stat-card card-warning"><div class="stat-icon"><span class="material-icons">mark_email_unread</span></div><div class="stat-info"><h3>Mensagens Pendentes</h3><p id="pending-messages-count">0</p></div></div><div class="card stat-card card-danger"><div class="stat-icon"><span class="material-icons">report_problem</span></div><div class="stat-info"><h3>Chamados Abertos</h3><p id="urgent-tickets-count">0</p></div></div></div></div>
-                <!-- BLOCO 2 CORRIGIDO -->
+                <!-- BLOCO 2 CORRIGIDO NO HTML -->
                 <div id="messages-page" class="page-content"><div class="page-header"><h1>Mensagens</h1></div><div class="message-actions-header"><div class="tabs-container"><button class="tab-link active" data-tab="inbox-content">Caixa de Entrada</button><button class="tab-link" data-tab="sent-content">Enviados</button><button class="tab-link" data-tab="tickets-content">Chamados</button><button class="tab-link" data-tab="archived-content">Arquivados</button></div><button id="refresh-messages-btn" class="refresh-btn" title="Atualizar mensagens"><span class="material-icons">refresh</span></button></div><div class="card" style="padding: 0; border-top-left-radius: 0; border-top-right-radius: 0;"><div id="inbox-content" class="tab-content active"></div><div id="sent-content" class="tab-content"></div><div id="tickets-content" class="tab-content"></div><div id="archived-content" class="tab-content"></div></div></div>
                 <!-- FIM BLOCO 2 CORRIGIDO -->
                 <div id="requests-page" class="page-content"><div class="page-header"><div><h1>Requisições</h1><p>Gerencie solicitações de RH e administrativas.</p></div><div class="page-header-actions"><button id="btn-new-request" class="btn btn-danger"><span class="material-icons">add</span> Nova Requisição</button></div></div><div class="card" style="padding:0;"><table class="data-table"><thead><tr><th style="width: 25%;">Tipo</th><th style="width: 25%;">Solicitante</th><th style="width: 20%;">Data</th><th style="width: 15%;">Status</th><th style="width: 15%;">Ações</th></tr></thead><tbody id="request-table-body"></tbody></table></div></div>
@@ -1336,18 +1352,23 @@
                 
                 if (error) throw error;
 
+                // 4. SUBSTITUIÇÃO DO BLOCO DE RENDERIZAÇÃO DA ÁRVORE (BLOCO 2 JS)
                 if (!orgData || orgData.length === 0) {
                     container.innerHTML = `<div class="empty-state">Nenhum dado encontrado para o organograma ${departmentFilter ? 'nesta área' : 'geral'}.</div>`;
                     return;
                 }
 
-                let treeHTML = `<div class="org-tree"><ul>`;
+                // 4. Renderiza a Árvore dentro do wrapper e adiciona o botão Fullscreen
+                let treeHTML = `<div class="org-tree-wrapper"><ul>`;
                 orgData.forEach(rootNode => {
                     treeHTML += renderOrgNode(rootNode);
                 });
                 treeHTML += `</ul></div>`;
-                
-                container.innerHTML = treeHTML;
+
+                // Adiciona o botão de Tela Cheia no container da árvore (ajustando a posição)
+                const expandButton = `<button class="btn btn-icon" onclick="toggleFullscreenOrg()" title="Tela Cheia" style="position: absolute; top: 10px; right: 10px; z-index: 100;"><span class="material-icons">fullscreen</span></button>`;
+
+                container.innerHTML = expandButton + treeHTML;
 
             } catch (e) {
                 console.error('Erro ao carregar organograma:', e);
@@ -1440,7 +1461,34 @@
                 showToast("Não foi possível carregar os dados do usuário para edição.", "danger");
             }
         }
+        
+        // BLOCO 3 JS ADICIONADO
+        function toggleFullscreenOrg() {
+            const body = document.body;
+            const isFullscreen = body.classList.toggle('fullscreen');
+            const expandButton = document.querySelector('#organograma-tree-container button[title="Tela Cheia"], #organograma-tree-container button[title="Sair da Tela Cheia"]');
+            const icon = expandButton.querySelector('.material-icons');
 
+            if (isFullscreen) {
+                icon.textContent = 'fullscreen_exit';
+                expandButton.title = 'Sair da Tela Cheia';
+            } else {
+                icon.textContent = 'fullscreen';
+                expandButton.title = 'Tela Cheia';
+            }
+
+            // A Sidebar deve ser ocultada/re-exibida pelo CSS, mas garantimos que o display do Sidebar é flex no modo normal.
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                // No modo fullscreen, o CSS se encarrega. No modo normal, garantimos que ela esteja visível para desktop.
+                if (!isFullscreen && window.innerWidth > 768) {
+                     sidebar.style.display = 'flex';
+                } else if (isFullscreen) {
+                     sidebar.style.display = 'none'; // Força o display none no JS para compatibilidade
+                }
+            }
+        }
+        // FIM BLOCO 3 JS
 
         // --- REQUESTS MODULE LOGIC ---
 
@@ -1801,7 +1849,7 @@
                                 <label><input type="radio" name="participacao_tipo" value="equipe" onchange="toggleParticipantes()"> Equipe ou grupo</label>
                             </div>
                         </div>
-                        <div id="participantes-group" class="form-group" style="display:none;">
+                        <div id="participantes-group" style="display:none;" class="form-group">
                             <label for="req-nomes-participantes">Nome(s) dos participantes (Listar nomes)</label>
                             <textarea id="req-nomes-participantes" name="nomes_participantes" class="input-field"></textarea>
                         </div>
@@ -1910,9 +1958,6 @@
             
             const candidatoInternoRadios = document.querySelectorAll('input[name="candidato_interno"]');
             candidatoInternoRadios.forEach(radio => radio.addEventListener('change', toggleCandidatoInterno));
-
-            const participacaoTipoRadios = document.querySelectorAll('input[name="participacao_tipo"]');
-            participacaoTipoRadios.forEach(radio => radio.addEventListener('change', toggleParticipantes));
 
             const urgenciaRadios = document.querySelectorAll('input[name="urgencia"]');
             const urgenciaDataInput = document.querySelector('input[name="urgencia_data"]');
