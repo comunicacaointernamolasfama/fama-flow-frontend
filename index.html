@@ -942,6 +942,7 @@
         let routineCurrentDate = new Date();
         let currentMenu = null;
         let currentEditingRequest = null; // <- NOVA VARIÁVEL GLOBAL
+        let selectedParticipants = [];
 
 
         const root = document.getElementById('root');
@@ -1745,7 +1746,13 @@
                             <div class="form-group"><label for="req-travel-start-time">Horário Sugestivo de Saída</label><input type="time" id="req-travel-start-time" name="hora_saida" class="input-field"></div>
                             <div class="form-group"><label for="req-travel-end-time">Horário Sugestivo de Retorno</label><input type="time" id="req-travel-end-time" name="hora_retorno" class="input-field"></div>
                         </div>
-                        <div class="form-group"><label for="req-travel-participants">Participantes* (nomes separados por vírgula)</label><input type="text" id="req-travel-participants" name="participantes_nomes" class="input-field" required></div>
+                        <div class="form-group">
+                            <label>Participantes da Viagem*</label>
+                            <div id="participants-pills-wrapper" style="display:flex; flex-wrap:wrap; gap:0.5rem; min-height:40px; padding:0.5rem; background:var(--color-background); border:1px solid var(--color-border); border-radius:8px; margin-bottom:0.5rem;"></div>
+                            <button type="button" class="btn btn-secondary" onclick="selectedParticipants = []; openUserSelectorModal({ title: 'Selecionar Participantes da Viagem', targetArray: selectedParticipants, onComplete: renderParticipantPills })">
+                                <span class="material-icons" style="font-size:18px;">group_add</span> Selecionar Participantes
+                            </button>
+                        </div>
                         
                         <h3 class="form-section-title">2. Detalhes Adicionais</h3>
                         <div class="form-group">
@@ -2060,14 +2067,22 @@ async function submitRequest(event) {
                 };
 
                 if (currentRequestType === 'travel') {
+                    if (selectedParticipants.length === 0) {
+                        showToast('Selecione pelo menos um participante para a viagem.', 'warning');
+                        btn.disabled = false;
+                        btn.innerHTML = 'Enviar Requisição';
+                        return;
+                    }
                     webhookUrl = N8N_CREATE_TRAVEL_REQUEST_URL;
                     payload = {
                         ...dataObject,
-                        local: localValue, // Injeta o endereço capturado manualmente
+                        local: localValue,
+                        participantes_nomes: selectedParticipants.map(p => p.full_name).join(', '),
                         solicitante_nome: currentUserProfile.full_name,
                         cargo: currentUserProfile.role,
                         setor: currentUserProfile.department
                     };
+                    selectedParticipants = [];
                 }
 
                 const response = await fetch(webhookUrl, {
@@ -2575,16 +2590,27 @@ async function submitRequest(event) {
             }
         }
 
-        function openRecipientModal() {
+        let _selectorConfig = null;
+
+        function openUserSelectorModal(config) {
+            _selectorConfig = config || { title: 'Selecionar Destinatários', targetArray: selectedRecipients, onComplete: renderRecipientPills };
             const modal = document.getElementById('recipient-modal');
+            modal.querySelector('.modal-header h3').textContent = _selectorConfig.title;
             modal.classList.add('visible');
             populateRecipientFilters();
-            applyRecipientFilters(); 
+            applyRecipientFilters();
+        }
+
+        function openRecipientModal() {
+            openUserSelectorModal({ title: 'Selecionar Destinatários', targetArray: selectedRecipients, onComplete: renderRecipientPills });
         }
 
         function closeRecipientModal() {
             document.getElementById('recipient-modal').classList.remove('visible');
-            renderRecipientPills(); 
+            if (_selectorConfig && typeof _selectorConfig.onComplete === 'function') {
+                _selectorConfig.onComplete();
+            }
+            _selectorConfig = null;
         }
 
         function populateRecipientFilters() {
@@ -2632,9 +2658,10 @@ async function submitRequest(event) {
         function renderRecipientModalTable(users) {
             const tbody = document.getElementById('recipient-table-body');
             tbody.innerHTML = '';
+            const targetArray = (_selectorConfig && _selectorConfig.targetArray) ? _selectorConfig.targetArray : selectedRecipients;
 
             users.forEach(user => {
-                const isSelected = selectedRecipients.some(r => r.id === user.id);
+                const isSelected = targetArray.some(r => r.id === user.id);
                 const tr = document.createElement('tr');
                 tr.onclick = () => toggleRecipientSelection(user);
                 if (isSelected) tr.classList.add('selected-row');
@@ -2663,13 +2690,15 @@ async function submitRequest(event) {
         }
 
         function toggleRecipientSelection(user) {
-            const exists = selectedRecipients.find(r => r.id === user.id);
+            const targetArray = (_selectorConfig && _selectorConfig.targetArray) ? _selectorConfig.targetArray : selectedRecipients;
+            const exists = targetArray.find(r => r.id === user.id);
             if (exists) {
-                selectedRecipients = selectedRecipients.filter(r => r.id !== user.id);
+                const idx = targetArray.findIndex(r => r.id === user.id);
+                targetArray.splice(idx, 1);
             } else {
-                selectedRecipients.push(user);
+                targetArray.push(user);
             }
-            applyRecipientFilters(); 
+            applyRecipientFilters();
         }
 
         function showConfirmation(title, message, onConfirm) {
@@ -2883,6 +2912,21 @@ async function submitRequest(event) {
         function closeNewMessagePopup() { document.getElementById('new-message-popup').classList.remove('visible'); document.getElementById('new-message-form').reset(); selectedRecipients = []; renderRecipientPills(); document.getElementById('recipient-suggestions').style.display = 'none'; if (quillEditor) quillEditor.setContents([]); document.getElementById('tipo-simples').checked = true; toggleChamadoFields(); clearAttachment(); }
         function toggleChamadoFields() { const isChamado = document.getElementById('tipo-chamado').checked; document.getElementById('chamado-fields').style.display = isChamado ? 'flex' : 'none'; }
         function setDueDate(days) { const date = new Date(); date.setDate(date.getDate() + days); document.getElementById('due_date').value = date.toISOString().split('T')[0]; }
+        function renderParticipantPills() {
+            const wrapper = document.getElementById('participants-pills-wrapper');
+            if (!wrapper) return;
+            wrapper.innerHTML = '';
+            selectedParticipants.forEach(user => {
+                const pill = document.createElement('span');
+                pill.className = 'recipient-pill';
+                pill.innerHTML = `${user.full_name} <span class="pill-remove" onclick="selectedParticipants = selectedParticipants.filter(p => p.id !== '${user.id}'); renderParticipantPills()">&times;</span>`;
+                wrapper.appendChild(pill);
+            });
+            if (selectedParticipants.length === 0) {
+                wrapper.innerHTML = `<span style="color:var(--color-text-secondary); font-size:0.9rem;">Nenhum participante selecionado</span>`;
+            }
+        }
+
         function renderRecipientPills() { const wrapper = document.getElementById('recipient-input-wrapper'); const input = document.getElementById('destinatario-input'); wrapper.querySelectorAll('.recipient-pill').forEach(pill => pill.remove()); selectedRecipients.forEach(user => { const pill = document.createElement('span'); pill.className = 'recipient-pill'; pill.dataset.userId = user.id; pill.innerHTML = `${user.full_name} <span class="pill-remove" onclick="removeRecipient('${user.id}')">&times;</span>`; wrapper.insertBefore(pill, input); }); input.placeholder = selectedRecipients.length > 0 ? '' : 'Para:'; }
         function addRecipient(user) { if (!selectedRecipients.some(r => r.id === user.id)) { selectedRecipients.push(user); renderRecipientPills(); } const input = document.getElementById('destinatario-input'); input.value = ''; input.focus(); document.getElementById('recipient-suggestions').style.display = 'none'; }
         window.removeRecipient = (userId) => { selectedRecipients = selectedRecipients.filter(r => r.id !== userId); renderRecipientPills(); }
