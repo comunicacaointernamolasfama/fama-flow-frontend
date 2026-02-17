@@ -3638,75 +3638,112 @@ async function submitRequest(event) {
             modal.classList.add('visible');
 
             try {
-                const { data: request, error } = await supabaseClient.from('requests').select('*').eq('id', requestId).single();
+                const { data: request, error } = await supabaseClient.from('requests').select('*, requester:profiles(full_name)').eq('id', requestId).single();
                 if (error || !request) throw new Error('Não foi possível carregar os detalhes da requisição.');
 
-                currentEditingRequest = request; // <-- GUARDA A REQUISIÇÃO ATUAL GLOBALMENTE
+                currentEditingRequest = request;
 
                 const reqData = request.data || {};
-                const cCarro = reqData.cenario_carro || {};
-                const cAviao = reqData.cenario_aviao || {};
+                const cCarro  = reqData.cenario_carro  || {};
+                const cAviao  = reqData.cenario_aviao  || {};
                 const cOnibus = reqData.cenario_onibus || {};
 
+                // 1. CORREÇÃO DO SOLICITANTE
+                const solicitanteNome = reqData.solicitante || request.requester?.full_name || 'N/A';
+
                 modalTitle.textContent = `Análise de Viagem: ${reqData.titulo || 'Sem Título'}`;
-                
+
+                // 3. CONTEÚDO DAS ABAS
+                const tabCarroHTML = `
+                    <div class="card" style="padding: 1rem; border-top-left-radius: 0;">
+                        <p><strong>Combustível / Transporte:</strong> ${formatCurrency(cCarro.combustivel_estimado || cCarro.transporte)}</p>
+                        <p><strong>Hospedagem:</strong> ${formatCurrency(cCarro.hospedagem)}</p>
+                        <p><strong>Alimentação:</strong> ${formatCurrency(cCarro.alimentacao)}</p>
+                        <p><strong>Inscrição:</strong> ${formatCurrency(reqData.custo_inscricao || 0)}</p>
+                        <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
+                        <p style="font-size: 1.1rem;"><strong>TOTAL: ${formatCurrency(cCarro.total)}</strong></p>
+                    </div>
+                `;
+
+                const voosHTML = (reqData.analise_viagem?.melhores_voos || []).length > 0
+                    ? (reqData.analise_viagem.melhores_voos).map(voo => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding: 6px 0;">
+                            <div>
+                                <strong style="font-size: 0.9rem;">${voo.cia}</strong>
+                                <span style="font-size: 0.85rem; color: var(--color-text-secondary);"> — ${formatCurrency(voo.preco_unitario)} / pessoa</span>
+                            </div>
+                            <a href="${voo.link}" target="_blank" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                                <span class="material-icons" style="font-size: 14px;">open_in_new</span> Ver voo
+                            </a>
+                        </div>
+                    `).join('')
+                    : `<p style="color: var(--color-text-secondary); font-size: 0.85rem;">Nenhuma opção de voo encontrada.</p>`;
+
+                const tabAviaoHTML = `
+                    <div class="card" style="padding: 1rem; border-top-left-radius: 0;">
+                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Melhores Opções de Voos:</p>
+                        <div style="background: var(--color-background); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;">
+                            ${voosHTML}
+                        </div>
+                        <p><strong>Passagem (Total Grupo):</strong> ${formatCurrency(cAviao.passagem_total || cAviao.passagem)}</p>
+                        <p><strong>Uber / Deslocamento Local:</strong> ${formatCurrency(cAviao.uber_local || 0)}</p>
+                        <p><strong>Hospedagem:</strong> ${formatCurrency(cAviao.hospedagem)}</p>
+                        <p><strong>Alimentação:</strong> ${formatCurrency(cAviao.alimentacao)}</p>
+                        <p><strong>Inscrição:</strong> ${formatCurrency(reqData.custo_inscricao || 0)}</p>
+                        <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
+                        <p style="font-size: 1.1rem;"><strong>TOTAL: ${formatCurrency(cAviao.total)}</strong></p>
+                    </div>
+                `;
+
+                const tabOnibusHTML = `
+                    <div class="card" style="padding: 1rem; border-top-left-radius: 0;">
+                        <p><strong>Passagem:</strong> ${formatCurrency(cOnibus.transporte_passagem || cOnibus.transporte)}</p>
+                        <p><strong>Hospedagem:</strong> ${formatCurrency(cOnibus.hospedagem)}</p>
+                        <p><strong>Alimentação:</strong> ${formatCurrency(cOnibus.alimentacao)}</p>
+                        <p><strong>Inscrição:</strong> ${formatCurrency(reqData.custo_inscricao || 0)}</p>
+                        <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
+                        <p style="font-size: 1.1rem;"><strong>TOTAL: ${formatCurrency(cOnibus.total)}</strong></p>
+                    </div>
+                `;
+
+                // 2. MONTAGEM DO MODAL COM SISTEMA DE ABAS
                 modalBody.innerHTML = `
                     <div style="padding: 1rem;">
-                        <h4 class="form-section-title">Informações Gerais</h4>
-                        <p><strong>Solicitante:</strong> ${reqData.solicitante || 'N/A'}</p>
+                        <h4 class="form-section-title" style="margin-top: 0;">Informações Gerais</h4>
+                        <p><strong>Solicitante:</strong> ${solicitanteNome}</p>
                         <p><strong>Destino:</strong> ${reqData.local || 'N/A'}</p>
                         <p><strong>Período:</strong> ${new Date(reqData.data_saida + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(reqData.data_retorno + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
                         <p><strong>Participantes:</strong> ${reqData.participantes_nomes || 'N/A'}</p>
                         <p><strong>Justificativa:</strong> ${reqData.justificativa || 'Não informada'}</p>
 
-                        <h4 class="form-section-title" style="margin-top: 2rem;">Análise Comparativa de Custos</h4>
-                        <div class="grid grid-cols-3">
-                            <div class="card" style="padding: 1rem;">
-                                <h5 class="card-title" style="margin-bottom:1rem; font-size:1rem;"><span class="material-icons">directions_car</span> Cenário: Carro</h5>
-                                <p><strong>Combustível:</strong> ${formatCurrency(cCarro.combustivel_estimado || cCarro.transporte)}</p>
-                                <p><strong>Hospedagem:</strong> ${formatCurrency(cCarro.hospedagem)}</p>
-                                <p><strong>Alimentação:</strong> ${formatCurrency(cCarro.alimentacao)}</p>
-                                <p><strong>Inscrição:</strong> ${formatCurrency(reqData.custo_inscricao || 0)}</p>
-                                <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
-                                <p><strong>TOTAL: ${formatCurrency(cCarro.total)}</strong></p>
-                            </div>
-<div class="card" style="padding: 1rem;">
-                                <h5 class="card-title" style="margin-bottom:1rem; font-size:1rem;"><span class="material-icons">flight_takeoff</span> Cenário: Avião</h5>
-                                
-                                <div style="background: var(--color-background); padding: 0.5rem; border-radius: 8px; margin-bottom: 1rem;">
-                                    <p style="font-size: 0.8rem; margin-bottom: 5px; font-weight: 600; color: var(--color-text-secondary);">Melhores Opções de Voos:</p>
-                                    ${(reqData.analise_viagem?.melhores_voos || []).map(voo => `
-                                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding: 4px 0;">
-                                            <span style="font-size: 0.85rem;"><strong>${voo.cia}</strong>: ${formatCurrency(voo.preco_unitario)} (un)</span>
-                                            <a href="${voo.link}" target="_blank" class="btn btn-icon" title="Ver no Google Flights" style="padding: 2px;"><span class="material-icons" style="font-size: 16px;">open_in_new</span></a>
-                                        </div>
-                                    `).join('')}
-                                </div>
+                        <h4 class="form-section-title" style="margin-top: 2rem; margin-bottom: 0;">Análise Comparativa de Custos</h4>
 
-                                <p><strong>Passagem (Total Grupo):</strong> ${formatCurrency(cAviao.passagem_total || cAviao.passagem)}</p>
-                                <p><strong>Uber Local:</strong> ${formatCurrency(cAviao.uber_local || 0)}</p>
-                                <p><strong>Hospedagem:</strong> ${formatCurrency(cAviao.hospedagem)}</p>
-                                <p><strong>Alimentação:</strong> ${formatCurrency(cAviao.alimentacao)}</p>
-                                <p><strong>Inscrição:</strong> ${formatCurrency(reqData.custo_inscricao || 0)}</p>
-                                <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
-                                <p><strong>TOTAL: ${formatCurrency(cAviao.total)}</strong></p>
-                            </div>
-                            <div class="card" style="padding: 1rem;">
-                                <h5 class="card-title" style="margin-bottom:1rem; font-size:1rem;"><span class="material-icons">directions_bus</span> Cenário: Ônibus</h5>
-                                <p><strong>Passagem:</strong> ${formatCurrency(cOnibus.transporte_passagem || cOnibus.transporte)}</p>
-                                <p><strong>Hospedagem:</strong> ${formatCurrency(cOnibus.hospedagem)}</p>
-                                <p><strong>Alimentação:</strong> ${formatCurrency(cOnibus.alimentacao)}</p>
-                                <p><strong>Inscrição:</strong> ${formatCurrency(reqData.custo_inscricao || 0)}</p>
-                                <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
-                                <p><strong>TOTAL: ${formatCurrency(cOnibus.total)}</strong></p>
-                            </div>
+                        <div style="display: flex; gap: 0; margin-top: 1rem; border-bottom: 1px solid var(--color-border);">
+                            <button class="tab-link active" id="tab-btn-carro"   onclick="switchTravelTab('carro')"  style="border: 1px solid var(--color-border); border-bottom: none; border-radius: 8px 8px 0 0; margin-right: 4px;">
+                                <span class="material-icons" style="font-size: 16px; vertical-align: middle;">directions_car</span> Carro
+                            </button>
+                            <button class="tab-link"        id="tab-btn-aviao"  onclick="switchTravelTab('aviao')"  style="border: 1px solid var(--color-border); border-bottom: none; border-radius: 8px 8px 0 0; margin-right: 4px;">
+                                <span class="material-icons" style="font-size: 16px; vertical-align: middle;">flight_takeoff</span> Avião
+                            </button>
+                            <button class="tab-link"        id="tab-btn-onibus" onclick="switchTravelTab('onibus')" style="border: 1px solid var(--color-border); border-bottom: none; border-radius: 8px 8px 0 0;">
+                                <span class="material-icons" style="font-size: 16px; vertical-align: middle;">directions_bus</span> Ônibus
+                            </button>
                         </div>
+
+                        <div id="travel-tab-carro"  class="travel-tab-content">${tabCarroHTML}</div>
+                        <div id="travel-tab-aviao"  class="travel-tab-content" style="display:none;">${tabAviaoHTML}</div>
+                        <div id="travel-tab-onibus" class="travel-tab-content" style="display:none;">${tabOnibusHTML}</div>
                     </div>
                 `;
-                
+
+                // 4. CONTROLE DE ACESSO AO BOTÃO DE DECISÃO
+                const canDecide = currentUserProfile.permissions &&
+                                  currentUserProfile.permissions.includes('manage_requests') &&
+                                  request.status === 'pending_review';
+
                 modalFooter.innerHTML = `
                     <button class="btn btn-secondary" onclick="closeRequestModal()">Fechar</button>
-                    <button class="btn btn-danger" onclick="openDecisionModal()">Registrar Decisão</button>
+                    ${canDecide ? `<button class="btn btn-danger" onclick="openDecisionModal()">Registrar Decisão</button>` : ''}
                 `;
 
             } catch (error) {
@@ -3714,6 +3751,13 @@ async function submitRequest(event) {
                 modalBody.innerHTML = `<div class="empty-state" style="color:var(--color-danger);">${error.message}</div>`;
                 modalFooter.innerHTML = `<button class="btn btn-secondary" onclick="closeRequestModal()">Fechar</button>`;
             }
+        }
+
+        function switchTravelTab(tab) {
+            ['carro', 'aviao', 'onibus'].forEach(t => {
+                document.getElementById(`travel-tab-${t}`).style.display  = t === tab ? 'block' : 'none';
+                document.getElementById(`tab-btn-${t}`).classList.toggle('active', t === tab);
+            });
         }
 
         function openDecisionModal() {
