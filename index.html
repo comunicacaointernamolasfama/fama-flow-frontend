@@ -1557,8 +1557,7 @@
             const travelStatusLabels = {
                 'pending_review': 'Aguardando Análise', 'approved_by_director': 'Aprovado (Diretor)',
                 'rejected_by_director': 'Recusado (Diretor)', 'pending_final_approval': 'Aprovação Final Pendente',
-                'approved_definitively': 'Aprovada', 'rejected_definitively': 'Recusada',
-                'cancelled_by_requester': 'Cancelada pelo Solicitante'
+                'approved_definitively': 'Aprovada', 'rejected_definitively': 'Recusada'
             };
 
             tableBody.innerHTML = data.map(req => {
@@ -1616,6 +1615,23 @@
                 console.error("submitCancellation bloqueado: requestId inválido →", requestId);
                 return;
             }
+
+            // Atualização otimista: muda a linha visualmente antes da resposta do servidor
+            const tableBody = document.getElementById('request-table-body');
+            if (tableBody) {
+                tableBody.querySelectorAll('tr').forEach(row => {
+                    const btn = row.querySelector(`button[onclick*="${requestId}"]`);
+                    if (btn) {
+                        const statusCell = row.querySelector('.status-tag');
+                        if (statusCell) {
+                            statusCell.className = 'status-tag status-rejected';
+                            statusCell.textContent = 'Cancelada pelo Solicitante';
+                        }
+                        btn.remove();
+                    }
+                });
+            }
+
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) throw new Error("Sessão inválida.");
@@ -1635,11 +1651,12 @@
                 if (!response.ok) throw new Error('Falha ao processar o cancelamento.');
 
                 showToast("Requisição de viagem cancelada com sucesso!", "success");
-                loadRequests(); 
+                setTimeout(() => loadRequests(), 1500);
 
             } catch (error) {
                 console.error("Erro ao cancelar viagem:", error);
                 showToast(error.message, "danger");
+                loadRequests(); // Reverte para o estado real em caso de erro
             }
         }
 
@@ -3702,8 +3719,7 @@ async function submitRequest(event) {
             const travelStatusLabels = {
                 'pending_review': 'Aguardando Análise', 'approved_by_director': 'Aprovado (Diretor)',
                 'rejected_by_director': 'Recusado (Diretor)', 'pending_final_approval': 'Aprovação Final Pendente',
-                'approved_definitively': 'Aprovada', 'rejected_definitively': 'Recusada',
-                'cancelled_by_requester': 'Cancelada pelo Solicitante'
+                'approved_definitively': 'Aprovada', 'rejected_definitively': 'Recusada'
             };
 
             tableBody.innerHTML = travelRequests.map(req => {
