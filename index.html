@@ -3745,14 +3745,8 @@ async function submitRequest(event) {
                     </div>
                 `;
 
-                // 4. CONTROLE DE ACESSO AO BOTÃO DE DECISÃO
-                const canDecide = currentUserProfile.permissions &&
-                                  currentUserProfile.permissions.includes('manage_requests') &&
-                                  request.status === 'pending_review';
-
                 modalFooter.innerHTML = `
                     <button class="btn btn-secondary" onclick="closeRequestModal()">Fechar</button>
-                    ${canDecide ? `<button class="btn btn-danger" onclick="openDecisionModal()">Registrar Decisão</button>` : ''}
                 `;
 
             } catch (error) {
