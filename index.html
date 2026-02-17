@@ -9,7 +9,12 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDFgEhXMXR8pa8olYIEQ4QJXAVikag_lFE&v=beta&libraries=places"></script>    <style>
+<script>
+  (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Re-referencing: ",d):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
+    key: "AIzaSyDFgEhXMXR8pa8olYIEQ4QJXAVikag_lFE",
+    v: "weekly"
+  });
+</script>    <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         :root {
             --color-background: #F9F9F9; --color-surface: #FFFFFF; --color-text-primary: #1E1E1E; --color-text-secondary: #6B7280; --color-brand-primary: #D81920; --color-border: #E0E0E0; --color-success: #10B981; --color-warning: #F59E0B; --color-danger: #D81920; --color-info: #3B82F6; --color-success-bg: #E7F8F2; --color-warning-bg: #FFFBEB; --color-danger-bg: #FEF2F2; --color-info-bg: #EFF6FF; --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -1970,17 +1975,20 @@ document.getElementById('btn-submit-request').addEventListener('click', submitRe
             
             addConditionalFieldListeners();
 
-            iif (type === 'travel') {
+            if (type === 'travel') {
                 setTimeout(async () => {
                     const input = document.getElementById('req-travel-destination');
-                    if (input && typeof google !== 'undefined') {
-                        // Carrega a biblioteca de Places de forma assíncrona para garantir compatibilidade
-                        const { Autocomplete } = await google.maps.importLibrary("places");
-                        new Autocomplete(input, {
-                            types: ['geocode'],
-                            componentRestrictions: { country: 'br' },
-                            fields: ['address_components', 'geometry', 'name']
-                        });
+                    if (input && google.maps.importLibrary) {
+                        try {
+                            const { Autocomplete } = await google.maps.importLibrary("places");
+                            new Autocomplete(input, {
+                                types: ['geocode'],
+                                componentRestrictions: { country: 'br' },
+                                fields: ['address_components', 'geometry', 'name']
+                            });
+                        } catch (err) {
+                            console.error("Erro ao carregar Google Autocomplete:", err);
+                        }
                     }
                 }, 400);
             }
