@@ -62,6 +62,8 @@
         .page-header-actions { display: flex; align-items: center; gap: 1rem; }
         .page-content { display: none; } .page-content.active { display: block; }
         .card { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
+.calc-info { font-size: 14px; color: var(--color-text-secondary); cursor: help; vertical-align: middle; margin-left: 4px; }
+.calc-info:hover { color: var(--color-brand-primary); }
         .grid { display: grid; gap: 1.5rem; } .grid-cols-2 { grid-template-columns: repeat(2, 1fr); } .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
         .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; border: none; transition: background-color 0.2s, opacity 0.2s;}
         .btn:hover { opacity: 0.9; } .btn .material-icons { margin-right: 0.5rem; font-size: 20px; }
@@ -3673,9 +3675,15 @@ async function submitRequest(event) {
 
                 const tabCarroHTML = `
                     <div class="card" style="border-left: 4px solid var(--color-brand-primary); margin: 0;">
-                        <p><strong>Combustível (Estimado):</strong> ${formatCurrency(cCarro.combustivel_estimado || cCarro.transporte)}</p>
-                        <p><strong>Hospedagem:</strong> ${formatCurrency(cCarro.hospedagem)}</p>
-                        <p><strong>Alimentação:</strong> ${formatCurrency(cCarro.alimentacao)}</p>
+                        <p><strong>Combustível (Estimado):</strong> ${formatCurrency(cCarro.combustivel_estimado || cCarro.transporte)}
+                            <span class="material-icons calc-info" title="Distância calculada via Google Maps x preço médio do combustível na rota. Inclui ida e volta.">info</span>
+                        </p>
+                        <p><strong>Hospedagem:</strong> ${formatCurrency(cCarro.hospedagem)}
+                            <span class="material-icons calc-info" title="Valor médio de R$ 450,00 por diária/pessoa x ${reqData.num_participantes || 1} pessoas x ${reqData.analise_viagem?.dias || 1} dias.">info</span>
+                        </p>
+                        <p><strong>Alimentação:</strong> ${formatCurrency(cCarro.alimentacao)}
+                            <span class="material-icons calc-info" title="Soma das 4 refeições diárias (R$ 150,00) x ${reqData.num_participantes || 1} pessoas x ${reqData.analise_viagem?.dias || 1} dias.">info</span>
+                        </p>
                         <hr style="margin: 1rem 0; border-color: var(--color-border);">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <h3 style="margin: 0; color: var(--color-brand-primary);">TOTAL: ${formatCurrency(cCarro.total)}</h3>
@@ -3704,10 +3712,18 @@ async function submitRequest(event) {
                         <div style="background: var(--color-background); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;">
                             ${voosHTML}
                         </div>
-                        <p><strong>Passagem (Total Grupo):</strong> ${formatCurrency(cAviao.passagem_total || cAviao.passagem)}</p>
-                        <p><strong>Uber / Deslocamento Local:</strong> ${formatCurrency(cAviao.uber_local || 0)}</p>
-                        <p><strong>Hospedagem:</strong> ${formatCurrency(cAviao.hospedagem)}</p>
-                        <p><strong>Alimentação:</strong> ${formatCurrency(cAviao.alimentacao)}</p>
+                        <p><strong>Passagem (Total Grupo):</strong> ${formatCurrency(cAviao.passagem_total || cAviao.passagem)}
+                            <span class="material-icons calc-info" title="Menor tarifa encontrada pela API Amadeus + 20% de margem de segurança para variação de preço até a compra.">info</span>
+                        </p>
+                        <p><strong>Uber / Deslocamento Local:</strong> ${formatCurrency(cAviao.uber_local || 0)}
+                            <span class="material-icons calc-info" title="Custo diário de R$ 80,00 (padrão Fama) x ${reqData.analise_viagem?.dias || 1} dias de estadia.">info</span>
+                        </p>
+                        <p><strong>Hospedagem:</strong> ${formatCurrency(cAviao.hospedagem)}
+                            <span class="material-icons calc-info" title="Valor médio de R$ 450,00 por diária/pessoa x ${reqData.num_participantes || 1} pessoas x ${reqData.analise_viagem?.dias || 1} dias.">info</span>
+                        </p>
+                        <p><strong>Alimentação:</strong> ${formatCurrency(cAviao.alimentacao)}
+                            <span class="material-icons calc-info" title="Soma das 4 refeições diárias (R$ 150,00) x ${reqData.num_participantes || 1} pessoas x ${reqData.analise_viagem?.dias || 1} dias.">info</span>
+                        </p>
                         <hr style="margin: 1rem 0; border-color: var(--color-border);">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <h3 style="margin: 0; color: var(--color-info);">TOTAL: ${formatCurrency(cAviao.total)}</h3>
@@ -3718,9 +3734,15 @@ async function submitRequest(event) {
 
                 const tabOnibusHTML = `
                     <div class="card" style="border-left: 4px solid var(--color-warning); margin: 0;">
-                        <p><strong>Passagem Ônibus:</strong> ${formatCurrency(cOnibus.transporte_passagem || cOnibus.transporte)}</p>
-                        <p><strong>Hospedagem:</strong> ${formatCurrency(cOnibus.hospedagem)}</p>
-                        <p><strong>Alimentação:</strong> ${formatCurrency(cOnibus.alimentacao)}</p>
+                        <p><strong>Passagem Ônibus:</strong> ${formatCurrency(cOnibus.transporte_passagem || cOnibus.transporte)}
+                            <span class="material-icons calc-info" title="Melhor tarifa de passagem rodoviária encontrada para a rota, incluindo ida e volta para todos os participantes.">info</span>
+                        </p>
+                        <p><strong>Hospedagem:</strong> ${formatCurrency(cOnibus.hospedagem)}
+                            <span class="material-icons calc-info" title="Valor médio de R$ 450,00 por diária/pessoa x ${reqData.num_participantes || 1} pessoas x ${reqData.analise_viagem?.dias || 1} dias.">info</span>
+                        </p>
+                        <p><strong>Alimentação:</strong> ${formatCurrency(cOnibus.alimentacao)}
+                            <span class="material-icons calc-info" title="Soma das 4 refeições diárias (R$ 150,00) x ${reqData.num_participantes || 1} pessoas x ${reqData.analise_viagem?.dias || 1} dias.">info</span>
+                        </p>
                         <hr style="margin: 1rem 0; border-color: var(--color-border);">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <h3 style="margin: 0; color: var(--color-warning);">TOTAL: ${formatCurrency(cOnibus.total)}</h3>
