@@ -64,6 +64,7 @@
         .card { background-color: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
 .calc-info { font-size: 14px; color: var(--color-text-secondary); cursor: help; vertical-align: middle; margin-left: 4px; }
 .calc-info:hover { color: var(--color-brand-primary); }
+.voo-selecionado { background-color: var(--color-success-bg); border-left: 3px solid var(--color-success); padding: 6px 8px !important; margin: 4px -8px; border-radius: 4px; }
         .grid { display: grid; gap: 1.5rem; } .grid-cols-2 { grid-template-columns: repeat(2, 1fr); } .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
         .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; border: none; transition: background-color 0.2s, opacity 0.2s;}
         .btn:hover { opacity: 0.9; } .btn .material-icons { margin-right: 0.5rem; font-size: 20px; }
@@ -3693,20 +3694,26 @@ async function submitRequest(event) {
                 `;
 
                 const voosHTML = (reqData.analise_viagem?.melhores_voos || []).length > 0
-                    ? (reqData.analise_viagem.melhores_voos).map(voo => `
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding: 6px 0;">
+                    ? (reqData.analise_viagem.melhores_voos).map(voo => {
+                        const isSelecionado = isApproved && reqData.approved_flight_link && voo.link === reqData.approved_flight_link;
+                        return `
+                        <div class="${isSelecionado ? 'voo-selecionado' : ''}" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding: 6px 0;">
                             <div>
                                 <strong style="font-size: 0.9rem;">${voo.cia}</strong>
                                 <span style="font-size: 0.85rem; color: var(--color-text-secondary);"> — ${formatCurrency(voo.preco_unitario)} / pessoa</span>
+                                ${isSelecionado ? `<span class="material-icons" style="font-size: 16px; color: var(--color-success); vertical-align: middle; margin-left: 4px;">check_circle</span>` : ''}
                             </div>
-                            <div style="display:flex; gap:5px;">
-                                <a href="${voo.link}" target="_blank" class="btn btn-secondary" title="Ver no site" style="padding: 0.3rem; border-radius: 4px;"><span class="material-icons" style="font-size: 16px;">open_in_new</span></a>
+                            <div style="display:flex; gap:5px; align-items:center;">
+                                ${isSelecionado
+                                    ? `<span class="status-tag status-approved" style="font-size: 0.75rem;">SELECIONADO</span>`
+                                    : `<a href="${voo.link}" target="_blank" class="btn btn-secondary" title="Ver no site" style="padding: 0.3rem; border-radius: 4px;"><span class="material-icons" style="font-size: 16px;">open_in_new</span></a>`
+                                }
                                 ${canApprove && request.status === 'pending_review' ? `
                                     <button class="btn btn-success" onclick="openDecisionModal('aviao', '${voo.link}', '${voo.preco_unitario}')" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">Escolher e Ajustar</button>
                                 ` : ''}
                             </div>
                         </div>
-                    `).join('')
+                    `}).join('')
                     : `<p style="color: var(--color-text-secondary); font-size: 0.85rem;">Nenhuma opção de voo encontrada.</p>`;
 
                 const tabAviaoHTML = `
