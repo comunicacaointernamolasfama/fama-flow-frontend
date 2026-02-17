@@ -3654,14 +3654,19 @@ async function submitRequest(event) {
                 modalTitle.textContent = `Análise de Viagem: ${reqData.titulo || 'Sem Título'}`;
 
                 // 3. CONTEÚDO DAS ABAS
+                const canApprove = currentUserProfile.permissions &&
+                                   currentUserProfile.permissions.includes('manage_requests');
+
                 const tabCarroHTML = `
-                    <div class="card" style="padding: 1rem; border-top-left-radius: 0;">
-                        <p><strong>Combustível / Transporte:</strong> ${formatCurrency(cCarro.combustivel_estimado || cCarro.transporte)}</p>
+                    <div class="card" style="border-left: 4px solid var(--color-brand-primary); margin: 0;">
+                        <p><strong>Combustível (Estimado):</strong> ${formatCurrency(cCarro.combustivel_estimado || cCarro.transporte)}</p>
                         <p><strong>Hospedagem:</strong> ${formatCurrency(cCarro.hospedagem)}</p>
                         <p><strong>Alimentação:</strong> ${formatCurrency(cCarro.alimentacao)}</p>
-                        <p><strong>Inscrição:</strong> ${formatCurrency(reqData.custo_inscricao || 0)}</p>
-                        <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
-                        <p style="font-size: 1.1rem;"><strong>TOTAL: ${formatCurrency(cCarro.total)}</strong></p>
+                        <hr style="margin: 1rem 0; border-color: var(--color-border);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h3 style="margin: 0; color: var(--color-brand-primary);">TOTAL: ${formatCurrency(cCarro.total)}</h3>
+                            ${canApprove && request.status === 'pending_review' ? `<button class="btn btn-danger" onclick="openDecisionModal('carro')">Escolher Carro</button>` : ''}
+                        </div>
                     </div>
                 `;
 
@@ -3680,7 +3685,7 @@ async function submitRequest(event) {
                     : `<p style="color: var(--color-text-secondary); font-size: 0.85rem;">Nenhuma opção de voo encontrada.</p>`;
 
                 const tabAviaoHTML = `
-                    <div class="card" style="padding: 1rem; border-top-left-radius: 0;">
+                    <div class="card" style="border-left: 4px solid var(--color-info); margin: 0;">
                         <p style="font-weight: 600; margin-bottom: 0.5rem;">Melhores Opções de Voos:</p>
                         <div style="background: var(--color-background); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;">
                             ${voosHTML}
@@ -3689,20 +3694,24 @@ async function submitRequest(event) {
                         <p><strong>Uber / Deslocamento Local:</strong> ${formatCurrency(cAviao.uber_local || 0)}</p>
                         <p><strong>Hospedagem:</strong> ${formatCurrency(cAviao.hospedagem)}</p>
                         <p><strong>Alimentação:</strong> ${formatCurrency(cAviao.alimentacao)}</p>
-                        <p><strong>Inscrição:</strong> ${formatCurrency(reqData.custo_inscricao || 0)}</p>
-                        <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
-                        <p style="font-size: 1.1rem;"><strong>TOTAL: ${formatCurrency(cAviao.total)}</strong></p>
+                        <hr style="margin: 1rem 0; border-color: var(--color-border);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h3 style="margin: 0; color: var(--color-info);">TOTAL: ${formatCurrency(cAviao.total)}</h3>
+                            ${canApprove && request.status === 'pending_review' ? `<button class="btn btn-danger" onclick="openDecisionModal('aviao')">Escolher Avião</button>` : ''}
+                        </div>
                     </div>
                 `;
 
                 const tabOnibusHTML = `
-                    <div class="card" style="padding: 1rem; border-top-left-radius: 0;">
-                        <p><strong>Passagem:</strong> ${formatCurrency(cOnibus.transporte_passagem || cOnibus.transporte)}</p>
+                    <div class="card" style="border-left: 4px solid var(--color-warning); margin: 0;">
+                        <p><strong>Passagem Ônibus:</strong> ${formatCurrency(cOnibus.transporte_passagem || cOnibus.transporte)}</p>
                         <p><strong>Hospedagem:</strong> ${formatCurrency(cOnibus.hospedagem)}</p>
                         <p><strong>Alimentação:</strong> ${formatCurrency(cOnibus.alimentacao)}</p>
-                        <p><strong>Inscrição:</strong> ${formatCurrency(reqData.custo_inscricao || 0)}</p>
-                        <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
-                        <p style="font-size: 1.1rem;"><strong>TOTAL: ${formatCurrency(cOnibus.total)}</strong></p>
+                        <hr style="margin: 1rem 0; border-color: var(--color-border);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h3 style="margin: 0; color: var(--color-warning);">TOTAL: ${formatCurrency(cOnibus.total)}</h3>
+                            ${canApprove && request.status === 'pending_review' ? `<button class="btn btn-danger" onclick="openDecisionModal('onibus')">Escolher Ônibus</button>` : ''}
+                        </div>
                     </div>
                 `;
 
@@ -3760,72 +3769,84 @@ async function submitRequest(event) {
             });
         }
 
-        function openDecisionModal() {
+        function openDecisionModal(selectedScenario) {
             if (!currentEditingRequest) return;
 
             const modalTitle = document.getElementById('request-modal-title');
             const modalBody = document.getElementById('request-modal-body');
             const modalFooter = document.getElementById('request-modal-footer');
-            
-            const reqData = currentEditingRequest.data;
 
-            modalTitle.textContent = `Ajuste e Decisão Final: ${reqData.titulo}`;
+            const reqData = currentEditingRequest.data;
+            const scenarioData = selectedScenario === 'carro'
+                ? reqData.cenario_carro
+                : (selectedScenario === 'aviao' ? reqData.cenario_aviao : reqData.cenario_onibus);
+
+            const scenarioLabels = { carro: 'Carro', aviao: 'Avião', onibus: 'Ônibus' };
+            modalTitle.textContent = `Ajuste Final: Cenário ${scenarioLabels[selectedScenario] || selectedScenario}`;
+
+            let fieldsHTML = '';
+            if (selectedScenario === 'carro') {
+                fieldsHTML = `
+                    <label>Combustível (R$)</label>
+                    <input type="number" step="0.01" id="edit-transport" class="input-field" value="${scenarioData.transporte || scenarioData.combustivel_estimado || 0}">
+                `;
+            } else {
+                fieldsHTML = `
+                    <label>Passagem (R$)</label>
+                    <input type="number" step="0.01" id="edit-transport" class="input-field" value="${scenarioData.passagem || scenarioData.transporte_passagem || scenarioData.passagem_total || 0}">
+                    <label>Deslocamento Local / Uber (R$)</label>
+                    <input type="number" step="0.01" id="edit-uber" class="input-field" value="${scenarioData.uber_local || 0}">
+                `;
+            }
+
             modalBody.innerHTML = `
             <div style="padding: 1rem;">
                 <div class="form-group">
-                    <h4 class="form-section-title">Ajustar Custos - Cenário Carro</h4>
-                    <div class="grid grid-cols-2" style="align-items: center;">
-                        <label>Transporte (R$)</label><input type="number" step="0.01" id="edit-car-transport" class="input-field" value="${reqData.cenario_carro.transporte}">
-                        <label>Hospedagem (R$)</label><input type="number" step="0.01" id="edit-car-hospedagem" class="input-field" value="${reqData.cenario_carro.hospedagem}">
-                        <label>Alimentação (R$)</label><input type="number" step="0.01" id="edit-car-alimentacao" class="input-field" value="${reqData.cenario_carro.alimentacao}">
-                        <label>Inscrição (R$)</label><input type="number" step="0.01" id="edit-car-inscricao" class="input-field" value="${reqData.cenario_carro.inscricao}">
+                    <h4 class="form-section-title">Revisar Valores Selecionados</h4>
+                    <div class="grid grid-cols-2" style="align-items: center; gap: 10px;">
+                        ${fieldsHTML}
+                        <label>Hospedagem (R$)</label>
+                        <input type="number" step="0.01" id="edit-hospedagem" class="input-field" value="${scenarioData.hospedagem || 0}">
+                        <label>Alimentação (R$)</label>
+                        <input type="number" step="0.01" id="edit-alimentacao" class="input-field" value="${scenarioData.alimentacao || 0}">
                     </div>
                 </div>
                 <div class="form-group">
-                    <h4 class="form-section-title">Ajustar Custos - Cenário Avião</h4>
-                    <div class="grid grid-cols-2" style="align-items: center;">
-                        <label>Transporte (R$)</label><input type="number" step="0.01" id="edit-plane-transport" class="input-field" value="${reqData.cenario_aviao.transporte}">
-                        <label>Hospedagem (R$)</label><input type="number" step="0.01" id="edit-plane-hospedagem" class="input-field" value="${reqData.cenario_aviao.hospedagem}">
-                        <label>Alimentação (R$)</label><input type="number" step="0.01" id="edit-plane-alimentacao" class="input-field" value="${reqData.cenario_aviao.alimentacao}">
-                        <label>Inscrição (R$)</label><input type="number" step="0.01" id="edit-plane-inscricao" class="input-field" value="${reqData.cenario_aviao.inscricao}">
-                    </div>
-                </div>
-                <div class="form-group">
-                     <h4 class="form-section-title">Observações da Gestão</h4>
-                     <textarea id="decision-notes" class="input-field" rows="3" placeholder="Adicione observações sobre a decisão..."></textarea>
+                    <h4 class="form-section-title">Observações da Gestão</h4>
+                    <textarea id="decision-notes" class="input-field" rows="3" placeholder="Por que este cenário foi escolhido?"></textarea>
                 </div>
             </div>
             `;
 
             modalFooter.innerHTML = `
-                <button class="btn btn-secondary" onclick="openTravelRequestDetailsModal(currentEditingRequest.id)">Cancelar</button>
-                <button class="btn btn-danger" onclick="submitTravelDecision('rejected_by_director')">Recusar Definitivamente</button>
-                <button class="btn btn-success" onclick="submitTravelDecision('approved_by_director')">Aprovar Definitivamente</button>
+                <button class="btn btn-secondary" onclick="openTravelRequestDetailsModal('${currentEditingRequest.id}')">Voltar</button>
+                <button class="btn btn-danger" onclick="submitTravelDecision('rejected_by_director', '${selectedScenario}')">Recusar</button>
+                <button class="btn btn-success" onclick="submitTravelDecision('approved_by_director', '${selectedScenario}')">Aprovar Cenário</button>
             `;
         }
         
-        async function submitTravelDecision(decision) {
+        async function submitTravelDecision(decision, selectedScenario) {
             if (!currentEditingRequest) return;
 
             // 1. RECOLETAR OS DADOS (INCLUINDO OS EDITADOS)
-            let updatedData = JSON.parse(JSON.stringify(currentEditingRequest.data)); // Clona o objeto original profundamente
+            let updatedData = JSON.parse(JSON.stringify(currentEditingRequest.data));
 
-            // Atualiza com os valores editados dos cenários
-            updatedData.cenario_carro.transporte = document.getElementById('edit-car-transport').value;
-            updatedData.cenario_carro.hospedagem = document.getElementById('edit-car-hospedagem').value;
-            updatedData.cenario_carro.alimentacao = document.getElementById('edit-car-alimentacao').value;
-            updatedData.cenario_carro.inscricao = document.getElementById('edit-car-inscricao').value;
-            
-            updatedData.cenario_aviao.transporte = document.getElementById('edit-plane-transport').value;
-            updatedData.cenario_aviao.hospedagem = document.getElementById('edit-plane-hospedagem').value;
-            updatedData.cenario_aviao.alimentacao = document.getElementById('edit-plane-alimentacao').value;
-            updatedData.cenario_aviao.inscricao = document.getElementById('edit-plane-inscricao').value;
+            // Atualiza apenas o cenário selecionado com os valores editados
+            const scenarioKey = selectedScenario === 'carro' ? 'cenario_carro' : (selectedScenario === 'aviao' ? 'cenario_aviao' : 'cenario_onibus');
+            if (selectedScenario === 'carro') {
+                updatedData[scenarioKey].transporte = document.getElementById('edit-transport').value;
+            } else {
+                updatedData[scenarioKey].transporte = document.getElementById('edit-transport').value;
+                updatedData[scenarioKey].uber_local  = document.getElementById('edit-uber')?.value || 0;
+            }
+            updatedData[scenarioKey].hospedagem  = document.getElementById('edit-hospedagem').value;
+            updatedData[scenarioKey].alimentacao = document.getElementById('edit-alimentacao').value;
 
-            // Adiciona observações e a decisão final ao objeto de dados
-            updatedData.decision_notes = document.getElementById('decision-notes').value;
-            updatedData.final_decision = decision;
-            updatedData.decided_by = currentUserProfile.full_name;
-            updatedData.decided_at = new Date().toISOString();
+            updatedData.decision_notes    = document.getElementById('decision-notes').value;
+            updatedData.selected_scenario = selectedScenario;
+            updatedData.final_decision    = decision;
+            updatedData.decided_by        = currentUserProfile.full_name;
+            updatedData.decided_at        = new Date().toISOString();
             
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
