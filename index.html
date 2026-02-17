@@ -3670,9 +3670,20 @@ async function submitRequest(event) {
                                 <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
                                 <p><strong>TOTAL: ${formatCurrency(cCarro.total)}</strong></p>
                             </div>
-                            <div class="card" style="padding: 1rem;">
+<div class="card" style="padding: 1rem;">
                                 <h5 class="card-title" style="margin-bottom:1rem; font-size:1rem;"><span class="material-icons">flight_takeoff</span> Cenário: Avião</h5>
-                                <p><strong>Passagem (+20%):</strong> ${formatCurrency(cAviao.passagem_total || cAviao.transporte_passagem)}</p>
+                                
+                                <div style="background: var(--color-background); padding: 0.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                                    <p style="font-size: 0.8rem; margin-bottom: 5px; font-weight: 600; color: var(--color-text-secondary);">Melhores Opções de Voos:</p>
+                                    ${(reqData.analise_viagem?.melhores_voos || []).map(voo => `
+                                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding: 4px 0;">
+                                            <span style="font-size: 0.85rem;"><strong>${voo.cia}</strong>: ${formatCurrency(voo.preco_unitario)} (un)</span>
+                                            <a href="${voo.link}" target="_blank" class="btn btn-icon" title="Ver no Google Flights" style="padding: 2px;"><span class="material-icons" style="font-size: 16px;">open_in_new</span></a>
+                                        </div>
+                                    `).join('')}
+                                </div>
+
+                                <p><strong>Passagem (Total Grupo):</strong> ${formatCurrency(cAviao.passagem_total || cAviao.passagem)}</p>
                                 <p><strong>Uber Local:</strong> ${formatCurrency(cAviao.uber_local || 0)}</p>
                                 <p><strong>Hospedagem:</strong> ${formatCurrency(cAviao.hospedagem)}</p>
                                 <p><strong>Alimentação:</strong> ${formatCurrency(cAviao.alimentacao)}</p>
