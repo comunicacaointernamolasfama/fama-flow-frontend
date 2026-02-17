@@ -3831,10 +3831,10 @@ async function submitRequest(event) {
                     <label>Combustível (R$)</label>
                     <input type="number" step="0.01" id="edit-transport" class="input-field" value="${scenarioData.transporte || scenarioData.combustivel_estimado || 0}">
                 `;
-            } else {
+} else {
                 fieldsHTML = `
-                    <label>Passagem (R$)</label>
-                    <input type="number" step="0.01" id="edit-transport" class="input-field" value="${scenarioData.passagem || scenarioData.transporte_passagem || scenarioData.passagem_total || 0}">
+                    <label>Passagem (R$ / pessoa)</label>
+                    <input type="number" step="0.01" id="edit-transport" class="input-field" value="${flightPrice || scenarioData.passagem || scenarioData.transporte_passagem || scenarioData.passagem_total || 0}">
                     <label>Deslocamento Local / Uber (R$)</label>
                     <input type="number" step="0.01" id="edit-uber" class="input-field" value="${scenarioData.uber_local || 0}">
                 `;
@@ -3874,11 +3874,14 @@ async function submitRequest(event) {
 
             // Atualiza apenas o cenário selecionado com os valores editados
             const scenarioKey = selectedScenario === 'carro' ? 'cenario_carro' : (selectedScenario === 'aviao' ? 'cenario_aviao' : 'cenario_onibus');
+const numParticipants = updatedData.num_participantes || 1;
             if (selectedScenario === 'carro') {
                 updatedData[scenarioKey].transporte = document.getElementById('edit-transport').value;
             } else {
-                updatedData[scenarioKey].transporte = document.getElementById('edit-transport').value;
-                updatedData[scenarioKey].uber_local  = document.getElementById('edit-uber')?.value || 0;
+                const valorPassagemEditado = parseFloat(document.getElementById('edit-transport').value || 0);
+                updatedData[scenarioKey].passagem_unitaria_aprovada = valorPassagemEditado.toFixed(2);
+                updatedData[scenarioKey].passagem_total = (valorPassagemEditado * numParticipants).toFixed(2);
+                updatedData[scenarioKey].uber_local = document.getElementById('edit-uber')?.value || 0;
             }
             updatedData[scenarioKey].hospedagem  = document.getElementById('edit-hospedagem').value;
             updatedData[scenarioKey].alimentacao = document.getElementById('edit-alimentacao').value;
