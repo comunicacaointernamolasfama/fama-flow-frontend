@@ -3650,6 +3650,20 @@ async function submitRequest(event) {
 
                 // 1. CORREÇÃO DO SOLICITANTE
                 const solicitanteNome = reqData.solicitante || request.requester?.full_name || 'N/A';
+                
+                // Dados de Aprovação (Task: Veredito)
+                const isApproved = request.status.includes('approved');
+                const selectedScenario = reqData.selected_scenario;
+                const vereditoHTML = isApproved ? `
+                    <div class="card" style="border-left: 4px solid var(--color-success); background: var(--color-success-bg); margin-bottom: 1.5rem; padding: 1rem;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: var(--color-success); display: flex; align-items: center; gap: 0.5rem;">
+                            <span class="material-icons">gavel</span> Veredito da Gestão
+                        </h4>
+                        <p style="margin: 0; font-size: 0.9rem;"><strong>Cenário Eleito:</strong> <span class="tag-fino status-approved">${selectedScenario.toUpperCase()}</span></p>
+                        <p style="margin: 4px 0; font-size: 0.9rem;"><strong>Decidido por:</strong> ${reqData.decided_by} em ${new Date(reqData.decided_at).toLocaleString('pt-BR')}</p>
+                        ${reqData.decision_notes ? `<p style="margin: 4px 0; font-size: 0.9rem; font-style: italic;">"${reqData.decision_notes}"</p>` : ''}
+                    </div>
+                ` : '';
 
                 modalTitle.textContent = `Análise de Viagem: ${reqData.titulo || 'Sem Título'}`;
 
@@ -3725,6 +3739,8 @@ async function submitRequest(event) {
                         <p><strong>Participantes:</strong> ${reqData.participantes_nomes || 'N/A'}</p>
                         <p><strong>Justificativa:</strong> ${reqData.justificativa || 'Não informada'}</p>
 
+                        ${vereditoHTML}
+
                         <h4 class="form-section-title" style="margin-top: 2rem; margin-bottom: 0;">Análise Comparativa de Custos</h4>
 
                         <div style="display: flex; gap: 0; margin-top: 1rem; border-bottom: 1px solid var(--color-border);">
@@ -3745,7 +3761,10 @@ async function submitRequest(event) {
                     </div>
                 `;
 
-                modalFooter.innerHTML = `
+                // ADICIONE ESTA LINHA AQUI:
+                switchTravelTab(selectedScenario || 'carro');
+
+                modalFooter.innerHTML = ``
                     <button class="btn btn-secondary" onclick="closeRequestModal()">Fechar</button>
                 `;
 
