@@ -2008,6 +2008,14 @@ if (input && window.google && google.maps.importLibrary) {
             event.preventDefault();
             const btn = event.target;
             const form = document.getElementById('dynamic-request-form');
+
+            // Captura manual do endereço do componente Google Maps (Task: Fix Localização)
+            let localValue = "";
+            const placePicker = document.getElementById('req-travel-destination');
+            if (placePicker && placePicker.value) {
+                // Tenta pegar o endereço formatado, caso contrário usa o nome simples
+                localValue = placePicker.value.formattedAddress || placePicker.value.name || "";
+            }
             if (!form.checkValidity()) {
                 showToast("Por favor, preencha todos os campos obrigatórios (*).", 'warning');
                 return;
@@ -2039,6 +2047,7 @@ if (input && window.google && google.maps.importLibrary) {
                     webhookUrl = N8N_CREATE_TRAVEL_REQUEST_URL;
                     payload = {
                         ...dataObject,
+                        local: localValue, // Injeta o endereço capturado manualmente
                         solicitante_nome: currentUserProfile.full_name,
                         cargo: currentUserProfile.role,
                         setor: currentUserProfile.department
