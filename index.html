@@ -1557,7 +1557,8 @@
             const travelStatusLabels = {
                 'pending_review': 'Aguardando Análise', 'approved_by_director': 'Aprovado (Diretor)',
                 'rejected_by_director': 'Recusado (Diretor)', 'pending_final_approval': 'Aprovação Final Pendente',
-                'approved_definitively': 'Aprovada', 'rejected_definitively': 'Recusada'
+                'approved_definitively': 'Aprovada', 'rejected_definitively': 'Recusada',
+                'cancelled_by_requester': 'Cancelada pelo Solicitante'
             };
 
             tableBody.innerHTML = data.map(req => {
@@ -3701,7 +3702,8 @@ async function submitRequest(event) {
             const travelStatusLabels = {
                 'pending_review': 'Aguardando Análise', 'approved_by_director': 'Aprovado (Diretor)',
                 'rejected_by_director': 'Recusado (Diretor)', 'pending_final_approval': 'Aprovação Final Pendente',
-                'approved_definitively': 'Aprovada', 'rejected_definitively': 'Recusada'
+                'approved_definitively': 'Aprovada', 'rejected_definitively': 'Recusada',
+                'cancelled_by_requester': 'Cancelada pelo Solicitante'
             };
 
             tableBody.innerHTML = travelRequests.map(req => {
