@@ -875,6 +875,27 @@
         </div>
     </div>
 
+    <!-- CANCELLATION MODAL -->
+    <div id="cancellation-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3>Confirmar Cancelamento</h3>
+                <span class="material-icons" style="cursor:pointer;" onclick="this.parentElement.parentElement.parentElement.classList.remove('visible')">close</span>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--color-text-secondary); margin-top: 0;">Para prosseguir, por favor, informe o motivo do cancelamento da requisição de viagem.</p>
+                <div class="form-group">
+                    <label for="cancellation-reason">Motivo do Cancelamento</label>
+                    <textarea id="cancellation-reason" class="input-field" rows="3" placeholder="Ex: Mudança de data do evento..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.parentElement.parentElement.parentElement.classList.remove('visible')">Voltar</button>
+                <button class="btn btn-danger" id="btn-confirm-cancellation">Sim, Cancelar Requisição</button>
+            </div>
+        </div>
+    </div>
+
     <!-- EDIT TASK MODAL -->
     <div id="edit-task-modal" class="modal-overlay">
         <div class="modal-content">
@@ -1134,6 +1155,18 @@
             document.getElementById('fab-new-post').addEventListener('click', openNewPostModal); 
             document.getElementById('btn-new-request').addEventListener('click', openRequestModal);
             document.getElementById('attachment-input').addEventListener('change', handleFileSelection);
+
+            document.getElementById('btn-confirm-cancellation').addEventListener('click', () => {
+                const btn = document.getElementById('btn-confirm-cancellation');
+                const reason = document.getElementById('cancellation-reason').value.trim();
+                const requestId = btn.dataset.requestId;
+                if (!reason) {
+                    showToast("O motivo do cancelamento é obrigatório.", "warning");
+                    return;
+                }
+                document.getElementById('cancellation-modal').classList.remove('visible');
+                submitCancellation(requestId, reason);
+            });
             
             document.getElementById('post-media-file').addEventListener('change', handlePostMediaPreview);
 
@@ -1558,12 +1591,13 @@
 
         // NOVAS FUNÇÕES DE CANCELAMENTO
         function promptCancellation(requestId) {
-            const reason = prompt("Por favor, digite o motivo do cancelamento:");
-            if (reason !== null && reason.trim() !== "") {
-                submitCancellation(requestId, reason);
-            } else if (reason !== null) {
-                alert("O motivo do cancelamento é obrigatório.");
-            }
+            const modal = document.getElementById('cancellation-modal');
+            const confirmBtn = document.getElementById('btn-confirm-cancellation');
+            const reasonInput = document.getElementById('cancellation-reason');
+            reasonInput.value = '';
+            confirmBtn.dataset.requestId = requestId;
+            modal.classList.add('visible');
+            reasonInput.focus();
         }
 
         async function submitCancellation(requestId, reason) {
