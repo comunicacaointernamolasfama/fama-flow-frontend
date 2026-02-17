@@ -1159,13 +1159,18 @@
             document.getElementById('btn-confirm-cancellation').addEventListener('click', () => {
                 const btn = document.getElementById('btn-confirm-cancellation');
                 const reason = document.getElementById('cancellation-reason').value.trim();
-                const requestId = btn.dataset.requestId;
+                const requestId = btn.getAttribute('data-request-id');
+
+                if (!requestId || requestId.trim() === '') {
+                    showToast("Erro crítico: ID da requisição perdido. Feche o modal e tente novamente.", "danger");
+                    return;
+                }
                 if (!reason) {
                     showToast("O motivo do cancelamento é obrigatório.", "warning");
                     return;
                 }
                 document.getElementById('cancellation-modal').classList.remove('visible');
-                submitCancellation(requestId, reason);
+                submitCancellation(requestId.trim(), reason);
             });
             
             document.getElementById('post-media-file').addEventListener('change', handlePostMediaPreview);
@@ -1591,16 +1596,25 @@
 
         // NOVAS FUNÇÕES DE CANCELAMENTO
         function promptCancellation(requestId) {
+            if (!requestId || typeof requestId !== 'string' || requestId.trim() === '') {
+                showToast("Erro: ID da requisição inválido. Tente recarregar a página.", "danger");
+                return;
+            }
             const modal = document.getElementById('cancellation-modal');
             const confirmBtn = document.getElementById('btn-confirm-cancellation');
             const reasonInput = document.getElementById('cancellation-reason');
             reasonInput.value = '';
-            confirmBtn.dataset.requestId = requestId;
+            confirmBtn.setAttribute('data-request-id', requestId.trim());
             modal.classList.add('visible');
             reasonInput.focus();
         }
 
         async function submitCancellation(requestId, reason) {
+            if (!requestId || typeof requestId !== 'string' || requestId.trim() === '') {
+                showToast("Erro de segurança: request_id inválido. Operação abortada.", "danger");
+                console.error("submitCancellation bloqueado: requestId inválido →", requestId);
+                return;
+            }
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) throw new Error("Sessão inválida.");
