@@ -3699,9 +3699,12 @@ async function submitRequest(event) {
                                 <strong style="font-size: 0.9rem;">${voo.cia}</strong>
                                 <span style="font-size: 0.85rem; color: var(--color-text-secondary);"> — ${formatCurrency(voo.preco_unitario)} / pessoa</span>
                             </div>
-                            <a href="${voo.link}" target="_blank" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
-                                <span class="material-icons" style="font-size: 14px;">open_in_new</span> Ver voo
-                            </a>
+                            <div style="display:flex; gap:5px;">
+                                <a href="${voo.link}" target="_blank" class="btn btn-secondary" title="Ver no site" style="padding: 0.3rem; border-radius: 4px;"><span class="material-icons" style="font-size: 16px;">open_in_new</span></a>
+                                ${canApprove && request.status === 'pending_review' ? `
+                                    <button class="btn btn-success" onclick="openDecisionModal('aviao', '${voo.link}', '${voo.preco_unitario}')" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">Escolher e Ajustar</button>
+                                ` : ''}
+                            </div>
                         </div>
                     `).join('')
                     : `<p style="color: var(--color-text-secondary); font-size: 0.85rem;">Nenhuma opção de voo encontrada.</p>`;
@@ -3804,8 +3807,11 @@ async function submitRequest(event) {
             });
         }
 
-        function openDecisionModal(selectedScenario) {
+        function openDecisionModal(selectedScenario, flightLink = null, flightPrice = null) {
             if (!currentEditingRequest) return;
+            // Armazena o link selecionado temporariamente no elemento para ser lido no submit
+            const modal = document.getElementById('request-modal');
+            modal.dataset.selectedFlightLink = flightLink || "";
 
             const modalTitle = document.getElementById('request-modal-title');
             const modalBody = document.getElementById('request-modal-body');
@@ -3882,6 +3888,7 @@ async function submitRequest(event) {
             updatedData.final_decision    = decision;
             updatedData.decided_by        = currentUserProfile.full_name;
             updatedData.decided_at        = new Date().toISOString();
+            updatedData.approved_flight_link = document.getElementById('request-modal').dataset.selectedFlightLink || "";
             
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
