@@ -2004,17 +2004,30 @@ if (input && window.google && google.maps.importLibrary) {
             }
 		}
 
-        async function submitRequest(event) {
+async function submitRequest(event) {
             event.preventDefault();
             const btn = event.target;
             const form = document.getElementById('dynamic-request-form');
 
-            // Captura manual do endereço do componente Google Maps (Task: Fix Localização)
+            // Captura do local via PlaceAutocompleteElement (substituiu o input original)
             let localValue = "";
-            const placePicker = document.getElementById('req-travel-destination');
-            if (placePicker && placePicker.value) {
-                // Tenta pegar o endereço formatado, caso contrário usa o nome simples
-                localValue = placePicker.value.formattedAddress || placePicker.value.name || "";
+            if (currentRequestType === 'travel') {
+                // Prioridade 1: input hidden criado pelo evento gmp-placeselect (usuário selecionou sugestão)
+                const hiddenLocal = form.querySelector('input[type="hidden"][name="local"]');
+                if (hiddenLocal && hiddenLocal.value) {
+                    localValue = hiddenLocal.value;
+                } else {
+                    // Prioridade 2: lê direto do elemento gmp-place-autocomplete (texto digitado)
+                    const autocompleteEl = form.querySelector('gmp-place-autocomplete');
+                    if (autocompleteEl) {
+                        localValue = autocompleteEl.value || '';
+                    }
+                    // Prioridade 3: fallback para o input original (caso o autocomplete não tenha carregado)
+                    if (!localValue) {
+                        const inputFallback = document.getElementById('req-travel-destination');
+                        if (inputFallback) localValue = inputFallback.value || '';
+                    }
+                }
             }
             if (!form.checkValidity()) {
                 showToast("Por favor, preencha todos os campos obrigatórios (*).", 'warning');
