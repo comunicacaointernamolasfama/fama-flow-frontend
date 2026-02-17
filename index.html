@@ -3663,29 +3663,29 @@ async function submitRequest(event) {
                         <div class="grid grid-cols-3">
                             <div class="card" style="padding: 1rem;">
                                 <h5 class="card-title" style="margin-bottom:1rem; font-size:1rem;"><span class="material-icons">directions_car</span> Cenário: Carro</h5>
-                                <p><strong>Transporte:</strong> ${formatCurrency(cCarro.transporte)}</p>
+                                <p><strong>Combustível:</strong> ${formatCurrency(cCarro.combustivel_estimado || cCarro.transporte)}</p>
                                 <p><strong>Hospedagem:</strong> ${formatCurrency(cCarro.hospedagem)}</p>
                                 <p><strong>Alimentação:</strong> ${formatCurrency(cCarro.alimentacao)}</p>
-                                <p><strong>Inscrição:</strong> ${formatCurrency(cCarro.inscricao)}</p>
+                                <p><strong>Inscrição:</strong> ${formatCurrency(reqData.custo_inscricao || 0)}</p>
                                 <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
                                 <p><strong>TOTAL: ${formatCurrency(cCarro.total)}</strong></p>
                             </div>
                             <div class="card" style="padding: 1rem;">
                                 <h5 class="card-title" style="margin-bottom:1rem; font-size:1rem;"><span class="material-icons">flight_takeoff</span> Cenário: Avião</h5>
-                                <p><strong>Passagem Aérea:</strong> ${formatCurrency(cAviao.transporte_passagem)}</p>
-                                <p><strong>Traslado/Desloc.:</strong> ${formatCurrency(0)}</p>
+                                <p><strong>Passagem (+20%):</strong> ${formatCurrency(cAviao.passagem_total || cAviao.transporte_passagem)}</p>
+                                <p><strong>Uber Local:</strong> ${formatCurrency(cAviao.uber_local || 0)}</p>
                                 <p><strong>Hospedagem:</strong> ${formatCurrency(cAviao.hospedagem)}</p>
                                 <p><strong>Alimentação:</strong> ${formatCurrency(cAviao.alimentacao)}</p>
-                                <p><strong>Inscrição:</strong> ${formatCurrency(cAviao.inscricao)}</p>
+                                <p><strong>Inscrição:</strong> ${formatCurrency(reqData.custo_inscricao || 0)}</p>
                                 <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
                                 <p><strong>TOTAL: ${formatCurrency(cAviao.total)}</strong></p>
                             </div>
                             <div class="card" style="padding: 1rem;">
                                 <h5 class="card-title" style="margin-bottom:1rem; font-size:1rem;"><span class="material-icons">directions_bus</span> Cenário: Ônibus</h5>
-                                <p><strong>Transporte:</strong> ${formatCurrency(cOnibus.transporte)}</p>
+                                <p><strong>Passagem:</strong> ${formatCurrency(cOnibus.transporte_passagem || cOnibus.transporte)}</p>
                                 <p><strong>Hospedagem:</strong> ${formatCurrency(cOnibus.hospedagem)}</p>
                                 <p><strong>Alimentação:</strong> ${formatCurrency(cOnibus.alimentacao)}</p>
-                                <p><strong>Inscrição:</strong> ${formatCurrency(cOnibus.inscricao)}</p>
+                                <p><strong>Inscrição:</strong> ${formatCurrency(reqData.custo_inscricao || 0)}</p>
                                 <hr style="margin: 0.5rem 0; border-color: var(--color-border);">
                                 <p><strong>TOTAL: ${formatCurrency(cOnibus.total)}</strong></p>
                             </div>
