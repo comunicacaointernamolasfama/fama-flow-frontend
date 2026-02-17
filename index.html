@@ -1978,19 +1978,28 @@ document.getElementById('btn-submit-request').addEventListener('click', submitRe
 if (type === 'travel') {
                 setTimeout(async () => {
                     const input = document.getElementById('req-travel-destination');
-                    if (input && window.google && google.maps.importLibrary) {
-                        try {
-                            // Esta linha carrega a biblioteca de forma moderna para novos clientes
-                            const { Autocomplete } = await google.maps.importLibrary("places");
-                            new Autocomplete(input, {
-                                types: ['geocode'],
-                                componentRestrictions: { country: 'br' },
-                                fields: ['formatted_address', 'geometry', 'name']
-                            });
-                        } catch (err) {
-                            console.error("Erro Google Autocomplete:", err);
-                        }
-                    }
+if (input && window.google && google.maps.importLibrary) {
+        try {
+            const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
+            const autocomplete = new PlaceAutocompleteElement({
+                componentRestrictions: { country: 'br' },
+            });
+            autocomplete.style.width = '100%';
+            // Substitui o input original pelo elemento nativo
+            input.parentNode.replaceChild(autocomplete, input);
+            autocomplete.addEventListener('gmp-placeselect', (e) => {
+                const place = e.placePrediction.toPlace();
+                // Cria um input hidden para guardar o valor
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'local';
+                hidden.value = e.placePrediction.text.toString();
+                autocomplete.parentNode.appendChild(hidden);
+            });
+        } catch (err) {
+            console.error("Erro Google Autocomplete:", err);
+        }
+    }
                 }, 300);
             }
 		}
