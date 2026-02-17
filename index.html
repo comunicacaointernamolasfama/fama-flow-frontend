@@ -1975,24 +1975,24 @@ document.getElementById('btn-submit-request').addEventListener('click', submitRe
             
             addConditionalFieldListeners();
 
-            if (type === 'travel') {
+if (type === 'travel') {
                 setTimeout(async () => {
                     const input = document.getElementById('req-travel-destination');
-                    if (input && google.maps.importLibrary) {
+                    if (input && window.google && google.maps.importLibrary) {
                         try {
+                            // Esta linha carrega a biblioteca de forma moderna para novos clientes
                             const { Autocomplete } = await google.maps.importLibrary("places");
                             new Autocomplete(input, {
                                 types: ['geocode'],
                                 componentRestrictions: { country: 'br' },
-                                fields: ['address_components', 'geometry', 'name']
+                                fields: ['formatted_address', 'geometry', 'name']
                             });
                         } catch (err) {
-                            console.error("Erro ao carregar Google Autocomplete:", err);
+                            console.error("Erro Google Autocomplete:", err);
                         }
                     }
-                }, 400);
+                }, 300);
             }
-        }
 
         async function submitRequest(event) {
             event.preventDefault();
