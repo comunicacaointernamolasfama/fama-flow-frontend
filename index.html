@@ -707,19 +707,41 @@
             justify-content: center;
         }
 
-        /* --- FULLSCREEN FIXES (RESTAURADO) --- */
+        /* --- FULLSCREEN FIXES --- */
         body.fullscreen .sidebar { display: none !important; }
+        body.fullscreen .theme-toggle { display: none !important; }
         body.fullscreen main.content {
             margin-left: 0 !important;
             padding: 0 !important;
-            width: 100vw; height: 100vh;
-            position: fixed; top: 0; left: 0; z-index: 9999;
+            width: 100vw; 
+            height: 100vh;
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            z-index: 9999;
             background: var(--color-background);
-            overflow: auto;
+            overflow: hidden;
+        }
+        body.fullscreen .organograma-header { display: none !important; }
+        body.fullscreen .organograma-actions-bar { display: none !important; }
+        body.fullscreen .organograma-tree-card {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            margin: 0 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            z-index: 10000 !important;
+            overflow: auto !important;
         }
         body.fullscreen .org-tree-wrapper {
             min-height: 100vh;
-            padding: 4rem 2rem;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
     </style>
 </head>
@@ -1094,18 +1116,24 @@
                     </div>
                 <div id="team-list-content">Carregando equipe...</div></div>
                 <div id="organograma-page" class="page-content">
-                    <div class="page-header">
-                        <div style="display: flex; align-items: baseline; gap: 1rem;">
-                        <h1 style="margin: 0;">Organograma Vivo</h1>
-                        <p style="color: var(--color-text-secondary); font-size: 0.9rem; margin: 0;">Estrutura hierárquica da empresa</p>
+                    <div class="page-header organograma-header">
+                        <div>
+                            <h1>Organograma Vivo</h1>
+                            <p>Estrutura hierárquica da empresa</p>
+                        </div>
                     </div>
+                    
+                    <div class="card organograma-actions-bar" style="margin-bottom: 2rem; padding: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+                            <label for="org-filter-dept" style="font-weight: 600; font-size: 0.9rem; color: var(--color-text-secondary); white-space: nowrap;">Visualizar Área:</label>
+                            <select id="org-filter-dept" class="input-field" onchange="loadOrganogramaPage(this.value)" style="max-width: 300px; flex-grow: 1;"></select>
+                        </div>
+                        <button class="btn btn-danger" onclick="openUserModal(null)">
+                            <span class="material-icons">person_add</span> Novo Colaborador
+                        </button>
                     </div>
-<div class="card" style="margin-bottom: 1.5rem; padding: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
-                <label for="org-filter-dept" style="font-weight: 600; font-size: 0.9rem; color: var(--color-text-secondary);">Visualizar Área:</label>
-                        <select id="org-filter-dept" class="input-field" onchange="loadOrganogramaPage(this.value)" style="max-width: 300px; flex-grow: 1;"></select>
-                        <button class="btn btn-danger" onclick="openUserModal(null)"><span class="material-icons">person_add</span> Novo Colaborador</button>
-                    </div>
-                    <div class="card" id="organograma-tree-container" style="overflow-x: auto;">
+                    
+                    <div class="card organograma-tree-card" id="organograma-tree-container" style="overflow-x: auto; position: relative;">
                         <div class="empty-state">Carregando organograma...</div>
                     </div>
                 </div>
@@ -1718,50 +1746,38 @@
 function toggleFullscreenOrg() {
     const body = document.body;
     const isFullscreen = body.classList.toggle('fullscreen');
-    const expandButton = document.querySelector('#organograma-tree-container button[title="Tela Cheia"], #organograma-tree-container button[title="Sair da Tela Cheia"]');
-    const icon = expandButton.querySelector('.material-icons');
+    const expandButton = document.querySelector('#organograma-tree-container button');
+    const icon = expandButton?.querySelector('.material-icons');
     const container = document.getElementById('organograma-tree-container');
-    const wrapper = container.querySelector('.org-tree-wrapper');
+    const wrapper = container?.querySelector('.org-tree-wrapper');
+    
+    if (!expandButton || !icon || !container || !wrapper) return;
     
     if (isFullscreen) {
         icon.textContent = 'fullscreen_exit';
         expandButton.title = 'Sair da Tela Cheia';
         
-        // Aplicar zoom automático após um pequeno delay para garantir que o layout foi atualizado
+        // Aplicar zoom automático após delay
         setTimeout(() => {
-            if (wrapper) {
-                const containerWidth = window.innerWidth - 100;
-                const containerHeight = window.innerHeight - 100;
-                const treeWidth = wrapper.scrollWidth;
-                const treeHeight = wrapper.scrollHeight;
-                
-                const scaleX = containerWidth / treeWidth;
-                const scaleY = containerHeight / treeHeight;
-                const scale = Math.min(scaleX, scaleY, 1); // Nunca aumentar, só diminuir
-                
-                wrapper.style.transform = `scale(${scale})`;
-                wrapper.style.transformOrigin = 'top center';
-                container.style.overflow = 'auto';
-                container.style.display = 'flex';
-                container.style.justifyContent = 'center';
-                container.style.alignItems = 'flex-start';
-                container.style.padding = '2rem';
-            }
-        }, 100);
+            const containerWidth = window.innerWidth - 80;
+            const containerHeight = window.innerHeight - 80;
+            const treeWidth = wrapper.scrollWidth;
+            const treeHeight = wrapper.scrollHeight;
+            
+            const scaleX = containerWidth / treeWidth;
+            const scaleY = containerHeight / treeHeight;
+            const scale = Math.min(scaleX, scaleY, 1);
+            
+            wrapper.style.transform = `scale(${scale})`;
+            wrapper.style.transformOrigin = 'top center';
+        }, 150);
     } else {
         icon.textContent = 'fullscreen';
         expandButton.title = 'Tela Cheia';
         
-        // Remover zoom ao sair
-        if (wrapper) {
-            wrapper.style.transform = 'scale(1)';
-            wrapper.style.transformOrigin = '';
-            container.style.overflow = '';
-            container.style.display = '';
-            container.style.justifyContent = '';
-            container.style.alignItems = '';
-            container.style.padding = '';
-        }
+        // Resetar zoom
+        wrapper.style.transform = 'scale(1)';
+        wrapper.style.transformOrigin = '';
     }
 }
 
