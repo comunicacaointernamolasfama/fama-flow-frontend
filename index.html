@@ -3808,29 +3808,40 @@ const userId = document.getElementById('user-id').value;
                 body: JSON.stringify(payload) 
             });
             if (!response.ok) throw new Error('Falha ao atualizar usuário.');
-        } else {
-            // Criar novo usuário
-            if (!password) { throw new Error("Senha é obrigatória para novos usuários."); }
-            const payload = { 
-                email: email, 
-                password: password, 
-                full_name: fullName, 
-                department: department, 
-                role: role,
-                manager_id: managerId
-            };
-            const response = await fetch(N8N_CREATE_USER_URL, { 
-                method: 'POST', 
-                headers: headers, 
-                body: JSON.stringify(payload) 
-            });
-            if (!response.ok) throw new Error('Falha ao criar usuário.');
-            
-            const result = await response.json();
-            finalUserId = result.user_id;
-            
-            if (!finalUserId) throw new Error('ID do usuário não foi retornado');
-        }
+} else {
+                    // Criar novo usuário
+                    if (!password) { throw new Error("Senha é obrigatória para novos usuários."); }
+                    
+                    // Coletar permissões marcadas
+                    const selectedPermissions = [];
+                    Object.keys(PERMISSION_MAPPING).forEach(key => {
+                        const checkbox = document.getElementById(`perm-${key}`);
+                        if (checkbox && checkbox.checked) {
+                            selectedPermissions.push(key);
+                        }
+                    });
+                    
+                    const payload = { 
+                        email: email, 
+                        password: password, 
+                        full_name: fullName, 
+                        department: department, 
+                        role: role,
+                        manager_id: managerId,
+                        permissions: selectedPermissions
+                    };
+                    const response = await fetch(N8N_CREATE_USER_URL, { 
+                        method: 'POST', 
+                        headers: headers, 
+                        body: JSON.stringify(payload) 
+                    });
+                    if (!response.ok) throw new Error('Falha ao criar usuário.');
+                    
+                    const result = await response.json();
+                    finalUserId = result.user_id;
+                    
+                    if (!finalUserId) throw new Error('ID do usuário não foi retornado');
+                }
         
         // Sincronizar permissões individuais
         await syncUserPermissions(finalUserId);
