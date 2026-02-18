@@ -2759,16 +2759,16 @@ async function submitRequest(event) {
             document.getElementById('selected-count-display').textContent = `${selectedRecipients.length} selecionados`;
         }
 
-        function toggleRecipientSelection(user) {
-            const targetArray = (_selectorConfig && _selectorConfig.targetArray) ? _selectorConfig.targetArray : selectedRecipients;
-            const exists = targetArray.find(r => r.id === user.id);
+function toggleRecipientSelection(user) {
+            const exists = selectedRecipients.find(r => r.id === user.id);
             if (exists) {
-                const idx = targetArray.findIndex(r => r.id === user.id);
-                targetArray.splice(idx, 1);
+                selectedRecipients = selectedRecipients.filter(r => r.id !== user.id);
             } else {
-                targetArray.push(user);
+                selectedRecipients.push(user);
             }
-            applyRecipientFilters();
+            applyRecipientFilters(); 
+            // ATUALIZA O CONTADOR A CADA CLIQUE
+            document.getElementById('selected-count-display').textContent = `${selectedRecipients.length} selecionados`;
         }
 
         function showConfirmation(title, message, onConfirm) {
