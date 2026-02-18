@@ -1653,9 +1653,12 @@
             else allUsers = data; 
         }
 
-        async function loadOrganogramaPage(departmentFilter = '') {
-            const container = document.getElementById('organograma-tree-container');
-            if (!container) return;
+async function loadOrganogramaPage(departmentFilter = '') {
+    const container = document.getElementById('organograma-tree-container');
+    if (!container) return;
+    
+    // Reset zoom quando recarregar o organograma
+    currentZoom = 1.0;
 
             container.innerHTML = `<div class="empty-state">Carregando organograma...</div>`;
 
@@ -1838,16 +1841,18 @@ function toggleFullscreenOrg() {
 let currentZoom = 1.0;
 
 function zoomOrganograma(delta) {
-    const wrapper = document.querySelector('#organograma-tree-container .org-tree-wrapper');
-    if (!wrapper) return;
+    const wrapper = document.querySelector('.org-tree-wrapper');
+    if (!wrapper) {
+        console.error('Wrapper do organograma não encontrado');
+        return;
+    }
     
     currentZoom += delta;
-    currentZoom = Math.max(0.3, Math.min(currentZoom, 2.0)); // Limitar entre 30% e 200%
+    currentZoom = Math.max(0.3, Math.min(currentZoom, 2.0));
     
     wrapper.style.transform = `scale(${currentZoom})`;
     wrapper.style.transformOrigin = 'top center';
     
-    // Atualizar label
     const zoomLabel = document.getElementById('zoom-level');
     if (zoomLabel) {
         zoomLabel.textContent = Math.round(currentZoom * 100) + '%';
@@ -1855,12 +1860,14 @@ function zoomOrganograma(delta) {
 }
 
 function resetZoomOrganograma() {
-    const wrapper = document.querySelector('#organograma-tree-container .org-tree-wrapper');
-    if (!wrapper) return;
+    const wrapper = document.querySelector('.org-tree-wrapper');
+    if (!wrapper) {
+        console.error('Wrapper do organograma não encontrado');
+        return;
+    }
     
     currentZoom = 1.0;
     wrapper.style.transform = 'scale(1)';
-    wrapper.style.transformOrigin = 'top center';
     
     const zoomLabel = document.getElementById('zoom-level');
     if (zoomLabel) {
