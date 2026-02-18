@@ -2756,29 +2756,20 @@ async function submitRequest(event) {
                 tbody.appendChild(tr);
             });
             
-            document.getElementById('selected-count-display').textContent = `${selectedRecipients.length} selecionados`;
+            const targetArray = (_selectorConfig && _selectorConfig.targetArray) ? _selectorConfig.targetArray : selectedRecipients;
+            document.getElementById('selected-count-display').textContent = `${targetArray.length} selecionados`;
         }
 
-function toggleRecipientSelection(user, rowElement) {
-            const existsIndex = selectedRecipients.findIndex(r => r.id === user.id);
-            const isSelected = existsIndex > -1;
-            
-            // Alterna a classe visual da linha
-            rowElement.classList.toggle('selected-row', !isSelected);
-            
-            // Alterna o ícone
-            const icon = rowElement.querySelector('.check-icon');
-            icon.textContent = !isSelected ? 'check_circle' : 'radio_button_unchecked';
-            
-            // Atualiza o array de dados
-            if (isSelected) {
-                selectedRecipients.splice(existsIndex, 1); // Remove
+function toggleRecipientSelection(user) {
+            const targetArray = (_selectorConfig && _selectorConfig.targetArray) ? _selectorConfig.targetArray : selectedRecipients;
+            const exists = targetArray.find(r => r.id === user.id);
+            if (exists) {
+                const idx = targetArray.findIndex(r => r.id === user.id);
+                targetArray.splice(idx, 1);
             } else {
-                selectedRecipients.push(user); // Adiciona
+                targetArray.push(user);
             }
-
-            // Atualiza o contador de texto
-            document.getElementById('selected-count-display').textContent = `${selectedRecipients.length} selecionados`;
+            applyRecipientFilters();
         }
 
         function showConfirmation(title, message, onConfirm) {
