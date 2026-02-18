@@ -1518,20 +1518,55 @@
             }
         }
         
-        function toggleFullscreenOrg() {
-            const body = document.body;
-            const isFullscreen = body.classList.toggle('fullscreen');
-            const expandButton = document.querySelector('#organograma-tree-container button[title="Tela Cheia"], #organograma-tree-container button[title="Sair da Tela Cheia"]');
-            const icon = expandButton.querySelector('.material-icons');
-
-            if (isFullscreen) {
-                icon.textContent = 'fullscreen_exit';
-                expandButton.title = 'Sair da Tela Cheia';
-            } else {
-                icon.textContent = 'fullscreen';
-                expandButton.title = 'Tela Cheia';
+function toggleFullscreenOrg() {
+    const body = document.body;
+    const isFullscreen = body.classList.toggle('fullscreen');
+    const expandButton = document.querySelector('#organograma-tree-container button[title="Tela Cheia"], #organograma-tree-container button[title="Sair da Tela Cheia"]');
+    const icon = expandButton.querySelector('.material-icons');
+    const container = document.getElementById('organograma-tree-container');
+    const wrapper = container.querySelector('.org-tree-wrapper');
+    
+    if (isFullscreen) {
+        icon.textContent = 'fullscreen_exit';
+        expandButton.title = 'Sair da Tela Cheia';
+        
+        // Aplicar zoom automático após um pequeno delay para garantir que o layout foi atualizado
+        setTimeout(() => {
+            if (wrapper) {
+                const containerWidth = window.innerWidth - 100;
+                const containerHeight = window.innerHeight - 100;
+                const treeWidth = wrapper.scrollWidth;
+                const treeHeight = wrapper.scrollHeight;
+                
+                const scaleX = containerWidth / treeWidth;
+                const scaleY = containerHeight / treeHeight;
+                const scale = Math.min(scaleX, scaleY, 1); // Nunca aumentar, só diminuir
+                
+                wrapper.style.transform = `scale(${scale})`;
+                wrapper.style.transformOrigin = 'top center';
+                container.style.overflow = 'auto';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'center';
+                container.style.alignItems = 'flex-start';
+                container.style.padding = '2rem';
             }
+        }, 100);
+    } else {
+        icon.textContent = 'fullscreen';
+        expandButton.title = 'Tela Cheia';
+        
+        // Remover zoom ao sair
+        if (wrapper) {
+            wrapper.style.transform = 'scale(1)';
+            wrapper.style.transformOrigin = '';
+            container.style.overflow = '';
+            container.style.display = '';
+            container.style.justifyContent = '';
+            container.style.alignItems = '';
+            container.style.padding = '';
         }
+    }
+}
 
         // --- REQUESTS MODULE LOGIC ---
 
