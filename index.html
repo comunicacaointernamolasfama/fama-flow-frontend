@@ -3668,7 +3668,8 @@ function toggleRecipientSelection(user) {
             const statusLabels = {
                 pending: 'Pendente',
                 approved: 'Aprovado',
-                rejected: 'Recusado'
+                rejected: 'Recusado',
+                cancelled_by_requester: 'Cancelada pelo Solicitante'
             };
 
             tableBody.innerHTML = filteredData.map(req => {
