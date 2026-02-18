@@ -219,6 +219,34 @@
             color: var(--color-text-primary);
             flex: 1;
         }
+        
+        /* Controles de Zoom do Organograma */
+        .zoom-controls {
+            display: flex !important;
+            align-items: center;
+        }
+        .btn-icon-secondary {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: var(--color-surface);
+            color: var(--color-text-primary);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn-icon-secondary:hover {
+            background: var(--color-background);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+        .btn-icon-secondary .material-icons {
+            font-size: 20px;
+        }
 
         /* --- ORGANOGRAMA STYLES (RESTAURADO) --- */
         .org-tree-wrapper {
@@ -1134,6 +1162,18 @@
                     </div>
                     
                     <div class="card organograma-tree-card" id="organograma-tree-container" style="overflow-x: auto; position: relative;">
+                        <div class="zoom-controls" style="position: absolute; top: 1rem; left: 1rem; z-index: 100; display: none; gap: 0.5rem;">
+                            <button onclick="zoomOrganograma(-0.1)" class="btn-icon-secondary" title="Diminuir Zoom">
+                                <span class="material-icons">zoom_out</span>
+                            </button>
+                            <span id="zoom-level" style="padding: 0.5rem 1rem; background: var(--color-surface); border-radius: 6px; font-size: 0.9rem; font-weight: 600; min-width: 60px; text-align: center;">100%</span>
+                            <button onclick="zoomOrganograma(0.1)" class="btn-icon-secondary" title="Aumentar Zoom">
+                                <span class="material-icons">zoom_in</span>
+                            </button>
+                            <button onclick="resetZoomOrganograma()" class="btn-icon-secondary" title="Resetar Zoom">
+                                <span class="material-icons">restart_alt</span>
+                            </button>
+                        </div>
                         <div class="empty-state">Carregando organograma...</div>
                     </div>
                 </div>
@@ -1778,6 +1818,39 @@ function toggleFullscreenOrg() {
         // Resetar zoom
         wrapper.style.transform = 'scale(1)';
         wrapper.style.transformOrigin = '';
+    }
+}
+
+let currentZoom = 1.0;
+
+function zoomOrganograma(delta) {
+    const wrapper = document.querySelector('#organograma-tree-container .org-tree-wrapper');
+    if (!wrapper) return;
+    
+    currentZoom += delta;
+    currentZoom = Math.max(0.3, Math.min(currentZoom, 2.0)); // Limitar entre 30% e 200%
+    
+    wrapper.style.transform = `scale(${currentZoom})`;
+    wrapper.style.transformOrigin = 'top center';
+    
+    // Atualizar label
+    const zoomLabel = document.getElementById('zoom-level');
+    if (zoomLabel) {
+        zoomLabel.textContent = Math.round(currentZoom * 100) + '%';
+    }
+}
+
+function resetZoomOrganograma() {
+    const wrapper = document.querySelector('#organograma-tree-container .org-tree-wrapper');
+    if (!wrapper) return;
+    
+    currentZoom = 1.0;
+    wrapper.style.transform = 'scale(1)';
+    wrapper.style.transformOrigin = 'top center';
+    
+    const zoomLabel = document.getElementById('zoom-level');
+    if (zoomLabel) {
+        zoomLabel.textContent = '100%';
     }
 }
 
