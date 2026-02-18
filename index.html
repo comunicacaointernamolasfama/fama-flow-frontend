@@ -2768,6 +2768,7 @@ function toggleRecipientSelection(user) {
             } else {
                 targetArray.push(user);
             }
+            document.getElementById('selected-count-display').textContent = `${targetArray.length} selecionados`;
             applyRecipientFilters();
         }
 
