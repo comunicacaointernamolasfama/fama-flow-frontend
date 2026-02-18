@@ -1874,50 +1874,7 @@ function resetZoomOrganograma() {
     }
 }
 
-let isPanning = false;
-let startPanX = 0;
-let startPanY = 0;
-let scrollLeftStart = 0;
-let scrollTopStart = 0;
 
-function initOrganogramaPan() {
-    const wrapper = document.querySelector('.org-tree-wrapper');
-    if (!wrapper) return;
-    
-    wrapper.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.btn-icon-secondary') || 
-            e.target.closest('.btn') || 
-            e.target.closest('.org-node')) {
-            return;
-        }
-        isPanning = true;
-        wrapper.style.cursor = 'grabbing';
-        startPanX = e.clientX;
-        startPanY = e.clientY;
-        scrollLeftStart = wrapper.scrollLeft;
-        scrollTopStart = wrapper.scrollTop;
-        e.preventDefault();
-    });
-    
-    wrapper.addEventListener('mouseleave', () => {
-        isPanning = false;
-        wrapper.style.cursor = 'grab';
-    });
-    
-    wrapper.addEventListener('mouseup', () => {
-        isPanning = false;
-        wrapper.style.cursor = 'grab';
-    });
-    
-    wrapper.addEventListener('mousemove', (e) => {
-        if (!isPanning) return;
-        e.preventDefault();
-        const deltaX = e.clientX - startPanX;
-        const deltaY = e.clientY - startPanY;
-        wrapper.scrollLeft = scrollLeftStart - deltaX;
-        wrapper.scrollTop = scrollTopStart - deltaY;
-    });
-}
 
 // === FUNCIONALIDADE DE PAN (ARRASTAR) ===
 let isPanning = false;
@@ -1969,19 +1926,19 @@ function initOrganogramaPan() {
     });
 }
 
-// Variáveis para controle de pan (arrastar)
+// === CONTROLE DE ZOOM E PAN DO ORGANOGRAMA ===
 let isPanning = false;
-let startX = 0;
-let startY = 0;
-let scrollLeft = 0;
-let scrollTop = 0;
+let startPanX = 0;
+let startPanY = 0;
+let scrollLeftStart = 0;
+let scrollTopStart = 0;
 
 // Ativar zoom com scroll do mouse
 function initOrganogramaZoomScroll() {
-    const container = document.getElementById('organograma-tree-container');
-    if (!container) return;
+    const wrapper = document.querySelector('.org-tree-wrapper');
+    if (!wrapper) return;
     
-    container.addEventListener('wheel', (e) => {
+    wrapper.addEventListener('wheel', (e) => {
         e.preventDefault();
         const delta = e.deltaY > 0 ? -0.1 : 0.1;
         zoomOrganograma(delta);
@@ -1990,40 +1947,41 @@ function initOrganogramaZoomScroll() {
 
 // Ativar arrastar para mover (pan)
 function initOrganogramaPan() {
-    const container = document.getElementById('organograma-tree-container');
-    if (!container) return;
+    const wrapper = document.querySelector('.org-tree-wrapper');
+    if (!wrapper) return;
     
-    container.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.btn-icon-secondary') || e.target.closest('.btn') || e.target.closest('.org-node')) {
+    wrapper.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.btn-icon-secondary') || 
+            e.target.closest('.btn') || 
+            e.target.closest('.org-node')) {
             return;
         }
         isPanning = true;
-        container.style.cursor = 'grabbing';
-        startX = e.pageX - container.offsetLeft;
-        startY = e.pageY - container.offsetTop;
-        scrollLeft = container.scrollLeft;
-        scrollTop = container.scrollTop;
+        wrapper.style.cursor = 'grabbing';
+        startPanX = e.clientX;
+        startPanY = e.clientY;
+        scrollLeftStart = wrapper.scrollLeft;
+        scrollTopStart = wrapper.scrollTop;
+        e.preventDefault();
     });
     
-    container.addEventListener('mouseleave', () => {
+    wrapper.addEventListener('mouseleave', () => {
         isPanning = false;
-        container.style.cursor = 'default';
+        wrapper.style.cursor = 'grab';
     });
     
-    container.addEventListener('mouseup', () => {
+    wrapper.addEventListener('mouseup', () => {
         isPanning = false;
-        container.style.cursor = 'default';
+        wrapper.style.cursor = 'grab';
     });
     
-    container.addEventListener('mousemove', (e) => {
+    wrapper.addEventListener('mousemove', (e) => {
         if (!isPanning) return;
         e.preventDefault();
-        const x = e.pageX - container.offsetLeft;
-        const y = e.pageY - container.offsetTop;
-        const walkX = (x - startX) * 1.5;
-        const walkY = (y - startY) * 1.5;
-        container.scrollLeft = scrollLeft - walkX;
-        container.scrollTop = scrollTop - walkY;
+        const deltaX = e.clientX - startPanX;
+        const deltaY = e.clientY - startPanY;
+        wrapper.scrollLeft = scrollLeftStart - deltaX;
+        wrapper.scrollTop = scrollTopStart - deltaY;
     });
 }
 
