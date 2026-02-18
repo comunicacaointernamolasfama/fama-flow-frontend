@@ -257,7 +257,10 @@
             justify-content: center;
             background: var(--color-background);
             position: relative;
-            cursor: default;
+            cursor: grab;
+        }
+        .org-tree-wrapper:active {
+            cursor: grabbing;
         }
         .org-tree, .org-tree ul {
             display: flex;
@@ -1869,6 +1872,101 @@ function resetZoomOrganograma() {
     if (zoomLabel) {
         zoomLabel.textContent = '100%';
     }
+}
+
+let isPanning = false;
+let startPanX = 0;
+let startPanY = 0;
+let scrollLeftStart = 0;
+let scrollTopStart = 0;
+
+function initOrganogramaPan() {
+    const wrapper = document.querySelector('.org-tree-wrapper');
+    if (!wrapper) return;
+    
+    wrapper.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.btn-icon-secondary') || 
+            e.target.closest('.btn') || 
+            e.target.closest('.org-node')) {
+            return;
+        }
+        isPanning = true;
+        wrapper.style.cursor = 'grabbing';
+        startPanX = e.clientX;
+        startPanY = e.clientY;
+        scrollLeftStart = wrapper.scrollLeft;
+        scrollTopStart = wrapper.scrollTop;
+        e.preventDefault();
+    });
+    
+    wrapper.addEventListener('mouseleave', () => {
+        isPanning = false;
+        wrapper.style.cursor = 'grab';
+    });
+    
+    wrapper.addEventListener('mouseup', () => {
+        isPanning = false;
+        wrapper.style.cursor = 'grab';
+    });
+    
+    wrapper.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        e.preventDefault();
+        const deltaX = e.clientX - startPanX;
+        const deltaY = e.clientY - startPanY;
+        wrapper.scrollLeft = scrollLeftStart - deltaX;
+        wrapper.scrollTop = scrollTopStart - deltaY;
+    });
+}
+
+// === FUNCIONALIDADE DE PAN (ARRASTAR) ===
+let isPanning = false;
+let startPanX = 0;
+let startPanY = 0;
+let scrollLeftStart = 0;
+let scrollTopStart = 0;
+
+function initOrganogramaPan() {
+    const wrapper = document.querySelector('.org-tree-wrapper');
+    if (!wrapper) return;
+    
+    wrapper.addEventListener('mousedown', (e) => {
+        // Ignorar cliques em elementos interativos
+        if (e.target.closest('.btn-icon-secondary') || 
+            e.target.closest('.btn') || 
+            e.target.closest('.org-node')) {
+            return;
+        }
+        
+        isPanning = true;
+        wrapper.style.cursor = 'grabbing';
+        startPanX = e.clientX;
+        startPanY = e.clientY;
+        scrollLeftStart = wrapper.scrollLeft;
+        scrollTopStart = wrapper.scrollTop;
+        e.preventDefault();
+    });
+    
+    wrapper.addEventListener('mouseleave', () => {
+        isPanning = false;
+        wrapper.style.cursor = 'grab';
+    });
+    
+    wrapper.addEventListener('mouseup', () => {
+        isPanning = false;
+        wrapper.style.cursor = 'grab';
+    });
+    
+    wrapper.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        e.preventDefault();
+        
+        const deltaX = e.clientX - startPanX;
+        const deltaY = e.clientY - startPanY;
+        
+        wrapper.scrollLeft = scrollLeftStart - deltaX;
+        wrapper.scrollTop = scrollTopStart - deltaY;
+    });
 }
 
 // Variáveis para controle de pan (arrastar)
