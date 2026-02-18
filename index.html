@@ -5362,27 +5362,33 @@ const numParticipants = updatedData.num_participantes || 1;
             const { data, error } = await supabaseClient.rpc('get_dashboard_stats').single();
             const { data: tasks, error: tasksError } = await supabaseClient.rpc('get_user_tasks_for_date', { p_date: new Date().toISOString().split('T')[0] });
             
-            let summaryMessage = `<h2>Resumo do seu dia, ${currentUserProfile.full_name.split(' ')[0]}!</h2>`;
             let hasContent = false;
+            let summaryHTML = `<h3 style="margin: 0 0 1rem 0; font-size: 1.2rem;">Resumo do seu dia, ${currentUserProfile.full_name.split(' ')[0]}!</h3>`;
 
             if (data && data.pending_messages_count > 0) {
-                summaryMessage += `<p>• Você tem <strong>${data.pending_messages_count}</strong> mensagens pendentes.</p>`;
+                summaryHTML += `<p style="margin: 0.5rem 0;">• Você tem <strong>${data.pending_messages_count}</strong> mensagem(ns) pendente(s).</p>`;
                 hasContent = true;
             }
             if (data && data.urgent_tickets_count > 0) {
-                summaryMessage += `<p>• Há <strong>${data.urgent_tickets_count}</strong> chamados abertos aguardando sua atenção.</p>`;
+                summaryHTML += `<p style="margin: 0.5rem 0;">• Há <strong>${data.urgent_tickets_count}</strong> chamado(s) aberto(s) aguardando sua atenção.</p>`;
                 hasContent = true;
             }
             if (tasks && tasks.length > 0) {
-                summaryMessage += `<p>• Sua agenda de hoje inclui <strong>${tasks.length}</strong> tarefas em suas rotinas.</p>`;
+                summaryHTML += `<p style="margin: 0.5rem 0;">• Sua agenda de hoje inclui <strong>${tasks.length}</strong> tarefa(s) nas suas rotinas.</p>`;
                 hasContent = true;
             }
-
             if (!hasContent) {
-                summaryMessage += "<p>Tudo em ordem por aqui! Sem pendências ou tarefas para hoje. Bom trabalho!</p>";
+                summaryHTML += `<p style="margin: 0.5rem 0;">Tudo em ordem por aqui! Sem pendências ou tarefas para hoje. Bom trabalho!</p>`;
             }
 
-            showConfirmation('Briefing Diário', summaryMessage, () => {});
+            const modal = document.getElementById('confirmation-modal');
+            const body = modal.querySelector('.modal-body');
+            body.innerHTML = `
+                <span class="material-icons" style="font-size: 48px; color: var(--color-brand-primary); margin-bottom: 1rem;">wb_sunny</span>
+                <div style="text-align: center; margin-bottom: 2rem; color: var(--color-text-primary);">${summaryHTML}</div>
+                <button class="btn btn-danger" style="width: 100%;" onclick="closeConfirmationModal()">Seguir Adiante</button>
+            `;
+            modal.classList.add('visible');
         }
 
     </script>
