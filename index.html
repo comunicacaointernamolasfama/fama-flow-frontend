@@ -2733,7 +2733,7 @@ async function submitRequest(event) {
             users.forEach(user => {
                 const isSelected = targetArray.some(r => r.id === user.id);
                 const tr = document.createElement('tr');
-                tr.onclick = () => toggleRecipientSelection(user);
+                tr.onclick = (event) => toggleRecipientSelection(user, event.currentTarget);
                 if (isSelected) tr.classList.add('selected-row');
 
                 const avatarInitial = user.full_name ? user.full_name.charAt(0).toUpperCase() : '?';
@@ -2759,15 +2759,25 @@ async function submitRequest(event) {
             document.getElementById('selected-count-display').textContent = `${selectedRecipients.length} selecionados`;
         }
 
-function toggleRecipientSelection(user) {
-            const exists = selectedRecipients.find(r => r.id === user.id);
-            if (exists) {
-                selectedRecipients = selectedRecipients.filter(r => r.id !== user.id);
+function toggleRecipientSelection(user, rowElement) {
+            const existsIndex = selectedRecipients.findIndex(r => r.id === user.id);
+            const isSelected = existsIndex > -1;
+            
+            // Alterna a classe visual da linha
+            rowElement.classList.toggle('selected-row', !isSelected);
+            
+            // Alterna o ícone
+            const icon = rowElement.querySelector('.check-icon');
+            icon.textContent = !isSelected ? 'check_circle' : 'radio_button_unchecked';
+            
+            // Atualiza o array de dados
+            if (isSelected) {
+                selectedRecipients.splice(existsIndex, 1); // Remove
             } else {
-                selectedRecipients.push(user);
+                selectedRecipients.push(user); // Adiciona
             }
-            applyRecipientFilters(); 
-            // ATUALIZA O CONTADOR A CADA CLIQUE
+
+            // Atualiza o contador de texto
             document.getElementById('selected-count-display').textContent = `${selectedRecipients.length} selecionados`;
         }
 
