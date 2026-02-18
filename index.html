@@ -1029,10 +1029,10 @@
 
         // Mapeamento de permissões RBAC
         const PERMISSION_MAPPING = {
-            'manage_travel': 'Gerenciar Viagens',
-            'manage_hr': 'Gerenciar RH (Solicitações Gerais)',
+            'manage_travel': 'Gerenciar Viagens (Controladoria)',
+            'manage_hr': 'Gerenciar Requisições Gerais (RH)',
             'manage_routines': 'Gerenciar Rotinas do Setor',
-            'manage_users': 'Administrar Usuários e Permissões'
+            'manage_users': 'Administrador Geral'
         };
 
         let currentUserProfile = null;
@@ -1281,29 +1281,40 @@
                                         <input type="checkbox" id="perm-manage_travel">
                                         <span class="perm-checkmark"></span>
                                         <span class="material-icons perm-icon">flight_takeoff</span>
-                                        <span class="perm-text">Viagens</span>
+                                        <span class="perm-text">Viagens (Controladoria)</span>
                                     </label>
                                     
                                     <label class="perm-checkbox">
                                         <input type="checkbox" id="perm-manage_hr">
                                         <span class="perm-checkmark"></span>
                                         <span class="material-icons perm-icon">assignment</span>
-                                        <span class="perm-text">RH</span>
+                                        <span class="perm-text">Requisições (RH)</span>
                                     </label>
                                     
                                     <label class="perm-checkbox">
                                         <input type="checkbox" id="perm-manage_routines">
                                         <span class="perm-checkmark"></span>
                                         <span class="material-icons perm-icon">checklist</span>
-                                        <span class="perm-text">Rotinas</span>
+                                        <span class="perm-text">Rotinas do Setor</span>
                                     </label>
                                     
                                     <label class="perm-checkbox">
                                         <input type="checkbox" id="perm-manage_users">
                                         <span class="perm-checkmark"></span>
                                         <span class="material-icons perm-icon">admin_panel_settings</span>
-                                        <span class="perm-text">Admin</span>
+                                        <span class="perm-text">Admin Geral</span>
                                     </label>
+                                </div>
+                                
+                                <div style="margin-top: 1rem; padding: 0.875rem; background: var(--color-info-bg); border-left: 3px solid var(--color-info); border-radius: 6px;">
+                                    <p style="margin: 0; font-size: 0.8rem; line-height: 1.5; color: var(--color-text-primary);">
+                                        <strong style="display: flex; align-items: center; gap: 0.25rem; margin-bottom: 0.25rem;">
+                                            <span style="font-size: 1rem;">💡</span> Entenda as Regras:
+                                        </strong>
+                                        <span style="color: var(--color-text-secondary);">
+                                            Gerenciar Viagens é centralizado na <strong>Controladoria</strong>. Gerentes e Supervisores gerenciam Rotinas de seus setores <strong>por padrão</strong>. Use as permissões acima apenas para exceções ou cargos administrativos.
+                                        </span>
+                                    </p>
                                 </div>
                             </div>
                         </form>
