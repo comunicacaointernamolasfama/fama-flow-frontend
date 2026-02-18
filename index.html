@@ -955,6 +955,14 @@
         const N8N_CANCEL_TRAVEL_REQUEST_URL = 'https://n8n-n8n.znxk1t.easypanel.host/webhook/cancel-travel-request';
 
 
+        // Mapeamento de permissões RBAC
+        const PERMISSION_MAPPING = {
+            'manage_travel': 'Gerenciar Viagens',
+            'manage_hr': 'Gerenciar RH (Solicitações Gerais)',
+            'manage_routines': 'Gerenciar Rotinas do Setor',
+            'manage_users': 'Administrar Usuários e Permissões'
+        };
+
         let currentUserProfile = null;
         let quillEditor = null;
         let allUsers = [];
@@ -1122,11 +1130,35 @@
                 <div id="manage-routines-page" class="page-content"></div>
                 <button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button>
             </main>
-            <div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div><div class="form-group">
-    <label for="manager_id">Gerente Direto</label>
-    <select id="manager_id" class="input-field">
-        <option value="">Nenhum</option>
-    </select>
+            <div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div><label for="manager_id">Gerente Direto</label>
+<select id="manager_id" class="input-field">
+    <option value="">Nenhum</option>
+</select>
+</div>
+
+<div class="form-group" style="margin-top: 1.5rem;">
+    <h4 style="margin-bottom: 1rem; color: var(--color-text-primary); font-size: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">Permissões Individuais (Overrides)</h4>
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" id="perm-manage_travel" style="cursor: pointer;">
+            <span>Gerenciar Viagens</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" id="perm-manage_hr" style="cursor: pointer;">
+            <span>Gerenciar RH (Solicitações Gerais)</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" id="perm-manage_routines" style="cursor: pointer;">
+            <span>Gerenciar Rotinas do Setor</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" id="perm-manage_users" style="cursor: pointer;">
+            <span>Administrar Usuários e Permissões</span>
+        </label>
+    </div>
+    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--color-text-secondary); font-style: italic;">
+        Permissões marcadas substituem as permissões padrão do cargo
+    </p>
 </div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div>
         </div>`;
         
@@ -3447,7 +3479,7 @@ function toggleRecipientSelection(user) {
             }
         }
 
-        async function openUserModal(user) {
+async function openUserModal(user) {
             const modal = document.querySelector('#app-container #user-modal');
             const form = document.getElementById('user-form');
             form.reset();
@@ -3478,81 +3510,171 @@ function toggleRecipientSelection(user) {
                 document.getElementById('department').value = user.department;
                 document.getElementById('role').value = user.role;
                 managerSelect.value = user.manager_id || '';
+                
+                // Carregar permissões específicas do usuário
+                await loadUserPermissions(user.id);
             } else {
                 document.getElementById('user-modal-title').textContent = 'Novo Usuário';
                 document.getElementById('user-id').value = '';
+                
+                // Desmarcar todas as permissões
+                Object.keys(PERMISSION_MAPPING).forEach(key => {
+                    const checkbox = document.getElementById(`perm-${key}`);
+                    if (checkbox) checkbox.checked = false;
+                });
             }
             
             modal.classList.add('visible');
         }
         function closeUserModal() { document.querySelector('#app-container #user-modal')?.classList.remove('visible'); }
+		
+async function loadUserPermissions(userId) {
+    try {
+        const { data: permissions, error } = await supabaseClient
+            .from('user_specific_permissions')
+            .select('permission_key')
+            .eq('user_id', userId);
+        
+        if (error) throw error;
+        
+        // Desmarcar todos primeiro
+        Object.keys(PERMISSION_MAPPING).forEach(key => {
+            const checkbox = document.getElementById(`perm-${key}`);
+            if (checkbox) checkbox.checked = false;
+        });
+        
+        // Marcar os que o usuário possui
+        if (permissions && permissions.length > 0) {
+            permissions.forEach(perm => {
+                const checkbox = document.getElementById(`perm-${perm.permission_key}`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao carregar permissões:', error);
+        showToast('Erro ao carregar permissões do usuário', 'danger');
+    }
+}
 
-        async function saveUser() {
-            const userId = document.getElementById('user-id').value;
-            const fullName = document.getElementById('full_name').value;
-            const department = document.getElementById('department').value;
-            const role = document.getElementById('role').value;
-            const managerIdValue = document.getElementById('manager_id').value;
-            const managerId = managerIdValue === "" ? null : managerIdValue;
-            const email = document.getElementById('user_email').value;
-            const password = document.getElementById('user_password').value;
+async function saveUser() {
+    const userId = document.getElementById('user-id').value;
+    const fullName = document.getElementById('full_name').value;
+    const department = document.getElementById('department').value;
+    const role = document.getElementById('role').value;
+    const managerIdValue = document.getElementById('manager_id').value;
+    const managerId = managerIdValue === "" ? null : managerIdValue;
+    const email = document.getElementById('user_email').value;
+    const password = document.getElementById('user_password').value;
+    
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) { showToast("Sessão inválida.", 'danger'); return; }
+    const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` };
+    const btnSave = document.querySelector('#user-modal .btn-danger');
+    btnSave.disabled = true; btnSave.textContent = "Salvando...";
+    
+    try {
+        let finalUserId = userId;
+        
+        if (userId) {
+            // Atualizar usuário existente
+            const payload = { 
+                id: userId, 
+                full_name: fullName, 
+                department: department, 
+                role: role, 
+                manager_id: managerId 
+            };
+            const response = await fetch(N8N_UPDATE_USER_URL, { 
+                method: 'POST', 
+                headers: headers, 
+                body: JSON.stringify(payload) 
+            });
+            if (!response.ok) throw new Error('Falha ao atualizar usuário.');
+        } else {
+            // Criar novo usuário
+            if (!password) { throw new Error("Senha é obrigatória para novos usuários."); }
+            const payload = { 
+                email: email, 
+                password: password, 
+                full_name: fullName, 
+                department: department, 
+                role: role,
+                manager_id: managerId
+            };
+            const response = await fetch(N8N_CREATE_USER_URL, { 
+                method: 'POST', 
+                headers: headers, 
+                body: JSON.stringify(payload) 
+            });
+            if (!response.ok) throw new Error('Falha ao criar usuário.');
             
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) { showToast("Sessão inválida.", 'danger'); return; }
-            const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` };
-            const btnSave = document.querySelector('#user-modal .btn-danger');
-            btnSave.disabled = true; btnSave.textContent = "Salvando...";
+            const result = await response.json();
+            finalUserId = result.user_id;
             
+            if (!finalUserId) throw new Error('ID do usuário não foi retornado');
+        }
+        
+        // Sincronizar permissões individuais
+        await syncUserPermissions(finalUserId);
+        
+        showToast(userId ? "Usuário atualizado com sucesso!" : "Usuário criado com sucesso!", 'success');
+        closeUserModal();
+        await fetchAllUsersForSearch();
+        loadUsersForAdmin();
+
+        const organogramaPage = document.getElementById('organograma-page');
+        if (organogramaPage && organogramaPage.classList.contains('active')) {
+            const currentFilter = document.getElementById('org-filter-dept')?.value || '';
+            loadOrganogramaPage(currentFilter);
+        }
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message, 'danger');
+    } finally {
+        btnSave.disabled = false;
+        btnSave.textContent = "Salvar";
+    }
+}
+
+async function syncUserPermissions(userId) {
             try {
-                if (userId) {
-                    const payload = { 
-                        id: userId, 
-                        full_name: fullName, 
-                        department: department, 
-                        role: role, 
-                        manager_id: managerId 
-                    };
-                    const response = await fetch(N8N_UPDATE_USER_URL, { 
-                        method: 'POST', 
-                        headers: headers, 
-                        body: JSON.stringify(payload) 
-                    });
-                    if (!response.ok) throw new Error('Falha ao atualizar usuário.');
-                    showToast("Usuário atualizado com sucesso!", 'success');
-                } else {
-                    if (!password) { throw new Error("Senha é obrigatória para novos usuários."); }
-                    const payload = { 
-                        email: email, 
-                        password: password, 
-                        full_name: fullName, 
-                        department: department, 
-                        role: role,
-                        manager_id: managerId
-                    };
-                    const response = await fetch(N8N_CREATE_USER_URL, { 
-                        method: 'POST', 
-                        headers: headers, 
-                        body: JSON.stringify(payload) 
-                    });
-                    if (!response.ok) throw new Error('Falha ao criar usuário.');
-                    showToast("Usuário criado com sucesso!", 'success');
+                // Coletar permissões marcadas
+                const selectedPermissions = [];
+                Object.keys(PERMISSION_MAPPING).forEach(key => {
+                    const checkbox = document.getElementById(`perm-${key}`);
+                    if (checkbox && checkbox.checked) {
+                        selectedPermissions.push(key);
+                    }
+                });
+                
+                // Passo 1: Remover todas as permissões antigas do usuário
+                const { error: deleteError } = await supabaseClient
+                    .from('user_specific_permissions')
+                    .delete()
+                    .eq('user_id', userId);
+                
+                if (deleteError) throw deleteError;
+                
+                // Passo 2: Inserir novas permissões
+                if (selectedPermissions.length > 0) {
+                    const permissionsToInsert = selectedPermissions.map(permKey => ({
+                        user_id: userId,
+                        permission_key: permKey
+                    }));
+                    
+                    const { error: insertError } = await supabaseClient
+                        .from('user_specific_permissions')
+                        .insert(permissionsToInsert);
+                    
+                    if (insertError) throw insertError;
                 }
-                closeUserModal();
-                await fetchAllUsersForSearch();
-                loadUsersForAdmin();
-
-                const organogramaPage = document.getElementById('organograma-page');
-                if (organogramaPage && organogramaPage.classList.contains('active')) {
-                    const currentFilter = document.getElementById('org-filter-dept')?.value || '';
-                    loadOrganogramaPage(currentFilter);
-                }
-
+                
+                console.log(`Permissões sincronizadas para usuário ${userId}:`, selectedPermissions);
+                
             } catch (error) {
-                console.error(error);
-                showToast(error.message, 'danger');
-            } finally {
-                btnSave.disabled = false;
-                btnSave.textContent = "Salvar";
+                console.error('Erro ao sincronizar permissões:', error);
+                throw new Error('Falha ao salvar permissões do usuário');
             }
         }
 
