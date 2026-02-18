@@ -5417,52 +5417,83 @@ const numParticipants = updatedData.num_participantes || 1;
             const body = modal.querySelector('.modal-body');
             body.innerHTML = `
                 <div style="width: 100%; text-align: left;">
-                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
-                        <span class="material-icons" style="font-size: 32px; color: var(--color-brand-primary);">wb_sunny</span>
+
+                    <!-- HEADER -->
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--color-border);">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #ff6b35, var(--color-brand-primary)); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <span class="material-icons" style="color: white; font-size: 24px;">wb_sunny</span>
+                        </div>
                         <div>
-                            <div style="font-weight: 800; font-size: 1.1rem;">Bom dia, ${nome}!</div>
-                            <div style="font-size: 0.85rem; color: var(--color-text-secondary);">${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</div>
+                            <div style="font-weight: 800; font-size: 1.3rem; letter-spacing: -0.01em;">Fala, ${nome}! 👋</div>
+                            <div style="font-size: 0.82rem; color: var(--color-text-secondary); text-transform: capitalize;">${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</div>
                         </div>
                     </div>
 
+                    <!-- BARRA DE PROGRESSO -->
                     <div class="briefing-progress-label">
-                        <span>Progresso do dia</span>
-                        <span>${completedTasks}/${totalTasks} tarefas concluídas</span>
+                        <span style="font-weight: 600;">Progresso do dia</span>
+                        <span style="font-weight: 700; color: var(--color-success);">${completedTasks}/${totalTasks} concluídas</span>
                     </div>
-                    <div class="briefing-progress-bar-wrapper">
+                    <div class="briefing-progress-bar-wrapper" style="margin-bottom: 1.5rem;">
                         <div class="briefing-progress-bar-fill" style="width: ${progressPct}%;"></div>
                     </div>
 
-                    <div class="briefing-cards-wrapper">
-                        <div class="briefing-card critico">
-                            <div class="briefing-card-header">
-                                <span class="material-icons">priority_high</span> Crítico
+                    <!-- CARDS VERTICAIS -->
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+
+                        <!-- CRÍTICO -->
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; background: var(--color-danger-bg); border: 1px solid rgba(216,25,32,0.2); border-radius: 10px;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--color-brand-primary); display: flex; align-items: center; justify-content: center;">
+                                    <span class="material-icons" style="color: white; font-size: 18px;">priority_high</span>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-danger);">Crítico</div>
+                                    <div style="font-size: 0.82rem; color: var(--color-text-secondary);">${overdueTasks.length > 0 ? `${overdueTasks.length} tarefa(s) atrasada(s)` : 'Tudo em dia!'}</div>
+                                </div>
                             </div>
-                            <div class="briefing-card-count">${overdueTasks.length}</div>
-                            <div class="briefing-card-sub">tarefa(s) atrasada(s)</div>
-                            ${overdueTasks.length > 0 ? `<button class="btn btn-danger" style="padding: 0.35rem; font-size: 0.8rem; margin-top: 0.25rem;" onclick="closeConfirmationModal(); showPage('my-routines-page');">Resolver</button>` : '<div style="font-size:0.8rem; color: var(--color-success);">Tudo em dia!</div>'}
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="font-size: 1.8rem; font-weight: 800; color: var(--color-danger);">${overdueTasks.length}</span>
+                                ${overdueTasks.length > 0 ? `<button class="btn btn-danger" style="padding: 0.3rem 0.75rem; font-size: 0.8rem;" onclick="closeConfirmationModal(); showPage('my-routines-page');">Resolver</button>` : `<span class="material-icons" style="color: var(--color-success); font-size: 22px;">check_circle</span>`}
+                            </div>
                         </div>
 
-                        <div class="briefing-card hoje">
-                            <div class="briefing-card-header">
-                                <span class="material-icons">today</span> Hoje
+                        <!-- HOJE -->
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; background: var(--color-warning-bg); border: 1px solid rgba(245,158,11,0.2); border-radius: 10px;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--color-warning); display: flex; align-items: center; justify-content: center;">
+                                    <span class="material-icons" style="color: white; font-size: 18px;">today</span>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-warning);">Hoje</div>
+                                    <div style="font-size: 0.82rem; color: var(--color-text-secondary);">${proximaTexto}</div>
+                                </div>
                             </div>
-                            <div class="briefing-card-count">${pendingTasks.length}</div>
-                            <div class="briefing-card-sub">${proximaTexto}</div>
+                            <span style="font-size: 1.8rem; font-weight: 800; color: var(--color-warning);">${pendingTasks.length}</span>
                         </div>
 
-                        <div class="briefing-card mensagens">
-                            <div class="briefing-card-header">
-                                <span class="material-icons">mail</span> Mensagens
+                        <!-- MENSAGENS -->
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; background: var(--color-info-bg); border: 1px solid rgba(59,130,246,0.2); border-radius: 10px;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--color-info); display: flex; align-items: center; justify-content: center;">
+                                    <span class="material-icons" style="color: white; font-size: 18px;">mail</span>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-info);">Mensagens</div>
+                                    <div style="font-size: 0.82rem; color: var(--color-text-secondary);">${stats.pending_messages_count || 0} msg · ${stats.urgent_tickets_count || 0} chamado(s)</div>
+                                </div>
                             </div>
-                            <div class="briefing-card-count">${mensagens}</div>
-                            <div class="briefing-card-sub">${stats.pending_messages_count || 0} mensagem(ns) · ${stats.urgent_tickets_count || 0} chamado(s)</div>
+                            <span style="font-size: 1.8rem; font-weight: 800; color: var(--color-info);">${mensagens}</span>
                         </div>
+
                     </div>
 
-                    <button class="briefing-footer-btn" onclick="closeConfirmationModal()">
-                        ENTENDIDO, VAMOS EXECUTAR!
+                    <!-- BOTÃO -->
+                    <button onclick="closeConfirmationModal()" style="width: 100%; padding: 1rem; border: none; border-radius: 12px; background: linear-gradient(135deg, #c0141b, var(--color-brand-primary) 50%, #ff4444); color: white; font-size: 0.95rem; font-weight: 800; cursor: pointer; letter-spacing: 0.08em; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 4px 15px rgba(216,25,32,0.4); transition: transform 0.15s, box-shadow 0.15s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(216,25,32,0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(216,25,32,0.4)'">
+                        <span class="material-icons" style="font-size: 20px;">rocket_launch</span>
+                        VAMOS EXECUTAR!
                     </button>
+
                 </div>
             `;
             modal.classList.add('visible');
