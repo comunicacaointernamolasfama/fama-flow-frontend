@@ -1505,7 +1505,7 @@
             }
         }
 
-        async function handleLogin(e) { e.preventDefault(); const email = document.getElementById('email').value; const password = document.getElementById('password').value; const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password }); if (error) { showToast('Erro no login: ' + error.message, 'danger'); } else if (data.user) { await fetchUserProfile(data.user); renderAppLayout(); } }
+        async function handleLogin(e) { e.preventDefault(); const email = document.getElementById('email').value; const password = document.getElementById('password').value; const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password }); if (error) { showToast('Erro no login: ' + error.message, 'danger'); } else if (data.user) { await fetchUserProfile(data.user); await showWelcomeNotification(); renderAppLayout(); } }
         async function handleLogout() { await supabaseClient.auth.signOut(); currentUserProfile = null; allUsers = []; renderAuthLayout(); }
         
         async function fetchUserProfile(user) {
@@ -1517,6 +1517,8 @@
         async function showApp() { 
             const appContainer = document.getElementById('app-container'); if (!appContainer) return;
             appContainer.classList.add('visible'); 
+
+            checkNotificationTriggers(); // <-- CHAMA A CENTRAL DE ALERTAS 
 
             const { data: permissions, error: permissionsError } = await supabaseClient.rpc('get_user_permissions');
             if (permissionsError) {
@@ -5301,6 +5303,87 @@ const numParticipants = updatedData.num_participantes || 1;
         document.getElementById('btn-create-routine')?.addEventListener('click', createRoutine);
         document.getElementById('btn-update-routine')?.addEventListener('click', updateRoutineHandler);
         document.getElementById('btn-update-task')?.addEventListener('click', updateTaskHandler);
+
+        async function showWelcomeNotification() {
+            if (sessionStorage.getItem('welcomeShown')) return;
+
+            try {
+                const { data, error } = await supabaseClient.rpc('get_dashboard_stats').single();
+                if (error) throw error;
+
+                const mensagens = data?.pending_messages_count || 0;
+                const chamados = data?.urgent_tickets_count || 0;
+                const nome = currentUserProfile?.full_name?.split(' ')[0] || 'você';
+
+                let mensagem = `Bem-vindo(a), ${nome}! `;
+                if (mensagens === 0 && chamados === 0) {
+                    mensagem += `Nenhuma pendência por enquanto. Bom trabalho!`;
+                } else {
+                    if (mensagens > 0) mensagem += `Você tem <strong>${mensagens}</strong> mensagem(ns) pendente(s). `;
+                    if (chamados > 0) mensagem += `Há <strong>${chamados}</strong> chamado(s) aberto(s).`;
+                }
+
+                showToast(mensagem, mensagens > 0 || chamados > 0 ? 'warning' : 'success');
+            } catch (e) {
+                console.warn('Não foi possível carregar o resumo de boas-vindas:', e);
+            } finally {
+                sessionStorage.setItem('welcomeShown', 'true');
+            }
+        }
+
+        function checkNotificationTriggers() {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const lastVisit = localStorage.getItem('lastVisitDate');
+            const lastAfternoonAlert = localStorage.getItem('lastAfternoonAlert');
+            const lastEveningAlert = localStorage.getItem('lastEveningAlert');
+
+            if (lastVisit !== today) {
+                displayDailySummary();
+                localStorage.setItem('lastVisitDate', today);
+                localStorage.setItem('lastAfternoonAlert', today);
+                localStorage.setItem('lastEveningAlert', today);
+                return;
+            }
+
+            if (now.getHours() >= 14 && lastAfternoonAlert !== today) {
+                 showToast(`Bem-vindo de volta! Lembre-se de suas pendências.`, 'info');
+                 localStorage.setItem('lastAfternoonAlert', today);
+                 return;
+            }
+
+            if (now.getHours() >= 17 && lastEveningAlert !== today) {
+                 showToast(`Última chamada! Verifique se há pendências antes de encerrar o dia.`, 'info');
+                 localStorage.setItem('lastEveningAlert', today);
+            }
+        }
+
+        async function displayDailySummary() {
+            const { data, error } = await supabaseClient.rpc('get_dashboard_stats').single();
+            const { data: tasks, error: tasksError } = await supabaseClient.rpc('get_user_tasks_for_date', { p_date: new Date().toISOString().split('T')[0] });
+            
+            let summaryMessage = `<h2>Resumo do seu dia, ${currentUserProfile.full_name.split(' ')[0]}!</h2>`;
+            let hasContent = false;
+
+            if (data && data.pending_messages_count > 0) {
+                summaryMessage += `<p>• Você tem <strong>${data.pending_messages_count}</strong> mensagens pendentes.</p>`;
+                hasContent = true;
+            }
+            if (data && data.urgent_tickets_count > 0) {
+                summaryMessage += `<p>• Há <strong>${data.urgent_tickets_count}</strong> chamados abertos aguardando sua atenção.</p>`;
+                hasContent = true;
+            }
+            if (tasks && tasks.length > 0) {
+                summaryMessage += `<p>• Sua agenda de hoje inclui <strong>${tasks.length}</strong> tarefas em suas rotinas.</p>`;
+                hasContent = true;
+            }
+
+            if (!hasContent) {
+                summaryMessage += "<p>Tudo em ordem por aqui! Sem pendências ou tarefas para hoje. Bom trabalho!</p>";
+            }
+
+            showConfirmation('Briefing Diário', summaryMessage, () => {});
+        }
 
     </script>
 </body>
