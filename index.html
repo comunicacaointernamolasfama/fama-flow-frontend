@@ -1688,7 +1688,21 @@
 
                 
 
-                let treeHTML = `<div class="org-tree-wrapper" style="position: relative;"><button class="btn btn-icon" onclick="toggleFullscreenOrg()" title="Expandir Tela Cheia" style="position: absolute; top: 10px; right: 10px; z-index: 100; background: var(--color-surface); border: 1px solid var(--color-border); box-shadow: 0 2px 4px rgba(0,0,0,0.1);"><span class="material-icons">fullscreen</span></button><div class="org-tree"><ul>`;
+                let treeHTML = `<div class="org-tree-wrapper" style="position: relative;">
+                    <div class="zoom-controls" style="position: absolute; top: 10px; left: 10px; z-index: 100; display: flex; gap: 0.5rem;">
+                        <button onclick="zoomOrganograma(-0.1)" class="btn-icon-secondary" title="Diminuir Zoom">
+                            <span class="material-icons">zoom_out</span>
+                        </button>
+                        <span id="zoom-level" style="padding: 0.5rem 1rem; background: var(--color-surface); border-radius: 6px; font-size: 0.9rem; font-weight: 600; min-width: 60px; text-align: center; border: 1px solid var(--color-border); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">100%</span>
+                        <button onclick="zoomOrganograma(0.1)" class="btn-icon-secondary" title="Aumentar Zoom">
+                            <span class="material-icons">zoom_in</span>
+                        </button>
+                        <button onclick="resetZoomOrganograma()" class="btn-icon-secondary" title="Resetar Zoom">
+                            <span class="material-icons">restart_alt</span>
+                        </button>
+                    </div>
+                    <button class="btn btn-icon" onclick="toggleFullscreenOrg()" title="Expandir Tela Cheia" style="position: absolute; top: 10px; right: 10px; z-index: 100; background: var(--color-surface); border: 1px solid var(--color-border); box-shadow: 0 2px 4px rgba(0,0,0,0.1);"><span class="material-icons">fullscreen</span></button>
+                    <div class="org-tree"><ul>`;
                 orgData.forEach(rootNode => {
                     treeHTML += renderOrgNode(rootNode);
                 });
