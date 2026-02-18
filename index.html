@@ -3684,6 +3684,7 @@ function toggleRecipientSelection(user) {
                 const typeLabel = requestTypeLabels[req.type] || req.type.replace(/_/g, ' ');
                 const date = new Date(req.created_at).toLocaleDateString('pt-BR');
                 const statusLabel = statusLabels[req.status] || req.status;
+                const statusClass = req.status === 'cancelled_by_requester' ? 'status-rejected' : `status-${req.status}`;
                 
                 const actionsHTML = `
                     <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;" onclick="openRequestDetailsModal('${req.id}')">Ver Detalhes</button>
@@ -3700,7 +3701,7 @@ function toggleRecipientSelection(user) {
                         <td>${req.requester_name || 'Desconhecido'}</td>
                         <td><strong>${typeLabel}</strong></td>
                         <td>${date}</td>
-                        <td><span class="status-tag status-${req.status}">${statusLabel}</span></td>
+                        <td><span class="status-tag ${statusClass}">${statusLabel}</span></td>
                         <td>${actionsHTML}</td>
                     </tr>
                 `;
@@ -3729,12 +3730,20 @@ function toggleRecipientSelection(user) {
             const travelStatusLabels = {
                 'pending_review': 'Aguardando Análise', 'approved_by_director': 'Aprovado (Diretor)',
                 'rejected_by_director': 'Recusado (Diretor)', 'pending_final_approval': 'Aprovação Final Pendente',
-                'approved_definitively': 'Aprovada', 'rejected_definitively': 'Recusada'
+                'approved_definitively': 'Aprovada', 'rejected_definitively': 'Recusada',
+                'cancelled_by_requester': 'Cancelada pelo Solicitante'
             };
 
             tableBody.innerHTML = travelRequests.map(req => {
                 const statusLabel = travelStatusLabels[req.status] || req.status.replace(/_/g, ' ');
-                const statusClass = (req.status === 'pending_review' || req.status === 'pending_final_approval') ? 'status-pending' : `status-${req.status.includes('approved') ? 'approved' : 'rejected'}`;
+                let statusClass;
+                if (req.status === 'pending_review' || req.status === 'pending_final_approval') {
+                    statusClass = 'status-pending';
+                } else if (req.status === 'cancelled_by_requester') {
+                    statusClass = 'status-rejected';
+                } else {
+                    statusClass = req.status.includes('approved') ? 'status-approved' : 'status-rejected';
+                }
                 const startDate = req.data.data_saida ? new Date(req.data.data_saida + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
                 const endDate = req.data.data_retorno ? new Date(req.data.data_retorno + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
                 return `
