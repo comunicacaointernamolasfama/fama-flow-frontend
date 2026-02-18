@@ -147,87 +147,77 @@
         .action-buttons { text-align: right; }
         .action-buttons .btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
         .action-buttons .btn:hover { background-color: var(--color-background); color: var(--color-text-primary); }
-                .permission-card {
+/* Checkbox de Permissões Compacto */
+        .perm-checkbox {
             position: relative;
             display: flex;
             align-items: center;
-            padding: 0.875rem;
+            gap: 0.5rem;
+            padding: 0.625rem 0.75rem;
             background: var(--color-background);
-            border: 2px solid var(--color-border);
-            border-radius: 8px;
+            border: 1.5px solid var(--color-border);
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s ease;
+            min-height: 42px;
         }
-        .permission-card:hover {
+        .perm-checkbox:hover {
             border-color: var(--color-brand-primary);
             background: var(--color-surface);
-            box-shadow: 0 2px 8px rgba(216, 25, 32, 0.1);
         }
-        .permission-card input[type="checkbox"] {
+        .perm-checkbox input[type="checkbox"] {
             position: absolute;
             opacity: 0;
             cursor: pointer;
+            width: 0;
+            height: 0;
         }
-        .permission-card input[type="checkbox"]:checked ~ .permission-content {
-            color: var(--color-brand-primary);
-        }
-        .permission-card input[type="checkbox"]:checked ~ .permission-content .permission-icon {
-            color: var(--color-brand-primary);
-            background: var(--color-danger-bg);
-        }
-        .permission-content {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            width: 100%;
-            color: var(--color-text-primary);
-            transition: color 0.2s;
-        }
-        .permission-icon {
-            font-size: 22px;
-            color: var(--color-text-secondary);
-            padding: 0.5rem;
-            background: var(--color-surface);
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-        .permission-label {
-            font-size: 0.9rem;
-            font-weight: 500;
-            flex: 1;
-        }
-        .permission-card input[type="checkbox"]:checked {
-            opacity: 1;
-        }
-        .permission-card::after {
-            content: '';
-            position: absolute;
-            right: 0.875rem;
-            width: 20px;
-            height: 20px;
+        .perm-checkmark {
+            position: relative;
+            height: 18px;
+            width: 18px;
+            background-color: var(--color-surface);
             border: 2px solid var(--color-border);
             border-radius: 4px;
-            background: var(--color-surface);
             transition: all 0.2s;
+            flex-shrink: 0;
         }
-        .permission-card input[type="checkbox"]:checked::after {
-            opacity: 0;
+        .perm-checkbox:hover .perm-checkmark {
+            border-color: var(--color-brand-primary);
         }
-        .permission-card input[type="checkbox"]:checked ~ .permission-content::after {
-            content: 'check';
-            font-family: 'Material Icons';
+        .perm-checkbox input:checked ~ .perm-checkmark {
+            background-color: var(--color-brand-primary);
+            border-color: var(--color-brand-primary);
+        }
+        .perm-checkmark::after {
+            content: "";
             position: absolute;
-            right: 0.875rem;
-            width: 20px;
-            height: 20px;
-            background: var(--color-brand-primary);
-            color: white;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            font-weight: bold;
+            display: none;
+            left: 5px;
+            top: 2px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .perm-checkbox input:checked ~ .perm-checkmark::after {
+            display: block;
+        }
+        .perm-icon {
+            font-size: 18px;
+            color: var(--color-text-secondary);
+            transition: color 0.2s;
+            flex-shrink: 0;
+        }
+        .perm-checkbox input:checked ~ .perm-icon {
+            color: var(--color-brand-primary);
+        }
+        .perm-text {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            flex: 1;
         }
 
         /* --- ORGANOGRAMA STYLES (RESTAURADO) --- */
@@ -1212,55 +1202,99 @@
                 <div id="manage-routines-page" class="page-content"></div>
                 <button class="fab" id="fab-new-message" title="Nova Mensagem"><span class="material-icons">add</span></button>
             </main>
-            <div id="user-modal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2 id="user-modal-title">Novo Usuário</h2><span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span></div><div class="modal-body"><form id="user-form"><input type="hidden" id="user-id"><div class="form-group"><label for="full_name">Nome Completo</label><input type="text" id="full_name" class="input-field" required></div><div class="form-group"><label for="user_email">Email</label><input type="email" id="user_email" class="input-field" required></div><div class="form-group" id="password-group"><label for="user_password">Senha</label><input type="password" id="user_password" class="input-field"></div><div class="form-group"><label for="department">Departamento</label><input type="text" id="department" class="input-field"></div><div class="form-group"><label for="role">Cargo (Admin, RH, etc)</label><input type="text" id="role" class="input-field"></div><label for="manager_id">Gerente Direto</label>
-<select id="manager_id" class="input-field">
-    <option value="">Nenhum</option>
-</select>
-</div>
-
-<div class="form-group" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid var(--color-border);">
-    <label style="font-weight: 600; font-size: 0.95rem; color: var(--color-text-primary); display: block; margin-bottom: 0.5rem;">
-        <span class="material-icons" style="vertical-align: middle; font-size: 20px; margin-right: 4px; color: var(--color-brand-primary);">security</span>
-        Permissões Especiais (Overrides)
-    </label>
-    <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin: 0 0 1rem 0;">
-        Permissões marcadas substituem as permissões padrão do cargo
-    </p>
-    
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-        <label class="permission-card">
-            <input type="checkbox" id="perm-manage_travel">
-            <div class="permission-content">
-                <span class="material-icons permission-icon">flight_takeoff</span>
-                <span class="permission-label">Gerenciar Viagens</span>
+<div id="user-modal" class="modal-overlay">
+                <div class="modal-content" style="max-width: 700px; max-height: 90vh; display: flex; flex-direction: column;">
+                    <div class="modal-header">
+                        <h2 id="user-modal-title">Novo Usuário</h2>
+                        <span class="material-icons" style="cursor:pointer;" onclick="closeUserModal()">close</span>
+                    </div>
+                    
+                    <div class="modal-body" style="overflow-y: auto; flex: 1; padding: 1.5rem;">
+                        <form id="user-form">
+                            <input type="hidden" id="user-id">
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="full_name">Nome Completo</label>
+                                    <input type="text" id="full_name" class="input-field" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="user_email">Email</label>
+                                    <input type="email" id="user_email" class="input-field" required>
+                                </div>
+                            </div>
+                            
+                            <div id="password-group" class="form-group">
+                                <label for="user_password">Senha</label>
+                                <input type="password" id="user_password" class="input-field">
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="department">Departamento</label>
+                                    <input type="text" id="department" class="input-field">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="role">Cargo</label>
+                                    <input type="text" id="role" class="input-field">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="manager_id">Gerente Direto</label>
+                                <select id="manager_id" class="input-field">
+                                    <option value="">Nenhum</option>
+                                </select>
+                            </div>
+                            
+                            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--color-border);">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                    <span class="material-icons" style="font-size: 20px; color: var(--color-brand-primary);">security</span>
+                                    <label style="font-weight: 600; font-size: 0.95rem; margin: 0;">Permissões Especiais</label>
+                                </div>
+                                <p style="font-size: 0.8rem; color: var(--color-text-secondary); margin: 0 0 1rem 0;">
+                                    Marcadas = substituem permissões do cargo
+                                </p>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.625rem;">
+                                    <label class="perm-checkbox">
+                                        <input type="checkbox" id="perm-manage_travel">
+                                        <span class="perm-checkmark"></span>
+                                        <span class="material-icons perm-icon">flight_takeoff</span>
+                                        <span class="perm-text">Viagens</span>
+                                    </label>
+                                    
+                                    <label class="perm-checkbox">
+                                        <input type="checkbox" id="perm-manage_hr">
+                                        <span class="perm-checkmark"></span>
+                                        <span class="material-icons perm-icon">assignment</span>
+                                        <span class="perm-text">RH</span>
+                                    </label>
+                                    
+                                    <label class="perm-checkbox">
+                                        <input type="checkbox" id="perm-manage_routines">
+                                        <span class="perm-checkmark"></span>
+                                        <span class="material-icons perm-icon">checklist</span>
+                                        <span class="perm-text">Rotinas</span>
+                                    </label>
+                                    
+                                    <label class="perm-checkbox">
+                                        <input type="checkbox" id="perm-manage_users">
+                                        <span class="perm-checkmark"></span>
+                                        <span class="material-icons perm-icon">admin_panel_settings</span>
+                                        <span class="perm-text">Admin</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button>
+                        <button class="btn btn-danger" onclick="saveUser()">Salvar</button>
+                    </div>
+                </div>
             </div>
-        </label>
-        
-        <label class="permission-card">
-            <input type="checkbox" id="perm-manage_hr">
-            <div class="permission-content">
-                <span class="material-icons permission-icon">assignment</span>
-                <span class="permission-label">Gerenciar RH</span>
-            </div>
-        </label>
-        
-        <label class="permission-card">
-            <input type="checkbox" id="perm-manage_routines">
-            <div class="permission-content">
-                <span class="material-icons permission-icon">checklist</span>
-                <span class="permission-label">Gerenciar Rotinas</span>
-            </div>
-        </label>
-        
-        <label class="permission-card">
-            <input type="checkbox" id="perm-manage_users">
-            <div class="permission-content">
-                <span class="material-icons permission-icon">admin_panel_settings</span>
-                <span class="permission-label">Administrar Usuários</span>
-            </div>
-        </label>
-    </div>
-</div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div>
         </div>`;
         
         document.addEventListener('DOMContentLoaded', checkUserSession);
