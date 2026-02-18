@@ -1809,38 +1809,28 @@ async function loadOrganogramaPage(departmentFilter = '') {
 function toggleFullscreenOrg() {
     const body = document.body;
     const isFullscreen = body.classList.toggle('fullscreen');
-    const expandButton = document.querySelector('#organograma-tree-container button');
+    const expandButton = document.querySelector('.org-tree-wrapper > button.btn.btn-icon');
     const icon = expandButton?.querySelector('.material-icons');
-    const container = document.getElementById('organograma-tree-container');
-    const wrapper = container?.querySelector('.org-tree-wrapper');
     
-    if (!expandButton || !icon || !container || !wrapper) return;
+    if (!expandButton || !icon) return;
     
     if (isFullscreen) {
         icon.textContent = 'fullscreen_exit';
         expandButton.title = 'Sair da Tela Cheia';
-        
-        // Aplicar zoom automático após delay
-        setTimeout(() => {
-            const containerWidth = window.innerWidth - 80;
-            const containerHeight = window.innerHeight - 80;
-            const treeWidth = wrapper.scrollWidth;
-            const treeHeight = wrapper.scrollHeight;
-            
-            const scaleX = containerWidth / treeWidth;
-            const scaleY = containerHeight / treeHeight;
-            const scale = Math.min(scaleX, scaleY, 1);
-            
-            wrapper.style.transform = `scale(${scale})`;
-            wrapper.style.transformOrigin = 'top center';
-        }, 150);
     } else {
         icon.textContent = 'fullscreen';
-        expandButton.title = 'Tela Cheia';
+        expandButton.title = 'Expandir Tela Cheia';
         
-        // Resetar zoom
-        wrapper.style.transform = 'scale(1)';
-        wrapper.style.transformOrigin = '';
+        // Resetar zoom ao sair do fullscreen
+        currentZoom = 1.0;
+        const orgTree = document.querySelector('.org-tree');
+        if (orgTree) {
+            orgTree.style.transform = 'scale(1)';
+        }
+        const zoomLabel = document.getElementById('zoom-level');
+        if (zoomLabel) {
+            zoomLabel.textContent = '100%';
+        }
     }
 }
 
