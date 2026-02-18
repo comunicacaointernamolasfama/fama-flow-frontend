@@ -1557,7 +1557,8 @@
             const travelStatusLabels = {
                 'pending_review': 'Aguardando Análise', 'approved_by_director': 'Aprovado (Diretor)',
                 'rejected_by_director': 'Recusado (Diretor)', 'pending_final_approval': 'Aprovação Final Pendente',
-                'approved_definitively': 'Aprovada', 'rejected_definitively': 'Recusada'
+                'approved_definitively': 'Aprovada', 'rejected_definitively': 'Recusada',
+                'cancelled_by_requester': 'Cancelada pelo Solicitante'
             };
 
             tableBody.innerHTML = data.map(req => {
@@ -1565,7 +1566,14 @@
 
                 if (req.type === 'travel') {
                     statusLabel = travelStatusLabels[req.status] || req.status.replace(/_/g, ' ');
-                    statusClass = (req.status === 'pending_review' || req.status === 'pending_final_approval') ? 'status-pending' : `status-${req.status.includes('approved') ? 'approved' : 'rejected'}`;
+                    
+                    if (req.status === 'pending_review' || req.status === 'pending_final_approval') {
+                        statusClass = 'status-pending';
+                    } else if (req.status === 'cancelled_by_requester') {
+                        statusClass = 'status-rejected';
+                    } else {
+                        statusClass = req.status.includes('approved') ? 'status-approved' : 'status-rejected';
+                    }
                 } else {
                     statusLabel = req.status === 'pending' ? 'Pendente' : (req.status === 'approved' ? 'Aprovada' : 'Recusada');
                     statusClass = `status-${req.status}`;
