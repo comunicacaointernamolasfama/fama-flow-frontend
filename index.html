@@ -1016,10 +1016,10 @@
                 <div id="organograma-page" class="page-content">
                     <div class="page-header">
                         <h1>Organograma Vivo</h1>
-                        <p>Estrutura hierárquica da empresa.</p>
                     </div>
-                    <div class="card" style="margin-bottom: 1.5rem; padding: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
-                        <label for="org-filter-dept" style="font-weight: 600; font-size: 0.9rem; color: var(--color-text-secondary);">Visualizar Área:</label>
+<div class="card" style="margin-bottom: 1.5rem; padding: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; position: relative;">
+                <p style="position: absolute; top: 1rem; right: 1rem; color: var(--color-text-secondary); font-size: 0.875rem; margin: 0;">Estrutura hierárquica da empresa</p>
+                <label for="org-filter-dept" style="font-weight: 600; font-size: 0.9rem; color: var(--color-text-secondary);">Visualizar Área:</label>
                         <select id="org-filter-dept" class="input-field" onchange="loadOrganogramaPage(this.value)" style="max-width: 300px; flex-grow: 1;"></select>
                         <button class="btn btn-danger" onclick="openUserModal(null)"><span class="material-icons">person_add</span> Novo Colaborador</button>
                     </div>
