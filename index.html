@@ -2756,7 +2756,6 @@ async function submitRequest(event) {
                 tbody.appendChild(tr);
             });
             
-            const targetArray = (_selectorConfig && _selectorConfig.targetArray) ? _selectorConfig.targetArray : selectedRecipients;
             document.getElementById('selected-count-display').textContent = `${targetArray.length} selecionados`;
         }
 
