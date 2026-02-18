@@ -147,7 +147,89 @@
         .action-buttons { text-align: right; }
         .action-buttons .btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 4px; border-radius: 50%; }
         .action-buttons .btn:hover { background-color: var(--color-background); color: var(--color-text-primary); }
-        
+                .permission-card {
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 0.875rem;
+            background: var(--color-background);
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .permission-card:hover {
+            border-color: var(--color-brand-primary);
+            background: var(--color-surface);
+            box-shadow: 0 2px 8px rgba(216, 25, 32, 0.1);
+        }
+        .permission-card input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .permission-card input[type="checkbox"]:checked ~ .permission-content {
+            color: var(--color-brand-primary);
+        }
+        .permission-card input[type="checkbox"]:checked ~ .permission-content .permission-icon {
+            color: var(--color-brand-primary);
+            background: var(--color-danger-bg);
+        }
+        .permission-content {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+            color: var(--color-text-primary);
+            transition: color 0.2s;
+        }
+        .permission-icon {
+            font-size: 22px;
+            color: var(--color-text-secondary);
+            padding: 0.5rem;
+            background: var(--color-surface);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .permission-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            flex: 1;
+        }
+        .permission-card input[type="checkbox"]:checked {
+            opacity: 1;
+        }
+        .permission-card::after {
+            content: '';
+            position: absolute;
+            right: 0.875rem;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--color-border);
+            border-radius: 4px;
+            background: var(--color-surface);
+            transition: all 0.2s;
+        }
+        .permission-card input[type="checkbox"]:checked::after {
+            opacity: 0;
+        }
+        .permission-card input[type="checkbox"]:checked ~ .permission-content::after {
+            content: 'check';
+            font-family: 'Material Icons';
+            position: absolute;
+            right: 0.875rem;
+            width: 20px;
+            height: 20px;
+            background: var(--color-brand-primary);
+            color: white;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
         /* --- ORGANOGRAMA STYLES (RESTAURADO) --- */
         .org-tree-wrapper {
             width: 100%;
@@ -1136,29 +1218,48 @@
 </select>
 </div>
 
-<div class="form-group" style="margin-top: 1.5rem;">
-    <h4 style="margin-bottom: 1rem; color: var(--color-text-primary); font-size: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">Permissões Individuais (Overrides)</h4>
-    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-            <input type="checkbox" id="perm-manage_travel" style="cursor: pointer;">
-            <span>Gerenciar Viagens</span>
-        </label>
-        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-            <input type="checkbox" id="perm-manage_hr" style="cursor: pointer;">
-            <span>Gerenciar RH (Solicitações Gerais)</span>
-        </label>
-        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-            <input type="checkbox" id="perm-manage_routines" style="cursor: pointer;">
-            <span>Gerenciar Rotinas do Setor</span>
-        </label>
-        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-            <input type="checkbox" id="perm-manage_users" style="cursor: pointer;">
-            <span>Administrar Usuários e Permissões</span>
-        </label>
-    </div>
-    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--color-text-secondary); font-style: italic;">
+<div class="form-group" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid var(--color-border);">
+    <label style="font-weight: 600; font-size: 0.95rem; color: var(--color-text-primary); display: block; margin-bottom: 0.5rem;">
+        <span class="material-icons" style="vertical-align: middle; font-size: 20px; margin-right: 4px; color: var(--color-brand-primary);">security</span>
+        Permissões Especiais (Overrides)
+    </label>
+    <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin: 0 0 1rem 0;">
         Permissões marcadas substituem as permissões padrão do cargo
     </p>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <label class="permission-card">
+            <input type="checkbox" id="perm-manage_travel">
+            <div class="permission-content">
+                <span class="material-icons permission-icon">flight_takeoff</span>
+                <span class="permission-label">Gerenciar Viagens</span>
+            </div>
+        </label>
+        
+        <label class="permission-card">
+            <input type="checkbox" id="perm-manage_hr">
+            <div class="permission-content">
+                <span class="material-icons permission-icon">assignment</span>
+                <span class="permission-label">Gerenciar RH</span>
+            </div>
+        </label>
+        
+        <label class="permission-card">
+            <input type="checkbox" id="perm-manage_routines">
+            <div class="permission-content">
+                <span class="material-icons permission-icon">checklist</span>
+                <span class="permission-label">Gerenciar Rotinas</span>
+            </div>
+        </label>
+        
+        <label class="permission-card">
+            <input type="checkbox" id="perm-manage_users">
+            <div class="permission-content">
+                <span class="material-icons permission-icon">admin_panel_settings</span>
+                <span class="permission-label">Administrar Usuários</span>
+            </div>
+        </label>
+    </div>
 </div></form></div><div class="modal-footer"><button class="btn btn-secondary" onclick="closeUserModal()">Cancelar</button><button class="btn btn-danger" onclick="saveUser()">Salvar</button></div></div></div>
         </div>`;
         
