@@ -5455,6 +5455,18 @@ const numParticipants = updatedData.num_participantes || 1;
                             <div class="briefing-card-header">
                                 <span class="material-icons">mail</span> Mensagens
                             </div>
+                            <div class="briefing-card-count">${mensagens}</div>
+                            <div class="briefing-card-sub">${stats.pending_messages_count || 0} mensagem(ns) · ${stats.urgent_tickets_count || 0} chamado(s)</div>
+                        </div>
+                    </div>
+
+                    <button class="briefing-footer-btn" onclick="closeConfirmationModal()">
+                        ENTENDIDO, VAMOS EXECUTAR!
+                    </button>
+                </div>
+            `;
+            modal.classList.add('visible');
+        }
 
     </script>
 </body>
