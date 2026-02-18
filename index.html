@@ -65,6 +65,29 @@
 .calc-info { font-size: 14px; color: var(--color-text-secondary); cursor: help; vertical-align: middle; margin-left: 4px; }
 .calc-info:hover { color: var(--color-brand-primary); }
 .voo-selecionado { background-color: var(--color-success-bg); border-left: 3px solid var(--color-success); padding: 6px 8px !important; margin: 4px -8px; border-radius: 4px; }
+
+        /* --- PAINEL DE CONTROLE DIÁRIO --- */
+        .briefing-progress-bar-wrapper { width: 100%; background: var(--color-border); border-radius: 8px; height: 8px; margin-bottom: 1.5rem; overflow: hidden; }
+        .briefing-progress-bar-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--color-success), #34d399); transition: width 0.6s ease-out; }
+        .briefing-progress-label { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--color-text-secondary); margin-bottom: 0.4rem; }
+        .briefing-cards-wrapper { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+        .briefing-card { flex: 1; border-radius: 10px; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; border: 1px solid transparent; }
+        .briefing-card.critico { background-color: var(--color-danger-bg); border-color: rgba(216,25,32,0.2); }
+        .briefing-card.hoje { background-color: var(--color-warning-bg); border-color: rgba(245,158,11,0.2); }
+        .briefing-card.mensagens { background-color: var(--color-info-bg); border-color: rgba(59,130,246,0.2); }
+        .briefing-card-header { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .briefing-card.critico .briefing-card-header { color: var(--color-danger); }
+        .briefing-card.hoje .briefing-card-header { color: var(--color-warning); }
+        .briefing-card.mensagens .briefing-card-header { color: var(--color-info); }
+        .briefing-card-header .material-icons { font-size: 18px; }
+        .briefing-card-count { font-size: 2rem; font-weight: 800; line-height: 1; }
+        .briefing-card.critico .briefing-card-count { color: var(--color-danger); }
+        .briefing-card.hoje .briefing-card-count { color: var(--color-warning); }
+        .briefing-card.mensagens .briefing-card-count { color: var(--color-info); }
+        .briefing-card-sub { font-size: 0.8rem; color: var(--color-text-secondary); flex-grow: 1; }
+        .briefing-footer-btn { width: 100%; padding: 0.9rem; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--color-brand-primary), #ff4444); color: white; font-size: 1rem; font-weight: 700; cursor: pointer; letter-spacing: 0.05em; transition: opacity 0.2s, transform 0.2s; }
+        .briefing-footer-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        @media (max-width: 768px) { .briefing-cards-wrapper { flex-direction: column; } }
         .grid { display: grid; gap: 1.5rem; } .grid-cols-2 { grid-template-columns: repeat(2, 1fr); } .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
         .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; border: none; transition: background-color 0.2s, opacity 0.2s;}
         .btn:hover { opacity: 0.9; } .btn .material-icons { margin-right: 0.5rem; font-size: 20px; }
@@ -5359,37 +5382,79 @@ const numParticipants = updatedData.num_participantes || 1;
         }
 
         async function displayDailySummary() {
-            const { data, error } = await supabaseClient.rpc('get_dashboard_stats').single();
-            const { data: tasks, error: tasksError } = await supabaseClient.rpc('get_user_tasks_for_date', { p_date: new Date().toISOString().split('T')[0] });
-            
-            let hasContent = false;
-            let summaryHTML = `<h3 style="margin: 0 0 1rem 0; font-size: 1.2rem;">Resumo do seu dia, ${currentUserProfile.full_name.split(' ')[0]}!</h3>`;
+            const today = new Date().toISOString().split('T')[0];
+            const nome = currentUserProfile.full_name.split(' ')[0];
 
-            if (data && data.pending_messages_count > 0) {
-                summaryHTML += `<p style="margin: 0.5rem 0;">• Você tem <strong>${data.pending_messages_count}</strong> mensagem(ns) pendente(s).</p>`;
-                hasContent = true;
-            }
-            if (data && data.urgent_tickets_count > 0) {
-                summaryHTML += `<p style="margin: 0.5rem 0;">• Há <strong>${data.urgent_tickets_count}</strong> chamado(s) aberto(s) aguardando sua atenção.</p>`;
-                hasContent = true;
-            }
-            if (tasks && tasks.length > 0) {
-                summaryHTML += `<p style="margin: 0.5rem 0;">• Sua agenda de hoje inclui <strong>${tasks.length}</strong> tarefa(s) nas suas rotinas.</p>`;
-                hasContent = true;
-            }
-            if (!hasContent) {
-                summaryHTML += `<p style="margin: 0.5rem 0;">Tudo em ordem por aqui! Sem pendências ou tarefas para hoje. Bom trabalho!</p>`;
-            }
+            const [statsRes, tasksRes] = await Promise.all([
+                supabaseClient.rpc('get_dashboard_stats').single(),
+                supabaseClient.rpc('get_user_tasks_for_date', { p_date: today })
+            ]);
+
+            const stats = statsRes.data || {};
+            const tasks = tasksRes.data || [];
+
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(t => t.status === 'completed').length;
+            const progressPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
+
+            const now = new Date();
+            const overdueTasks = tasks.filter(t => {
+                if (!t.due_time || t.status === 'completed') return false;
+                const [h, m] = t.due_time.split(':');
+                const due = new Date(); due.setHours(parseInt(h), parseInt(m), 0);
+                return due < now;
+            });
+
+            const pendingTasks = tasks.filter(t => t.status !== 'completed');
+            const proximaTask = pendingTasks.length > 0 ? pendingTasks[0] : null;
+            const proximaTexto = proximaTask
+                ? `Próxima: <strong>${proximaTask.task_title}</strong>${proximaTask.due_time ? ' às ' + proximaTask.due_time.substring(0,5) : ''}`
+                : 'Nenhuma tarefa pendente';
+
+            const mensagens = (stats.pending_messages_count || 0) + (stats.urgent_tickets_count || 0);
 
             const modal = document.getElementById('confirmation-modal');
             const body = modal.querySelector('.modal-body');
             body.innerHTML = `
-                <span class="material-icons" style="font-size: 48px; color: var(--color-brand-primary); margin-bottom: 1rem;">wb_sunny</span>
-                <div style="text-align: center; margin-bottom: 2rem; color: var(--color-text-primary);">${summaryHTML}</div>
-                <button class="btn btn-danger" style="width: 100%;" onclick="closeConfirmationModal()">Seguir Adiante</button>
-            `;
-            modal.classList.add('visible');
-        }
+                <div style="width: 100%; text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+                        <span class="material-icons" style="font-size: 32px; color: var(--color-brand-primary);">wb_sunny</span>
+                        <div>
+                            <div style="font-weight: 800; font-size: 1.1rem;">Bom dia, ${nome}!</div>
+                            <div style="font-size: 0.85rem; color: var(--color-text-secondary);">${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</div>
+                        </div>
+                    </div>
+
+                    <div class="briefing-progress-label">
+                        <span>Progresso do dia</span>
+                        <span>${completedTasks}/${totalTasks} tarefas concluídas</span>
+                    </div>
+                    <div class="briefing-progress-bar-wrapper">
+                        <div class="briefing-progress-bar-fill" style="width: ${progressPct}%;"></div>
+                    </div>
+
+                    <div class="briefing-cards-wrapper">
+                        <div class="briefing-card critico">
+                            <div class="briefing-card-header">
+                                <span class="material-icons">priority_high</span> Crítico
+                            </div>
+                            <div class="briefing-card-count">${overdueTasks.length}</div>
+                            <div class="briefing-card-sub">tarefa(s) atrasada(s)</div>
+                            ${overdueTasks.length > 0 ? `<button class="btn btn-danger" style="padding: 0.35rem; font-size: 0.8rem; margin-top: 0.25rem;" onclick="closeConfirmationModal(); showPage('my-routines-page');">Resolver</button>` : '<div style="font-size:0.8rem; color: var(--color-success);">Tudo em dia!</div>'}
+                        </div>
+
+                        <div class="briefing-card hoje">
+                            <div class="briefing-card-header">
+                                <span class="material-icons">today</span> Hoje
+                            </div>
+                            <div class="briefing-card-count">${pendingTasks.length}</div>
+                            <div class="briefing-card-sub">${proximaTexto}</div>
+                        </div>
+
+                        <div class="briefing-card mensagens">
+                            <div class="briefing-card-header">
+                                <span class="material-icons">mail</span> Mensagens
+                            </div>
 
     </script>
 </body>
