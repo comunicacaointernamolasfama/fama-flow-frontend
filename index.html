@@ -3838,11 +3838,17 @@ const userId = document.getElementById('user-id').value;
                     if (!response.ok) throw new Error('Falha ao criar usuário.');
                     
                     const result = await response.json();
+                    console.log('Resposta do n8n:', result); // DEBUG
                     
                     // Task: Fix User ID Recognition (Busca o ID no objeto retornado pelo n8n)
                     finalUserId = result.user_id || (result.json && result.json.id) || (result[0] && result[0].id) || result.id;
                     
-                    if (!finalUserId) throw new Error('ID do usuário não foi retornado');
+                    console.log('finalUserId capturado:', finalUserId); // DEBUG
+                    
+                    if (!finalUserId) {
+                        console.error('Resultado completo:', JSON.stringify(result));
+                        throw new Error('ID do usuário não foi retornado');
+                    }
                 }
         
         // Sincronizar permissões individuais
