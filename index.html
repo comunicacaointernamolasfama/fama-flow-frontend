@@ -1232,11 +1232,31 @@
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                                 <div class="form-group" style="margin-bottom: 0;">
                                     <label for="department">Departamento</label>
-                                    <input type="text" id="department" class="input-field">
+                                    <select id="department" class="input-field" onchange="toggleDepartmentOther()">
+                                        <option value="">Selecione...</option>
+                                        <option value="Administrativo">Administrativo</option>
+                                        <option value="Controladoria">Controladoria</option>
+                                        <option value="Recursos Humanos">Recursos Humanos</option>
+                                        <option value="Comercial">Comercial</option>
+                                        <option value="Produção">Produção</option>
+                                        <option value="Fundição">Fundição</option>
+                                        <option value="Grampos">Grampos</option>
+                                        <option value="TI">TI</option>
+                                        <option value="Outros">Outros</option>
+                                    </select>
+                                    <input type="text" id="department-other" class="input-field" placeholder="Especifique o departamento..." style="display: none; margin-top: 0.5rem;">
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0;">
                                     <label for="role">Cargo</label>
-                                    <input type="text" id="role" class="input-field">
+                                    <select id="role" class="input-field">
+                                        <option value="">Selecione...</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="Gerente">Gerente</option>
+                                        <option value="Supervisor">Supervisor</option>
+                                        <option value="Líder">Líder</option>
+                                        <option value="Auxiliar">Auxiliar</option>
+                                        <option value="Colaborador">Colaborador</option>
+                                    </select>
                                 </div>
                             </div>
                             
@@ -3622,10 +3642,17 @@ async function openUserModal(user) {
             const userEmailField = document.getElementById('user_email');
             const passwordGroup = document.getElementById('password-group');
             const managerSelect = document.getElementById('manager_id');
+            const deptSelect = document.getElementById('department');
+            const deptOtherInput = document.getElementById('department-other');
 
             userEmailField.disabled = !!user;
             passwordGroup.style.display = user ? 'none' : 'block';
             document.getElementById('user_password').required = !user;
+            
+            // Resetar campo "Outros"
+            deptOtherInput.style.display = 'none';
+            deptOtherInput.required = false;
+            deptOtherInput.value = '';
             
             managerSelect.innerHTML = '<option value="">Nenhum</option>';
             allUsers.forEach(u => {
@@ -3642,8 +3669,19 @@ async function openUserModal(user) {
                 document.getElementById('user-id').value = user.id;
                 document.getElementById('full_name').value = user.full_name;
                 userEmailField.value = user.email || '';
-                document.getElementById('department').value = user.department;
-                document.getElementById('role').value = user.role;
+                
+                // Lógica para Departamento (verificar se é "Outros")
+                const validDepartments = ['Administrativo', 'Controladoria', 'Recursos Humanos', 'Comercial', 'Produção', 'Fundição', 'Grampos', 'TI'];
+                if (user.department && validDepartments.includes(user.department)) {
+                    deptSelect.value = user.department;
+                } else if (user.department) {
+                    deptSelect.value = 'Outros';
+                    deptOtherInput.value = user.department;
+                    deptOtherInput.style.display = 'block';
+                    deptOtherInput.required = true;
+                }
+                
+                document.getElementById('role').value = user.role || '';
                 managerSelect.value = user.manager_id || '';
                 
                 // Carregar permissões específicas do usuário
@@ -3662,6 +3700,21 @@ async function openUserModal(user) {
             modal.classList.add('visible');
         }
         function closeUserModal() { document.querySelector('#app-container #user-modal')?.classList.remove('visible'); }
+
+        function toggleDepartmentOther() {
+            const deptSelect = document.getElementById('department');
+            const deptOtherInput = document.getElementById('department-other');
+            
+            if (deptSelect.value === 'Outros') {
+                deptOtherInput.style.display = 'block';
+                deptOtherInput.required = true;
+                deptOtherInput.focus();
+            } else {
+                deptOtherInput.style.display = 'none';
+                deptOtherInput.required = false;
+                deptOtherInput.value = '';
+            }
+        }
 		
 async function loadUserPermissions(userId) {
     try {
@@ -3692,10 +3745,13 @@ async function loadUserPermissions(userId) {
 }
 
 async function saveUser() {
-    const userId = document.getElementById('user-id').value;
-    const fullName = document.getElementById('full_name').value;
-    const department = document.getElementById('department').value;
-    const role = document.getElementById('role').value;
+const userId = document.getElementById('user-id').value;
+            const fullName = document.getElementById('full_name').value;
+            const deptSelect = document.getElementById('department');
+            const department = deptSelect.value === 'Outros' 
+                ? document.getElementById('department-other').value 
+                : deptSelect.value;
+            const role = document.getElementById('role').value;
     const managerIdValue = document.getElementById('manager_id').value;
     const managerId = managerIdValue === "" ? null : managerIdValue;
     const email = document.getElementById('user_email').value;
